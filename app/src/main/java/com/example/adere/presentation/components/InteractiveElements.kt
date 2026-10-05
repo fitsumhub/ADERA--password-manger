@@ -147,7 +147,7 @@ fun BounceButton(
     Surface(
         modifier = modifier
             .scale(scale * bounce.value)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(CircleShape)
             .clickable(
                 enabled = enabled,
                 indication = null,
@@ -167,7 +167,7 @@ fun BounceButton(
                     }
                 )
             },
-        shape = RoundedCornerShape(12.dp),
+        shape = CircleShape,
         color = Color.Transparent
     ) {
         Box(
@@ -443,7 +443,7 @@ private fun QuickActionCard(
                     onTap = { action.onClick() }
                 )
             },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         ),
@@ -463,7 +463,7 @@ private fun QuickActionCard(
                 .border(
                     width = 1.dp,
                     color = action.color.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(8.dp)
                 )
                 .padding(16.dp)
         ) {

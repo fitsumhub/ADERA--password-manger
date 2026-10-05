@@ -110,7 +110,7 @@ fun AnimatedPasswordStrengthIndicator(
     
     Card(
         modifier = modifier.scale(scaleAnimation.value),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         ),

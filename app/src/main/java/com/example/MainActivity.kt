@@ -19,6 +19,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.adere.AdereApplication
 import com.example.adere.core.backup.PdfExportManager
+import com.example.adere.core.utilities.AppErrorHandler
+import com.example.adere.core.utilities.AppErrorHandler.Operation
 import com.example.adere.presentation.navigation.AdereApp
 import com.example.adere.presentation.viewmodels.AdereViewModel
 import com.example.ui.theme.AdereTheme
@@ -61,9 +63,12 @@ class MainActivity : FragmentActivity() {
                                 Toast.LENGTH_LONG
                             ).show()
                         } else {
+                            val error = result.exceptionOrNull()?.localizedMessage
+                                ?: result.exceptionOrNull()?.message
+                                ?: "Failed to write PDF file"
                             Toast.makeText(
                                 this,
-                                "Failed to write PDF: ${result.exceptionOrNull()?.message}",
+                                "Failed to write PDF: $error",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
@@ -97,7 +102,8 @@ class MainActivity : FragmentActivity() {
             AdereTheme(palette = themePalette) {
                 AdereApp(
                     viewModel = viewModel,
-                    onTriggerBiometrics = ::triggerBiometricPrompt,
+                    onTriggerBiometrics = ::triggerBiometricUnlock,
+                    onAuthenticateSensitiveAction = ::triggerBiometricVerification,
                     onExportPdfSave = { options ->
                         pendingPdfExportOptions = options
                         isSystemPickerActive = true
@@ -136,9 +142,12 @@ class MainActivity : FragmentActivity() {
                     isSystemPickerActive = true
                     startActivity(Intent.createChooser(sendIntent, "Print or Share Vault PDF"))
                 } else {
+                    val error = result.exceptionOrNull()?.localizedMessage
+                        ?: result.exceptionOrNull()?.message
+                        ?: "Failed to generate PDF file"
                     Toast.makeText(
                         this,
-                        "Failed to generate PDF: ${result.exceptionOrNull()?.message}",
+                        "Failed to generate PDF: $error",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -150,7 +159,22 @@ class MainActivity : FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
-        viewModel.sessionManager.checkAutoLock()
+        if (!isSystemPickerActive) {
+            viewModel.sessionManager.checkAutoLock()
+        }
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        viewModel.sessionManager.recordInteraction()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // If returning from system dialog, update interaction time
+        if (isSystemPickerActive) {
+            viewModel.sessionManager.recordInteraction()
+        }
     }
 
     override fun onStop() {
@@ -159,7 +183,6 @@ class MainActivity : FragmentActivity() {
         if (!isSystemPickerActive && (viewModel.autoLockSeconds.value == 0)) {
             viewModel.lockVault()
         }
-        isSystemPickerActive = false
     }
 
     override fun onDestroy() {
@@ -167,25 +190,18 @@ class MainActivity : FragmentActivity() {
         PdfExportManager.cleanTemporaryExports(cacheDir)
     }
 
-    private fun triggerBiometricPrompt() {
+    private fun triggerBiometricUnlock() {
         val biometricManager = BiometricManager.from(this)
-        val hasCredential = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-        val authenticators = if (hasCredential) {
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        } else {
-            BiometricManager.Authenticators.BIOMETRIC_STRONG
-        }
-
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
         val canAuth = biometricManager.canAuthenticate(authenticators)
-        val canStrongOnly = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
 
-        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS && canStrongOnly != BiometricManager.BIOMETRIC_SUCCESS) {
-            val reason = when {
-                canAuth == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED || canStrongOnly == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ->
-                    "No fingerprint or face unlock enrolled on device. Please unlock with your Master Password."
-                canAuth == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE || canStrongOnly == BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
+        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+            val reason = when (canAuth) {
+                BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ->
+                    "No fingerprint or face unlock enrolled. Please set up biometrics in Android Settings or unlock with Master Password."
+                BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
                     "Biometric hardware not detected. Please unlock with your Master Password."
-                canAuth == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE || canStrongOnly == BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
+                BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
                     "Biometric sensor currently unavailable. Please unlock with your Master Password."
                 else -> "Biometric authentication unavailable. Please unlock with your Master Password."
             }
@@ -193,30 +209,13 @@ class MainActivity : FragmentActivity() {
             return
         }
 
-        // Prepare a hardware-gated Cipher to pass into CryptoObject.
-        // If this returns null the key doesn't exist yet or was invalidated — fall
-        // back to the password prompt instead of silently failing.
-        val biometricCipher = viewModel.prepareBiometricCipher()
-        if (biometricCipher == null) {
-            Toast.makeText(
-                this,
-                "Biometric key unavailable. Please unlock with your Master Password.",
-                Toast.LENGTH_LONG
-            ).show()
-            return
-        }
-
         val executor = ContextCompat.getMainExecutor(this)
-        val promptBuilder = BiometricPrompt.PromptInfo.Builder()
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.biometric_prompt_title))
             .setSubtitle(getString(R.string.biometric_prompt_subtitle))
-            // CryptoObject requires BIOMETRIC_STRONG — device-credential fallback is
-            // incompatible with a hardware-gated Cipher, so we always use strong biometric
-            // and provide a "Use Password" button as the cancel/fallback action.
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
             .setNegativeButtonText(getString(R.string.biometric_use_password))
-
-        val promptInfo = promptBuilder.build()
+            .setAllowedAuthenticators(authenticators)
+            .build()
 
         val biometricPrompt = BiometricPrompt(
             this,
@@ -224,37 +223,41 @@ class MainActivity : FragmentActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    // The OS has hardware-authorised the Cipher — pass it to the ViewModel
-                    // so the Keystore can now complete the DEK decryption.
-                    val authorizedCipher = result.cryptoObject?.cipher
-                    if (authorizedCipher == null) {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Biometric authentication failed: no cipher returned.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return
-                    }
-                    viewModel.unlockWithBiometric(authorizedCipher) { unlockResult ->
+                    viewModel.unlockWithBiometricAuth { unlockResult ->
                         if (unlockResult.isSuccess) {
                             Toast.makeText(this@MainActivity, "Vault unlocked with biometrics", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(
-                                this@MainActivity,
-                                unlockResult.exceptionOrNull()?.message
-                                    ?: "Biometric unlock failed. Please use Master Password.",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            val msg = AppErrorHandler.getMessage(
+                                unlockResult.exceptionOrNull(),
+                                Operation.BIOMETRIC_UNLOCK
+                            )
+                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
-                        errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON
-                    ) {
-                        Toast.makeText(this@MainActivity, errString, Toast.LENGTH_SHORT).show()
+                    when (errorCode) {
+                        BiometricPrompt.ERROR_USER_CANCELED,
+                        BiometricPrompt.ERROR_NEGATIVE_BUTTON -> {
+                            // User voluntarily cancelled or opted to use password; no toast needed
+                        }
+                        BiometricPrompt.ERROR_LOCKOUT,
+                        BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Biometric sensor locked. Please unlock with your Master Password.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        else -> {
+                            Toast.makeText(
+                                this@MainActivity,
+                                biometricPromptErrorMessage(errorCode),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
 
@@ -265,8 +268,85 @@ class MainActivity : FragmentActivity() {
             }
         )
 
-        // Pass the hardware-gated Cipher inside CryptoObject — this is what causes the
-        // Keystore to enforce the biometric check at the TEE/StrongBox level.
-        biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(biometricCipher))
+        biometricPrompt.authenticate(promptInfo)
+    }
+
+    private fun triggerBiometricVerification(
+        title: String,
+        subtitle: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val biometricManager = BiometricManager.from(this)
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
+        val canAuth = biometricManager.canAuthenticate(authenticators)
+
+        if (canAuth != BiometricManager.BIOMETRIC_SUCCESS) {
+            val reason = when (canAuth) {
+                BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ->
+                    "No fingerprint or face enrolled. Please use your Master Password."
+                BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
+                    "Biometric hardware not detected. Please use your Master Password."
+                BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
+                    "Biometric sensor currently unavailable. Please use your Master Password."
+                else -> "Biometric authentication unavailable. Please use your Master Password."
+            }
+            onError(reason)
+            return
+        }
+
+        val executor = ContextCompat.getMainExecutor(this)
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(title)
+            .setSubtitle(subtitle)
+            .setNegativeButtonText(getString(R.string.biometric_use_password))
+            .setAllowedAuthenticators(authenticators)
+            .build()
+
+        val biometricPrompt = BiometricPrompt(
+            this,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    onSuccess()
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    when (errorCode) {
+                        BiometricPrompt.ERROR_USER_CANCELED,
+                        BiometricPrompt.ERROR_NEGATIVE_BUTTON -> {
+                            // User cancelled; no toast needed
+                        }
+                        BiometricPrompt.ERROR_LOCKOUT,
+                        BiometricPrompt.ERROR_LOCKOUT_PERMANENT -> {
+                            onError("Biometric sensor locked. Please verify with your Master Password.")
+                        }
+                        else -> onError(biometricPromptErrorMessage(errorCode))
+                    }
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                }
+            }
+        )
+
+        biometricPrompt.authenticate(promptInfo)
+    }
+
+    private fun biometricPromptErrorMessage(errorCode: Int): String = when (errorCode) {
+        BiometricPrompt.ERROR_NO_BIOMETRICS ->
+            "No biometrics are enrolled. Configure fingerprint or face authentication in Android Settings."
+        BiometricPrompt.ERROR_HW_NOT_PRESENT ->
+            "This device does not have biometric hardware. Use your master password."
+        BiometricPrompt.ERROR_HW_UNAVAILABLE ->
+            "Biometric hardware is temporarily unavailable. Please try again or use your master password."
+        BiometricPrompt.ERROR_LOCKOUT,
+        BiometricPrompt.ERROR_LOCKOUT_PERMANENT ->
+            "Biometric authentication is locked. Please use your master password."
+        else ->
+            "Biometric authentication could not be completed. Please try again or use your master password."
     }
 }

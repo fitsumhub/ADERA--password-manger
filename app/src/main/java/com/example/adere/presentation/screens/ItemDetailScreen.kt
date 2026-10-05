@@ -1,4 +1,5 @@
 package com.example.adere.presentation.screens
+import com.example.ui.theme.Shapes
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -77,8 +78,6 @@ import com.example.adere.domain.model.VaultCategory
 import com.example.adere.domain.model.VaultItem
 import com.example.adere.presentation.components.VaultItemAvatar
 import com.example.ui.theme.CharcoalBg
-import com.example.ui.theme.CharcoalSurface
-import com.example.ui.theme.CharcoalSurfaceVariant
 import com.example.ui.theme.CleanBorder
 import com.example.ui.theme.EmeraldContainer
 import com.example.ui.theme.EmeraldLight
@@ -172,7 +171,7 @@ fun ItemDetailScreen(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit Item",
-                            tint = EmeraldLight
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     IconButton(onClick = { showDeleteConfirmDialog = true }, modifier = Modifier.testTag("detail_delete_button")) {
@@ -205,7 +204,7 @@ fun ItemDetailScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(18.dp)
+                shape = Shapes.medium
             ) {
                 Row(
                     modifier = Modifier.padding(18.dp),
@@ -334,8 +333,8 @@ fun ItemDetailScreen(
             if (item.payload.totpSecret.isNotBlank()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = CharcoalSurface),
-                    shape = RoundedCornerShape(16.dp)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = Shapes.medium
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -393,7 +392,7 @@ fun ItemDetailScreen(
                                 progress = { totp.progress },
                                 modifier = Modifier.size(16.dp),
                                 color = EmeraldPrimary,
-                                trackColor = CharcoalSurfaceVariant
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
                             )
                         }
                     }
@@ -423,8 +422,8 @@ fun ItemDetailScreen(
             // Timestamps Metadata
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = CharcoalSurface),
-                shape = RoundedCornerShape(12.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = Shapes.medium
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
@@ -486,8 +485,8 @@ fun ItemDetailScreen(
                     Text("Cancel", color = TextSecondary)
                 }
             },
-            containerColor = CharcoalSurface,
-            shape = RoundedCornerShape(18.dp)
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = Shapes.medium
         )
     }
 
@@ -616,8 +615,8 @@ private fun PlainFieldCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CharcoalSurface),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = Shapes.medium
     ) {
         Row(
             modifier = Modifier
@@ -667,8 +666,8 @@ private fun SecretFieldCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CharcoalSurface),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = Shapes.medium
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(

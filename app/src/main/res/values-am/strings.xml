@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Adere</string>
+    <string name="app_name">Adera</string>
     <string name="app_tagline">የይለፍ ቃሎች እና ሚስጥሮች ደህንነቱ የተጠበቀ ካዝና</string>
 
     <!-- Navigation -->
@@ -56,7 +56,7 @@
     <string name="master_password">ዋና ይለፍ ቃል</string>
     <string name="confirm_master_password">ዋና ይለፍ ቃል አረጋግጥ</string>
     <string name="enter_master_password">ዋና ይለፍ ቃል ያስገቡ</string>
-    <string name="biometric_prompt_title">Adere ን ይክፈቱ</string>
+    <string name="biometric_prompt_title">Adera ን ይክፈቱ</string>
     <string name="biometric_prompt_subtitle">ካዝናውን ለመክፈት የጣት አሻራዎን ያረጋግጡ</string>
     <string name="biometric_use_password">በይለፍ ቃል ክፈት</string>
     <string name="security_health_title">የደህንነት ሁኔታ</string>

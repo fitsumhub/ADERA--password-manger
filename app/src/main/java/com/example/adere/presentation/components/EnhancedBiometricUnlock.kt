@@ -172,7 +172,7 @@ private fun BiometricHeader(
 }
 
 @Composable
-private fun AnimatedBiometricIcon(
+fun AnimatedBiometricIcon(
     state: BiometricState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -423,7 +423,7 @@ private fun BiometricStateMessage(
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = CircleShape,
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.1f)
         )
@@ -460,7 +460,7 @@ private fun BiometricActionButtons(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -494,7 +494,7 @@ private fun BiometricActionButtons(
             colors = ButtonDefaults.outlinedButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary
             ),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)

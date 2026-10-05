@@ -1,6 +1,7 @@
 package com.example.adere
 
 import android.app.Application
+import com.google.android.gms.ads.MobileAds
 import com.example.adere.core.common.AdereAppContainer
 
 class AdereApplication : Application() {
@@ -10,5 +11,6 @@ class AdereApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AdereAppContainer(this)
+        MobileAds.initialize(this) {}
     }
 }

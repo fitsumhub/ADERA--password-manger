@@ -87,7 +87,7 @@ fun VaultAtmosphereBackground(
 @Composable
 fun VaultGlassCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(16.dp),
+    shape: Shape = RoundedCornerShape(8.dp),
     colors: CardColors? = null,
     borderWidth: Dp = 1.dp,
     content: @Composable () -> Unit

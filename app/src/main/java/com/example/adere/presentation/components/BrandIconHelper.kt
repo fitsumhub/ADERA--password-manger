@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.Email
@@ -17,7 +18,9 @@ import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -155,8 +158,11 @@ object BrandIconHelper {
     fun getCategoryFallbackIcon(category: VaultCategory): ImageVector {
         return when (category) {
             VaultCategory.CRYPTO -> Icons.Default.CurrencyBitcoin
+            VaultCategory.WALLETS -> Icons.Default.AccountBalanceWallet
             VaultCategory.EMAIL -> Icons.Default.Email
             VaultCategory.BANKING -> Icons.Default.AccountBalance
+            VaultCategory.WORK -> Icons.Default.Work
+            VaultCategory.SHOPPING -> Icons.Default.ShoppingCart
             VaultCategory.NOTES -> Icons.AutoMirrored.Filled.Note
             VaultCategory.WIFI -> Icons.Default.Wifi
             VaultCategory.TOTP_2FA -> Icons.Default.QrCode
@@ -165,6 +171,48 @@ object BrandIconHelper {
             VaultCategory.SOCIAL -> Icons.Default.Share
             VaultCategory.WEBSITE -> Icons.Default.Public
             else -> Icons.Default.Key
+        }
+    }
+
+    fun getCategoryEmoji(category: VaultCategory): String {
+        return when (category) {
+            VaultCategory.SOCIAL -> "🔐"
+            VaultCategory.EMAIL -> "✉️"
+            VaultCategory.BANKING -> "🏦"
+            VaultCategory.CRYPTO -> "₿"
+            VaultCategory.WALLETS -> "👛"
+            VaultCategory.WORK -> "💼"
+            VaultCategory.SHOPPING -> "🛍️"
+            VaultCategory.WEBSITE -> "🌐"
+            VaultCategory.WIFI -> "📶"
+            VaultCategory.IDENTITY -> "🪪"
+            VaultCategory.NOTES -> "📝"
+            VaultCategory.TOTP_2FA -> "🔢"
+            VaultCategory.RECOVERY -> "🛡️"
+            VaultCategory.FAVORITES -> "⭐"
+            VaultCategory.ALL -> "🗄️"
+            VaultCategory.OTHER -> "🔑"
+        }
+    }
+
+    fun getCategoryColor(category: VaultCategory): Color {
+        return when (category) {
+            VaultCategory.SOCIAL -> Color(0xFF2563EB)
+            VaultCategory.EMAIL -> Color(0xFFEA580C)
+            VaultCategory.BANKING -> Color(0xFF059669)
+            VaultCategory.CRYPTO -> Color(0xFFD97706)
+            VaultCategory.WALLETS -> Color(0xFF7C3AED)
+            VaultCategory.WORK -> Color(0xFF0284C7)
+            VaultCategory.SHOPPING -> Color(0xFFE11D48)
+            VaultCategory.WEBSITE -> Color(0xFF4F46E5)
+            VaultCategory.WIFI -> Color(0xFF0D9488)
+            VaultCategory.IDENTITY -> Color(0xFF9333EA)
+            VaultCategory.NOTES -> Color(0xFF64748B)
+            VaultCategory.TOTP_2FA -> Color(0xFFDB2777)
+            VaultCategory.RECOVERY -> Color(0xFFB45309)
+            VaultCategory.FAVORITES -> Color(0xFFF59E0B)
+            VaultCategory.ALL -> Color(0xFF10B981)
+            VaultCategory.OTHER -> Color(0xFF6B7280)
         }
     }
 }

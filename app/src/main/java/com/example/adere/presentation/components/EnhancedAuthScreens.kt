@@ -215,7 +215,7 @@ fun EnhancedMasterPasswordScreen(
                         onDone = { onUnlock() }
                     ),
                     singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = themeAccents.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -248,7 +248,7 @@ fun EnhancedMasterPasswordScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = themeAccents.primary
                     ),
@@ -455,7 +455,7 @@ fun EnhancedPasswordCreationField(
                 imeAction = ImeAction.Next
             ),
             singleLine = true,
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(8.dp)
         )
         
         // Password strength indicator
@@ -464,7 +464,6 @@ fun EnhancedPasswordCreationField(
             
             AnimatedPasswordStrengthIndicator(
                 password = password,
-                showCriteria = false,
                 animateOnAppear = true
             )
         }
@@ -498,7 +497,7 @@ fun EnhancedPasswordCreationField(
                 imeAction = ImeAction.Done
             ),
             singleLine = true,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(8.dp),
             isError = confirmPassword.isNotEmpty() && !passwordsMatch
         )
         

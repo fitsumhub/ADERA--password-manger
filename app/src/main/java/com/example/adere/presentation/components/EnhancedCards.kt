@@ -134,7 +134,7 @@ fun EnhancedVaultItemCard(
             .scale(scale.value * cardScale)
             .shadow(
                 elevation = elevation.dp,
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(8.dp),
                 spotColor = themeAccents.primary.copy(alpha = 0.25f),
                 ambientColor = themeAccents.primary.copy(alpha = 0.1f)
             )
@@ -151,7 +151,7 @@ fun EnhancedVaultItemCard(
                     onTap = { onClick() }
                 )
             },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(
@@ -173,7 +173,7 @@ fun EnhancedVaultItemCard(
                             Color.White.copy(alpha = borderAlpha * 0.5f)
                         )
                     ),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(8.dp)
                 )
         ) {
             // Subtle gradient overlay for depth
@@ -310,7 +310,7 @@ private fun VaultItemCardContent(
 }
 
 @Composable
-private fun EnhancedCategoryIcon(
+fun EnhancedCategoryIcon(
     category: VaultCategory,
     modifier: Modifier = Modifier
 ) {
@@ -319,9 +319,8 @@ private fun EnhancedCategoryIcon(
     val (icon, color) = remember(category) {
         when (category) {
             VaultCategory.SOCIAL -> Icons.Default.Person to Color(0xFF5E5CE6)
-            VaultCategory.CREDIT_CARDS -> Icons.Default.CreditCard to Color(0xFF48C9B0)
             VaultCategory.BANKING -> Icons.Default.CreditCard to Color(0xFF48C9B0)
-            VaultCategory.APPS -> Icons.Default.Security to Color(0xFFF5BA31)
+            VaultCategory.NOTES -> Icons.Default.Security to Color(0xFFF5BA31)
             VaultCategory.WEBSITE -> Icons.Default.Security to Color(0xFFF5BA31)
             VaultCategory.CRYPTO -> Icons.Default.Security to Color(0xFFFF6B6B)
             else -> Icons.Default.Security to themeAccents.primary
@@ -497,7 +496,7 @@ fun EnhancedSecurityCard(
             .scale(scale.value * cardScale)
             .shadow(
                 elevation = if (isHovered) 16.dp else 8.dp,
-                shape = RoundedCornerShape(24.dp),
+                shape = CircleShape,
                 spotColor = gradientColors.first().copy(alpha = 0.3f)
             )
             .pointerInput(Unit) {
@@ -513,7 +512,7 @@ fun EnhancedSecurityCard(
                     onTap = { onClick() }
                 )
             },
-        shape = RoundedCornerShape(24.dp),
+        shape = CircleShape,
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(
@@ -532,7 +531,7 @@ fun EnhancedSecurityCard(
                             Color.White.copy(alpha = 0.1f)
                         )
                     ),
-                    shape = RoundedCornerShape(24.dp)
+                    shape = CircleShape
                 )
         ) {
             // Animated background pattern
@@ -680,10 +679,10 @@ fun EnhancedInfoCard(
             .scale(scale.value * cardScale)
             .shadow(
                 elevation = if (isHovered) 12.dp else 4.dp,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(8.dp),
                 spotColor = accentColor.copy(alpha = 0.2f)
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         )
@@ -707,7 +706,7 @@ fun EnhancedInfoCard(
                             accentColor.copy(alpha = 0.1f)
                         )
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(8.dp)
                 )
         ) {
             Column(

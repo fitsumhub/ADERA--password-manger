@@ -1,4 +1,5 @@
 package com.example.adere.presentation.screens
+import com.example.ui.theme.Shapes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -91,25 +92,19 @@ import com.example.adere.core.crypto.TOTPGenerator
 import com.example.adere.domain.model.VaultCategory
 import com.example.adere.domain.model.VaultItem
 import com.example.adere.domain.model.VaultItemPayload
+import com.example.adere.presentation.components.AdereTopBar
 import com.example.adere.presentation.components.CategoryChip
 import com.example.adere.presentation.components.PasswordStrengthBar
 import com.example.adere.presentation.components.SecurityWarningCard
 import com.example.ui.theme.CategoryAppsYellow
 import com.example.ui.theme.CategoryCardTeal
-import com.example.ui.theme.CleanBg
-import com.example.ui.theme.CleanBorder
-import com.example.ui.theme.CleanSurface
-import com.example.ui.theme.CleanSurfaceVariant
 import com.example.ui.theme.HealthCompromisedTeal
 import com.example.ui.theme.HealthSafeBlue
 import com.example.ui.theme.SecurityOrange
 import com.example.ui.theme.SecurityRed
-import com.example.ui.theme.TextDarkMuted
-import com.example.ui.theme.TextDarkPrimary
-import com.example.ui.theme.TextDarkSecondary
-import com.example.ui.theme.TotalSecurityPrimary
-import com.example.ui.theme.TotalSecurityPrimaryContainer
 import java.util.UUID
+
+
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -188,22 +183,14 @@ fun AddEditItemScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (isEditMode) "Edit Item" else "New Vault Item",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = TextDarkPrimary
-                        )
-                    )
-                },
+            AdereTopBar(
+                title = if (isEditMode) "Edit Item" else "New Vault Item",
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextDarkPrimary
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
@@ -213,7 +200,7 @@ fun AddEditItemScreen(
                         Icon(
                             imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.FavoriteBorder,
                             contentDescription = "Toggle Favorite",
-                            tint = if (isFavorite) CategoryAppsYellow else TextDarkMuted
+                            tint = if (isFavorite) CategoryAppsYellow else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -265,10 +252,10 @@ fun AddEditItemScreen(
                             onSaveItem(item)
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = TotalSecurityPrimary,
+                            containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = Color.White
                         ),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Shapes.medium,
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .testTag("save_vault_item_button")
@@ -281,14 +268,10 @@ fun AddEditItemScreen(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Save", fontWeight = FontWeight.Bold)
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = CleanBg,
-                    titleContentColor = TextDarkPrimary
-                )
+                }
             )
         },
-        containerColor = CleanBg
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -304,7 +287,7 @@ fun AddEditItemScreen(
             Text(
                 text = "Item Category",
                 style = MaterialTheme.typography.labelMedium.copy(
-                    color = TextDarkSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -333,7 +316,7 @@ fun AddEditItemScreen(
 
             if (errorMessage != null) {
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = Shapes.medium,
                     color = Color(0xFFFEE2E2),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -349,9 +332,9 @@ fun AddEditItemScreen(
             // Title & Visual Avatar Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                shape = Shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -378,7 +361,7 @@ fun AddEditItemScreen(
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                             colors = cleanTextFieldColors(),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Shapes.medium,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("item_title_input")
@@ -393,9 +376,9 @@ fun AddEditItemScreen(
                     // Credit Card / Debit Card & Banking Form
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                        shape = Shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -422,12 +405,12 @@ fun AddEditItemScreen(
                                         text = "Payment Card & Bank Details",
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
-                                            color = TextDarkPrimary
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     )
                                     Text(
                                         text = "Hardware encrypted with zero network transmission",
-                                        style = MaterialTheme.typography.labelSmall.copy(color = TextDarkSecondary)
+                                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     )
                                 }
                             }
@@ -440,7 +423,7 @@ fun AddEditItemScreen(
                                 placeholder = { Text("e.g. ALEX MORGAN") },
                                 singleLine = true,
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -456,7 +439,7 @@ fun AddEditItemScreen(
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -476,7 +459,7 @@ fun AddEditItemScreen(
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     colors = cleanTextFieldColors(),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = Shapes.medium,
                                     modifier = Modifier.weight(1f)
                                 )
 
@@ -489,7 +472,7 @@ fun AddEditItemScreen(
                                     visualTransformation = PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                     colors = cleanTextFieldColors(),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = Shapes.medium,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -507,13 +490,13 @@ fun AddEditItemScreen(
                                         Icon(
                                             imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                                             contentDescription = if (passwordVisible) "Hide PIN" else "Show PIN",
-                                            tint = TextDarkSecondary
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -525,7 +508,7 @@ fun AddEditItemScreen(
                                 placeholder = { Text("e.g. Chase, Revolut, HSBC") },
                                 singleLine = true,
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -536,9 +519,9 @@ fun AddEditItemScreen(
                     // Identity & Official Documents
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                        shape = Shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -547,7 +530,7 @@ fun AddEditItemScreen(
                             Text(
                                 text = "Document Type",
                                 style = MaterialTheme.typography.labelMedium.copy(
-                                    color = TextDarkSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
@@ -564,7 +547,7 @@ fun AddEditItemScreen(
                                         onClick = { docType = type },
                                         label = { Text(type, fontSize = 12.sp) },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = TotalSecurityPrimary,
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
                                             selectedLabelColor = Color.White
                                         )
                                     )
@@ -577,7 +560,7 @@ fun AddEditItemScreen(
                                 label = { Text("Document / Identification Number") },
                                 singleLine = true,
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -587,7 +570,7 @@ fun AddEditItemScreen(
                                 label = { Text("Full Legal Name on Document") },
                                 singleLine = true,
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -602,9 +585,9 @@ fun AddEditItemScreen(
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                        shape = Shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -613,7 +596,7 @@ fun AddEditItemScreen(
                             Text(
                                 text = "Blockchain Network",
                                 style = MaterialTheme.typography.labelMedium.copy(
-                                    color = TextDarkSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
@@ -643,7 +626,7 @@ fun AddEditItemScreen(
                                 label = { Text("Public Wallet Address (0x... / bc1...)") },
                                 singleLine = true,
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -659,7 +642,7 @@ fun AddEditItemScreen(
                                 Text(
                                     text = "Recovery Seed Phrase (${seedWords.size} words)",
                                     style = MaterialTheme.typography.labelMedium.copy(
-                                        color = if (seedWords.size == 12 || seedWords.size == 24) Color(0xFF10B981) else TextDarkSecondary,
+                                        color = if (seedWords.size == 12 || seedWords.size == 24) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
@@ -675,10 +658,10 @@ fun AddEditItemScreen(
                             OutlinedTextField(
                                 value = cryptoSeedPhrase,
                                 onValueChange = { cryptoSeedPhrase = it },
-                                placeholder = { Text("e.g. anchor beacon citadel delta ember falcon...", color = TextDarkMuted) },
+                                placeholder = { Text("e.g. anchor beacon citadel delta ember falcon...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                 visualTransformation = if (seedPhraseVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 minLines = 3,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -690,7 +673,7 @@ fun AddEditItemScreen(
                                 singleLine = true,
                                 visualTransformation = PasswordVisualTransformation(),
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -701,9 +684,9 @@ fun AddEditItemScreen(
                     // Wi-Fi Configuration
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                        shape = Shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -715,7 +698,7 @@ fun AddEditItemScreen(
                                 label = { Text("Wi-Fi SSID (Network Name)") },
                                 singleLine = true,
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -731,7 +714,7 @@ fun AddEditItemScreen(
                                             Icon(
                                                 imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                                                 contentDescription = null,
-                                                tint = TextDarkSecondary
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                         IconButton(onClick = { 
@@ -743,20 +726,20 @@ fun AddEditItemScreen(
                                             Icon(
                                                 imageVector = Icons.Default.AutoAwesome,
                                                 contentDescription = "Generate strong Wi-Fi password",
-                                                tint = TotalSecurityPrimary
+                                                tint = MaterialTheme.colorScheme.primary
                                             )
                                         }
                                     }
                                 },
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
 
                             Text(
                                 text = "Security Protocol",
                                 style = MaterialTheme.typography.labelMedium.copy(
-                                    color = TextDarkSecondary,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
@@ -773,7 +756,7 @@ fun AddEditItemScreen(
                                         onClick = { wifiSecurityType = sec },
                                         label = { Text(sec, fontSize = 12.sp) },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = TotalSecurityPrimary,
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
                                             selectedLabelColor = Color.White
                                         )
                                     )
@@ -787,9 +770,9 @@ fun AddEditItemScreen(
                     // Standard Login Credential Fields (Social, Email, Website, etc.)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                        shape = Shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -804,8 +787,8 @@ fun AddEditItemScreen(
                                     val domains = listOf("@gmail.com", "@outlook.com", "@icloud.com", "@proton.me")
                                     for (domain in domains) {
                                         Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = CleanSurfaceVariant,
+                                            shape = Shapes.medium,
+                                            color = MaterialTheme.colorScheme.surfaceVariant,
                                             modifier = Modifier.clickable {
                                                 if (!username.contains("@")) {
                                                     username = username.trim() + domain
@@ -817,7 +800,7 @@ fun AddEditItemScreen(
                                         ) {
                                             Text(
                                                 text = domain,
-                                                color = TotalSecurityPrimary,
+                                                color = MaterialTheme.colorScheme.primary,
                                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
                                             )
@@ -834,7 +817,7 @@ fun AddEditItemScreen(
                                 singleLine = true,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("item_username_input")
@@ -857,7 +840,7 @@ fun AddEditItemScreen(
                                                 Icon(
                                                     imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                                                     contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                                    tint = TextDarkSecondary
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
                                             IconButton(onClick = { 
@@ -869,13 +852,13 @@ fun AddEditItemScreen(
                                                 Icon(
                                                     imageVector = Icons.Default.AutoAwesome,
                                                     contentDescription = "Generate strong password",
-                                                    tint = TotalSecurityPrimary
+                                                    tint = MaterialTheme.colorScheme.primary
                                                 )
                                             }
                                         }
                                     },
                                     colors = cleanTextFieldColors(),
-                                    shape = RoundedCornerShape(12.dp),
+                                    shape = Shapes.medium,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .testTag("item_password_input")
@@ -894,7 +877,7 @@ fun AddEditItemScreen(
                                 label = { Text("Website URL (e.g. https://instagram.com)") },
                                 singleLine = true,
                                 colors = cleanTextFieldColors(),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
@@ -905,21 +888,21 @@ fun AddEditItemScreen(
             // 2FA / TOTP Secret Field Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                shape = Shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Two-Factor Authenticator (TOTP 2FA)",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TextDarkPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     )
                     Text(
                         text = "Generates offline rotating 6-digit codes",
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextDarkSecondary)
+                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -930,7 +913,7 @@ fun AddEditItemScreen(
                         placeholder = { Text("Paste authenticator secret key") },
                         singleLine = true,
                         colors = cleanTextFieldColors(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Shapes.medium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("item_totp_input")
@@ -939,8 +922,8 @@ fun AddEditItemScreen(
                     if (liveTotpTest != null) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = TotalSecurityPrimaryContainer,
+                            shape = Shapes.medium,
+                            color = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
@@ -951,13 +934,13 @@ fun AddEditItemScreen(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = "Current Code: ",
-                                        style = MaterialTheme.typography.bodyMedium.copy(color = TextDarkSecondary)
+                                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     )
                                     Text(
                                         text = liveTotpTest.formattedCode,
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.ExtraBold,
-                                            color = TotalSecurityPrimary,
+                                            color = MaterialTheme.colorScheme.primary,
                                             letterSpacing = 2.sp
                                         )
                                     )
@@ -965,7 +948,7 @@ fun AddEditItemScreen(
                                 Text(
                                     text = "${liveTotpTest.secondsRemaining}s remaining",
                                     style = MaterialTheme.typography.labelSmall.copy(
-                                        color = TextDarkMuted,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
@@ -984,9 +967,9 @@ fun AddEditItemScreen(
             // Custom Secure Fields Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                shape = Shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -999,12 +982,12 @@ fun AddEditItemScreen(
                                 text = "Custom Secure Fields",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = TextDarkPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             )
                             Text(
                                 text = "Add secret questions, client IDs, or API keys",
-                                style = MaterialTheme.typography.bodySmall.copy(color = TextDarkSecondary)
+                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                             )
                         }
 
@@ -1012,7 +995,7 @@ fun AddEditItemScreen(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Add Custom Field",
-                                tint = TotalSecurityPrimary
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -1021,8 +1004,8 @@ fun AddEditItemScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         customFields.forEach { (key, value) ->
                             Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = CleanSurfaceVariant,
+                                shape = Shapes.medium,
+                                color = MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
@@ -1036,14 +1019,14 @@ fun AddEditItemScreen(
                                         Text(
                                             text = key,
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = TextDarkSecondary,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         )
                                         Text(
                                             text = value,
                                             style = MaterialTheme.typography.bodyMedium.copy(
-                                                color = TextDarkPrimary,
+                                                color = MaterialTheme.colorScheme.onSurface,
                                                 fontWeight = FontWeight.Medium
                                             )
                                         )
@@ -1069,16 +1052,16 @@ fun AddEditItemScreen(
             // Recovery Codes Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                shape = Shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Account Recovery Backup Codes",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TextDarkPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1089,10 +1072,10 @@ fun AddEditItemScreen(
                         OutlinedTextField(
                             value = newRecoveryCode,
                             onValueChange = { newRecoveryCode = it },
-                            placeholder = { Text("e.g. 1a2b-3c4d-5e6f", color = TextDarkMuted) },
+                            placeholder = { Text("e.g. 1a2b-3c4d-5e6f", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                             singleLine = true,
                             colors = cleanTextFieldColors(),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = Shapes.medium,
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -1107,7 +1090,7 @@ fun AddEditItemScreen(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Add recovery code",
-                                tint = TotalSecurityPrimary
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -1125,7 +1108,7 @@ fun AddEditItemScreen(
                                 Text(
                                     text = code,
                                     style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = TextDarkPrimary,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 )
@@ -1149,26 +1132,26 @@ fun AddEditItemScreen(
             // Secure Notes
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(CleanBorder))
+                shape = Shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Encrypted Notes",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TextDarkPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        placeholder = { Text("Enter private notes, recovery steps, or instructions...", color = TextDarkMuted) },
+                        placeholder = { Text("Enter private notes, recovery steps, or instructions...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         minLines = 3,
                         colors = cleanTextFieldColors(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = Shapes.medium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("item_notes_input")
@@ -1189,7 +1172,7 @@ fun AddEditItemScreen(
                     text = "Add Custom Field",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        color = TextDarkPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 )
             },
@@ -1205,7 +1188,7 @@ fun AddEditItemScreen(
                         placeholder = { Text("e.g. Security Answer, Client ID") },
                         singleLine = true,
                         colors = cleanTextFieldColors(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = Shapes.medium,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -1215,7 +1198,7 @@ fun AddEditItemScreen(
                         label = { Text("Field Value") },
                         singleLine = true,
                         colors = cleanTextFieldColors(),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = Shapes.medium,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -1230,28 +1213,30 @@ fun AddEditItemScreen(
                             showAddCustomFieldDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = TotalSecurityPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text("Add Field", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddCustomFieldDialog = false }) {
-                    Text("Cancel", color = TextDarkSecondary)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = CleanSurface,
-            shape = RoundedCornerShape(18.dp)
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = Shapes.medium
         )
     }
 }
 
 @Composable
 private fun cleanTextFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = TotalSecurityPrimary,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
     unfocusedBorderColor = Color.Transparent,
-    focusedContainerColor = CleanSurfaceVariant,
-    unfocusedContainerColor = CleanSurfaceVariant,
-    focusedTextColor = TextDarkPrimary,
-    unfocusedTextColor = TextDarkPrimary
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
 )
+
+

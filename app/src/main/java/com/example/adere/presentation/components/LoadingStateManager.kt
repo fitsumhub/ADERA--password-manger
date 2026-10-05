@@ -1,4 +1,5 @@
 package com.example.adere.presentation.components
+import androidx.compose.foundation.shape.CircleShape
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -187,7 +188,7 @@ fun DefaultErrorContent(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = CircleShape
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
@@ -247,7 +248,7 @@ fun DefaultEmptyContent(
         Box(
             modifier = Modifier
                 .size(64.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
@@ -278,7 +279,7 @@ private fun StateIcon(
     Box(
         modifier = modifier
             .size(64.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(backgroundColor),
         contentAlignment = Alignment.Center
     ) {
@@ -322,12 +323,24 @@ fun SecurityHealthLoadingState(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // Header skeleton
-        SectionHeaderSkeleton()
+@Composable
+fun SectionHeaderSkeleton(
+    modifier: Modifier = Modifier
+) {
+    ShimmerEffect(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .size(width = 120.dp, height = 24.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+        )
+    }
+}
         
         // Health ring skeleton
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
             )

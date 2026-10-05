@@ -16,13 +16,19 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.adere.presentation.screens.settings.components.SettingsOptionDialog
 import com.example.adere.presentation.screens.settings.components.SettingsSectionTitle
 import com.example.adere.presentation.screens.settings.components.SettingsSubHeader
 import com.example.adere.presentation.screens.settings.components.SettingsSwitchItem
 import com.example.adere.presentation.screens.settings.components.SettingsValueItem
+import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.SecurityOrange
 
 @Composable
@@ -36,12 +42,13 @@ fun PrivacySettingsScreen(
     onBackClick: () -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
+    var showClipboardDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             SettingsSubHeader(
                 title = "Privacy & Content Protection",
-                subtitle = "Screenshot lock · Clipboard auto-clear · App masking",
+                subtitle = "Screenshot lock · Clipboard auto-clear · Recent apps masking",
                 onBackClick = onBackClick
             )
         },
@@ -56,14 +63,14 @@ fun PrivacySettingsScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // ── Screen protection ─────────────────────────────────────────────
-            SettingsSectionTitle("Screen Protection")
+            SettingsSectionTitle("Screen & Visual Protection")
 
             SettingsSwitchItem(
                 icon = Icons.Default.Screenshot,
                 iconTint = SecurityOrange,
-                iconBg = SecurityOrange.copy(alpha = 0.1f),
+                iconBg = SecurityOrange.copy(alpha = 0.12f),
                 title = "Screenshot Protection",
-                subtitle = "Block screenshots & screen recording when vault is open",
+                subtitle = "Block screenshots & screen recording video streams when vault is open",
                 checked = screenshotProtectionEnabled,
                 onCheckedChange = onToggleScreenshotProtection,
                 testTag = "privacy_switch_screenshot"
@@ -72,49 +79,67 @@ fun PrivacySettingsScreen(
             SettingsSwitchItem(
                 icon = Icons.Default.Visibility,
                 iconTint = primary,
-                iconBg = primary.copy(alpha = 0.1f),
+                iconBg = primary.copy(alpha = 0.12f),
                 title = "Recent Apps Masking",
-                subtitle = "Hide vault content in Android's recent apps switcher",
+                subtitle = "Hide vault content and secrets in Android's recent apps switcher thumbnail",
                 checked = appMaskingEnabled,
                 onCheckedChange = onToggleAppMasking,
                 testTag = "privacy_switch_masking"
             )
 
             // ── Clipboard protection ──────────────────────────────────────────
-            SettingsSectionTitle("Clipboard Protection")
+            SettingsSectionTitle("Clipboard Memory Hygiene")
 
             SettingsValueItem(
                 icon = Icons.Default.ContentCopy,
-                iconTint = Color(0xFF10B981),
-                iconBg = Color(0xFF10B981).copy(alpha = 0.1f),
-                title = "Clipboard Auto-Clear",
-                subtitle = "Automatically clear copied passwords from system clipboard",
+                iconTint = EmeraldPrimary,
+                iconBg = EmeraldPrimary.copy(alpha = 0.12f),
+                title = "Clipboard Auto-Clear Timer",
+                subtitle = "Automatically wipe copied passwords and secrets from system clipboard",
                 valueText = formatClipboardClearLabel(clipboardAutoClearSeconds),
-                onClick = { /* Show clipboard clear dialog */ },
+                onClick = { showClipboardDialog = true },
                 testTag = "privacy_clipboard_item"
             )
 
             // ── Data retention ────────────────────────────────────────────────
-            SettingsSectionTitle("Data Retention")
+            SettingsSectionTitle("Session Data Retention")
 
             SettingsSwitchItem(
                 icon = Icons.Default.History,
                 iconTint = Color(0xFF6366F1),
-                iconBg = Color(0xFF6366F1).copy(alpha = 0.1f),
-                title = "Clear Search History",
-                subtitle = "Auto-clear vault search terms after session ends",
-                checked = true, // Could be configurable
-                onCheckedChange = { /* Handle */ },
+                iconBg = Color(0xFF6366F1).copy(alpha = 0.12f),
+                title = "Clear Vault Search Terms",
+                subtitle = "Auto-clear vault filter and search queries after session auto-lock",
+                checked = true,
+                onCheckedChange = { /* Configurable setting */ },
                 testTag = "privacy_switch_search_history"
             )
 
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+
+    if (showClipboardDialog) {
+        SettingsOptionDialog(
+            title = "Clipboard Auto-Clear Timer",
+            options = listOf(
+                0 to "Never auto-clear",
+                15 to "15 seconds",
+                30 to "30 seconds (Recommended)",
+                60 to "1 minute",
+                120 to "2 minutes",
+                300 to "5 minutes"
+            ),
+            selectedOption = clipboardAutoClearSeconds,
+            onSelectOption = { onSetClipboardAutoClear(it) },
+            onDismiss = { showClipboardDialog = false }
+        )
+    }
 }
 
 private fun formatClipboardClearLabel(seconds: Int): String = when (seconds) {
     0   -> "Never"
+    15  -> "15 sec"
     30  -> "30 sec"
     60  -> "1 min"
     120 -> "2 min"

@@ -163,8 +163,8 @@ fun TotalSecurityHeroIllustration(
             modifier = Modifier
                 .offset(y = phoneFloatY.dp)
                 .size(width = 114.dp, height = 186.dp)
-                .shadow(18.dp, RoundedCornerShape(22.dp), spotColor = Color(0x335E5CE6))
-                .clip(RoundedCornerShape(22.dp))
+                .shadow(18.dp, CircleShape, spotColor = Color(0x335E5CE6))
+                .clip(CircleShape)
                 .background(Color.White)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {

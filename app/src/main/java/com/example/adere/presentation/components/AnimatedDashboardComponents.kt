@@ -327,10 +327,10 @@ fun AnimatedSecuritySummaryCard(
             .fillMaxWidth()
             .scale(scale.value * cardScale)
             .offset(y = offsetY.value.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(8.dp))
             .shadow(
                 elevation = 8.dp,
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(8.dp),
                 spotColor = themeAccents.primary.copy(alpha = 0.3f)
             )
             .pointerInput(Unit) {
@@ -343,7 +343,7 @@ fun AnimatedSecuritySummaryCard(
                     onTap = { onNavigateToSecurity() }
                 )
             },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         )
@@ -463,7 +463,7 @@ fun AnimatedSearchBar(
                 )
             },
             singleLine = true,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(8.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -500,7 +500,7 @@ fun AnimatedFilterButton(onClick: () -> Unit) {
         modifier = Modifier
             .size(52.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
@@ -606,7 +606,7 @@ fun AnimatedCategoryTile(
             .offset(y = offsetY.value.dp)
             .shadow(
                 elevation = 6.dp,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(8.dp),
                 spotColor = backgroundColor.copy(alpha = 0.3f)
             )
             .pointerInput(Unit) {
@@ -619,7 +619,7 @@ fun AnimatedCategoryTile(
                     onTap = { onClick() }
                 )
             },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(

@@ -1,4 +1,5 @@
 package com.example.adere.presentation.components
+import androidx.compose.foundation.shape.CircleShape
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -82,7 +83,7 @@ fun BiometricUnlockDemo(
     } else {
         Card(
             modifier = modifier,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
@@ -176,23 +177,23 @@ fun BiometricUnlockDemo(
                                     MaterialTheme.colorScheme.surface
                                 )
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    AnimatedBiometricIcon(
-                        state = currentState,
-                        onClick = {
-                            coroutineScope.launch {
-                                currentState = BiometricState.Scanning
-                                delay(1500)
-                                currentState = BiometricState.Success
-                                delay(1500)
-                                currentState = BiometricState.Idle
-                            }
-                        },
-                        modifier = Modifier.size(120.dp)
-                    )
+                AnimatedBiometricIcon(
+                    state = currentState,
+                    onClick = {
+                        coroutineScope.launch {
+                            currentState = BiometricState.Scanning
+                            delay(1500)
+                            currentState = BiometricState.Success
+                            delay(1500)
+                            currentState = BiometricState.Idle
+                        }
+                    },
+                    modifier = Modifier.padding(120.dp)
+                )
                 }
                 
                 // Full Screen Demo Button
@@ -201,7 +202,7 @@ fun BiometricUnlockDemo(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = themeAccents.primary
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = CircleShape,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -261,7 +262,7 @@ fun CompactBiometricPrompt(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         )
@@ -276,7 +277,7 @@ fun CompactBiometricPrompt(
             AnimatedBiometricIcon(
                 state = state,
                 onClick = onBiometricClick,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.padding(48.dp)
             )
             
             Column(modifier = Modifier.weight(1f)) {

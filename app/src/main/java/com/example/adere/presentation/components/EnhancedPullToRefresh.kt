@@ -382,6 +382,7 @@ private fun SuccessCheckmark(
             lineTo(size.width * 0.8f, size.height * 0.3f)
         }
         
+        val bnds = checkPath.getBounds()
         drawPath(
             path = checkPath,
             color = color,
@@ -390,8 +391,8 @@ private fun SuccessCheckmark(
                 cap = StrokeCap.Round,
                 pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(
                     intervals = floatArrayOf(
-                        checkPath.getBounds().width() * progress.value,
-                        checkPath.getBounds().width()
+                        bnds.width * progress.value,
+                        bnds.width
                     )
                 )
             )
@@ -408,22 +409,22 @@ private fun ErrorIcon(
         modifier = modifier.size(24.dp)
     ) {
         val strokeWidth = 3.dp.toPx()
-        val size = size.minDimension * 0.6f
+        val iconSize = size.minDimension * 0.6f
         val center = Offset(size.width / 2, size.height / 2)
         
         // Draw X
         drawLine(
             color = color,
-            start = Offset(center.x - size / 2, center.y - size / 2),
-            end = Offset(center.x + size / 2, center.y + size / 2),
+            start = Offset(center.x - iconSize / 2, center.y - iconSize / 2),
+            end = Offset(center.x + iconSize / 2, center.y + iconSize / 2),
             strokeWidth = strokeWidth,
             cap = StrokeCap.Round
         )
         
         drawLine(
             color = color,
-            start = Offset(center.x + size / 2, center.y - size / 2),
-            end = Offset(center.x - size / 2, center.y + size / 2),
+            start = Offset(center.x + iconSize / 2, center.y - iconSize / 2),
+            end = Offset(center.x - iconSize / 2, center.y + iconSize / 2),
             strokeWidth = strokeWidth,
             cap = StrokeCap.Round
         )

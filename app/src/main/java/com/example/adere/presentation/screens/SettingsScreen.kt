@@ -6,13 +6,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.adere.core.backup.BackupManager
 import com.example.adere.core.backup.PdfExportManager
-import com.example.adere.core.crypto.PasswordGenerator
+import com.example.adere.domain.model.BackupHistoryEntry
 import com.example.adere.presentation.screens.settings.AboutScreen
 import com.example.adere.presentation.screens.settings.AppearanceSettingsScreen
 import com.example.adere.presentation.screens.settings.BackupRestoreScreen
-import com.example.adere.presentation.screens.settings.DangerZoneScreen
-import com.example.adere.presentation.screens.settings.GeneratorSettingsScreen
 import com.example.adere.presentation.screens.settings.HelpSupportScreen
 import com.example.adere.presentation.screens.settings.NotificationSettingsScreen
 import com.example.adere.presentation.screens.settings.PrivacySettingsScreen
@@ -33,22 +32,40 @@ fun SettingsScreen(
     hideRecentAppsContent: Boolean = false,
     notificationsEnabled: Boolean = true,
     themePalette: VaultThemePalette = VaultThemePalette.TOTAL_SECURITY,
-    generatorOptions: PasswordGenerator.GeneratorOptions = PasswordGenerator.GeneratorOptions(),
     onSelectThemePalette: (VaultThemePalette) -> Unit = {},
-    onToggleBiometric: (Boolean) -> Unit = {},
-    onSetAutoLockSeconds: (Int) -> Unit = {},
+    onToggleBiometric: (Boolean, (Result<Unit>) -> Unit) -> Unit,
+    onSetAutoLockSeconds: (Int, (Result<Unit>) -> Unit) -> Unit,
+    onRefreshBiometricState: () -> Unit,
     onToggleScreenshotProtection: (Boolean) -> Unit = {},
     onSetClipboardClearSeconds: (Int) -> Unit = {},
     onToggleHideRecentApps: (Boolean) -> Unit = {},
+    onViewFAQ: () -> Unit = {},
+    onViewSecurityGuide: () -> Unit = {},
+    onContactSupport: () -> Unit = {},
+    onReportBug: () -> Unit = {},
+    onRateApp: () -> Unit = {},
+    onJoinCommunity: () -> Unit = {},
+    onViewArchitecture: () -> Unit = {},
+    onViewPrivacyPolicy: () -> Unit = {},
+    onViewTermsOfService: () -> Unit = {},
+    onViewLicenses: () -> Unit = {},
+    onCheckUpdates: () -> Unit = {},
     onToggleNotifications: (Boolean) -> Unit = {},
-    onUpdateGeneratorOptions: (PasswordGenerator.GeneratorOptions) -> Unit = {},
     onChangeMasterPassword: (old: String, new: String, (Result<Unit>) -> Unit) -> Unit = { _, _, cb -> cb(Result.success(Unit)) },
+    lastBackupTimestamp: Long = 0L,
+    backupHistory: List<BackupHistoryEntry> = emptyList(),
+    onClearBackupHistory: (() -> Unit)? = null,
+    onTriggerBiometrics: (() -> Unit)? = null,
+    onAuthenticateSensitiveAction: ((title: String, subtitle: String, onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit)? = null,
+    onVerifyMasterPassword: ((password: String, (Boolean) -> Unit) -> Unit)? = null,
     onExportBackup: (passphrase: String, (Result<String>) -> Unit) -> Unit = { _, cb -> cb(Result.success("")) },
     onRestoreBackup: (content: String, passphrase: String, (Result<Int>) -> Unit) -> Unit = { _, _, cb -> cb(Result.success(0)) },
+    onRestoreBackupWithMode: ((content: String, passphrase: String, mode: BackupManager.RestoreMode, (Result<Int>) -> Unit) -> Unit)? = null,
+    onPreviewBackup: ((content: String, passphrase: String, (Result<BackupManager.RestorePreview>) -> Unit) -> Unit)? = null,
     onExportPdf: (options: PdfExportManager.ExportOptions, isShare: Boolean) -> Unit = { _, _ -> },
     onGetRecoveryKey: () -> Result<String> = { Result.failure(IllegalStateException()) },
     onRegenerateRecoveryKey: ((Result<String>) -> Unit) -> Unit = {},
-    onResetVault: () -> Unit = {}
+    onLockClick: () -> Unit = {}
 ) {
     var activeCategory by remember { mutableStateOf<SettingsCategory?>(null) }
 
@@ -64,7 +81,8 @@ fun SettingsScreen(
                 totalCredentialsCount = totalCredentialsCount,
                 favoritesCount = favoritesCount,
                 isVaultProtected = isVaultProtected,
-                onNavigateCategory = { cat -> activeCategory = cat }
+                onNavigateCategory = { cat -> activeCategory = cat },
+                onQuickLock = onLockClick
             )
         }
 
@@ -74,6 +92,7 @@ fun SettingsScreen(
                 autoLockSeconds = autoLockSeconds,
                 onToggleBiometric = onToggleBiometric,
                 onSetAutoLockSeconds = onSetAutoLockSeconds,
+                onRefreshBiometricState = onRefreshBiometricState,
                 onChangeMasterPassword = onChangeMasterPassword,
                 onGetRecoveryKey = onGetRecoveryKey,
                 onRegenerateRecoveryKey = onRegenerateRecoveryKey,
@@ -83,21 +102,32 @@ fun SettingsScreen(
 
         SettingsCategory.PRIVACY -> {
             PrivacySettingsScreen(
-                screenshotProtection = screenshotProtection,
-                clipboardClearSeconds = clipboardClearSeconds,
-                hideRecentAppsContent = hideRecentAppsContent,
+                screenshotProtectionEnabled = screenshotProtection,
+                appMaskingEnabled = hideRecentAppsContent,
+                clipboardAutoClearSeconds = clipboardClearSeconds,
                 onToggleScreenshotProtection = onToggleScreenshotProtection,
-                onSetClipboardClearSeconds = onSetClipboardClearSeconds,
-                onToggleHideRecentApps = onToggleHideRecentApps,
+                onToggleAppMasking = onToggleHideRecentApps,
+                onSetClipboardAutoClear = onSetClipboardClearSeconds,
                 onBackClick = { activeCategory = null }
             )
         }
 
         SettingsCategory.BACKUP_RESTORE -> {
             BackupRestoreScreen(
+                vaultItemsCount = totalCredentialsCount,
+                lastBackupTimestamp = lastBackupTimestamp,
+                backupHistory = backupHistory,
                 onExportBackup = onExportBackup,
                 onRestoreBackup = onRestoreBackup,
+                onRestoreBackupWithMode = onRestoreBackupWithMode,
+                onPreviewBackup = onPreviewBackup,
                 onExportPdf = onExportPdf,
+                onTriggerBiometrics = onTriggerBiometrics,
+                onAuthenticateSensitiveAction = onAuthenticateSensitiveAction,
+                onVerifyMasterPassword = onVerifyMasterPassword,
+                onClearBackupHistory = onClearBackupHistory,
+                onGetRecoveryKey = onGetRecoveryKey,
+                onRegenerateRecoveryKey = onRegenerateRecoveryKey,
                 onBackClick = { activeCategory = null }
             )
         }
@@ -106,14 +136,6 @@ fun SettingsScreen(
             AppearanceSettingsScreen(
                 currentPalette = themePalette,
                 onSelectThemePalette = onSelectThemePalette,
-                onBackClick = { activeCategory = null }
-            )
-        }
-
-        SettingsCategory.GENERATOR -> {
-            GeneratorSettingsScreen(
-                generatorOptions = generatorOptions,
-                onUpdateGeneratorOptions = onUpdateGeneratorOptions,
                 onBackClick = { activeCategory = null }
             )
         }
@@ -128,21 +150,26 @@ fun SettingsScreen(
 
         SettingsCategory.HELP_SUPPORT -> {
             HelpSupportScreen(
+                onViewFAQ = onViewFAQ,
+                onViewSecurityGuide = onViewSecurityGuide,
+                onContactSupport = onContactSupport,
+                onReportBug = onReportBug,
+                onRateApp = onRateApp,
+                onJoinCommunity = onJoinCommunity,
                 onBackClick = { activeCategory = null }
             )
         }
 
         SettingsCategory.ABOUT -> {
             AboutScreen(
+                onViewArchitecture = onViewArchitecture,
+                onViewPrivacyPolicy = onViewPrivacyPolicy,
+                onViewTermsOfService = onViewTermsOfService,
+                onViewLicenses = onViewLicenses,
+                onCheckUpdates = onCheckUpdates,
                 onBackClick = { activeCategory = null }
             )
         }
 
-        SettingsCategory.DANGER_ZONE -> {
-            DangerZoneScreen(
-                onResetVault = onResetVault,
-                onBackClick = { activeCategory = null }
-            )
-        }
     }
 }

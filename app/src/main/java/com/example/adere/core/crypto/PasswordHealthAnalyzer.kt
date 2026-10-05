@@ -109,7 +109,18 @@ object PasswordHealthAnalyzer {
             else -> SecurityStatus.ATTENTION_REQUIRED
         }
 
-        val rating = if (scorePercent >= 60) "10 / 10" else "${(scorePercent / 10).coerceIn(1, 10)} / 10"
+        val rating = when {
+            scorePercent >= 95 -> "10 / 10"
+            scorePercent >= 85 -> "9 / 10"
+            scorePercent >= 75 -> "8 / 10"
+            scorePercent >= 65 -> "7 / 10"
+            scorePercent >= 55 -> "6 / 10"
+            scorePercent >= 45 -> "5 / 10"
+            scorePercent >= 35 -> "4 / 10"
+            scorePercent >= 25 -> "3 / 10"
+            scorePercent >= 15 -> "2 / 10"
+            else -> "1 / 10"
+        }
 
         return VaultHealthReport(
             totalItems = items.size,

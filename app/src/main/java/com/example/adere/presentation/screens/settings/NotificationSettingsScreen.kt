@@ -1,4 +1,5 @@
 package com.example.adere.presentation.screens.settings
+import com.example.ui.theme.Shapes
 
 import android.Manifest
 import android.content.Intent
@@ -100,7 +101,7 @@ fun NotificationSettingsScreen(
             if (!hasSystemPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 Card(
                     modifier = Modifier.fillMaxWidth().testTag("notification_permission_banner"),
-                    shape = RoundedCornerShape(18.dp),
+                    shape = Shapes.medium,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, SecurityOrange.copy(alpha = 0.4f))
                 ) {
@@ -170,7 +171,7 @@ fun NotificationSettingsScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = Shapes.medium,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {

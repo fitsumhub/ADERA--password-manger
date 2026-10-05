@@ -36,6 +36,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Card
@@ -132,8 +134,8 @@ fun EnhancedSecretField(
                 scaleX = scale
                 scaleY = scale
             }
-            .shadow(elevation, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
+            .shadow(elevation, RoundedCornerShape(8.dp)),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -296,7 +298,7 @@ fun EnhancedSecretField(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(CircleShape)
                             .background(
                                 brush = Brush.horizontalGradient(
                                     colors = listOf(
@@ -308,7 +310,7 @@ fun EnhancedSecretField(
                             .border(
                                 width = 1.dp,
                                 color = themeAccents.primary.copy(alpha = 0.15f),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = CircleShape
                             )
                             .padding(14.dp)
                     ) {
@@ -330,7 +332,7 @@ fun EnhancedSecretField(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                             .padding(14.dp)
                     ) {
@@ -543,7 +545,7 @@ fun EnhancedItemHeader(
                 scaleX = scale
                 scaleY = scale
             },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -624,7 +626,7 @@ fun EnhancedItemHeader(
                         label = "favorite_icon"
                     ) { favorite ->
                         Icon(
-                            imageVector = if (favorite) Icons.Default.Star else Icons.Default.StarBorder,
+                            imageVector = if (favorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = if (favorite) "Remove Favorite" else "Add Favorite",
                             tint = if (favorite) Color(0xFFFBBF24) else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(26.dp)

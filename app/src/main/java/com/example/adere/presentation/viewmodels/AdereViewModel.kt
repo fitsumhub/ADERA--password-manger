@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.adere.core.backup.BackupManager
-import com.example.adere.core.crypto.PasswordGenerator
 import com.example.adere.core.crypto.PasswordHealthAnalyzer
 import com.example.adere.core.crypto.TOTPGenerator
 import com.example.adere.data.local.VaultConfigStore
+import com.example.adere.domain.model.BackupHistoryEntry
 import com.example.adere.domain.model.VaultCategory
 import com.example.adere.domain.model.VaultItem
 import com.example.adere.domain.repository.VaultLockState
@@ -78,22 +78,6 @@ class AdereViewModel(
     private val _totpMap = MutableStateFlow<Map<String, TOTPGenerator.TotpResult>>(emptyMap())
     val totpMap: StateFlow<Map<String, TOTPGenerator.TotpResult>> = _totpMap.asStateFlow()
 
-    // Generator state
-    private val initialGenOptions = PasswordGenerator.GeneratorOptions(
-        length = configStore.generatorLength,
-        includeUppercase = configStore.generatorIncludeUppercase,
-        includeLowercase = configStore.generatorIncludeLowercase,
-        includeDigits = configStore.generatorIncludeDigits,
-        includeSymbols = configStore.generatorIncludeSymbols,
-        excludeAmbiguous = configStore.generatorExcludeAmbiguous
-    )
-
-    private val _generatorOptions = MutableStateFlow(initialGenOptions)
-    val generatorOptions: StateFlow<PasswordGenerator.GeneratorOptions> = _generatorOptions.asStateFlow()
-
-    private val _generatedResult = MutableStateFlow(PasswordGenerator.generate(initialGenOptions))
-    val generatedResult: StateFlow<PasswordGenerator.GenerationResult> = _generatedResult.asStateFlow()
-
     // Settings observable state
     private val _autoLockSeconds = MutableStateFlow(configStore.autoLockSeconds)
     val autoLockSeconds: StateFlow<Int> = _autoLockSeconds.asStateFlow()
@@ -104,7 +88,7 @@ class AdereViewModel(
     private val _clipboardClearSeconds = MutableStateFlow(configStore.clipboardClearSeconds)
     val clipboardClearSeconds: StateFlow<Int> = _clipboardClearSeconds.asStateFlow()
 
-    private val _biometricEnabled = MutableStateFlow(configStore.isBiometricEnabled)
+    private val _biometricEnabled = MutableStateFlow(sessionManager.isBiometricEnabled())
     val biometricEnabled: StateFlow<Boolean> = _biometricEnabled.asStateFlow()
 
     private val _notificationsEnabled = MutableStateFlow(configStore.isNotificationsEnabled)
@@ -122,7 +106,20 @@ class AdereViewModel(
     )
     val themePalette: StateFlow<com.example.ui.theme.VaultThemePalette> = _themePalette.asStateFlow()
 
+    private val _backupHistory = MutableStateFlow<List<BackupHistoryEntry>>(configStore.getBackupHistory())
+    val backupHistory: StateFlow<List<BackupHistoryEntry>> = _backupHistory.asStateFlow()
+
+    private val _lastBackupTimestamp = MutableStateFlow<Long>(configStore.lastBackupTimestamp)
+    val lastBackupTimestamp: StateFlow<Long> = _lastBackupTimestamp.asStateFlow()
+
     init {
+        viewModelScope.launch {
+            while (isActive) {
+                sessionManager.checkAutoLock()
+                delay(1_000)
+            }
+        }
+
         // Periodic TOTP refresh ticker
         viewModelScope.launch(Dispatchers.Default) {
             while (isActive) {
@@ -184,13 +181,32 @@ class AdereViewModel(
     fun unlockWithPassword(password: String, onResult: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
             val res = sessionManager.unlockWithMasterPassword(password.toCharArray())
+            _biometricEnabled.value = sessionManager.isBiometricEnabled()
             onResult(res)
+        }
+    }
+
+    fun verifyMasterPassword(password: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.Default) {
+            val valid = sessionManager.verifyMasterPassword(password.toCharArray())
+            withContext(Dispatchers.Main) {
+                onResult(valid)
+            }
         }
     }
 
     fun unlockWithBiometric(authorizedCipher: javax.crypto.Cipher, onResult: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
             val res = sessionManager.unlockWithBiometric(authorizedCipher)
+            _biometricEnabled.value = sessionManager.isBiometricEnabled()
+            onResult(res)
+        }
+    }
+
+    fun unlockWithBiometricAuth(onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val res = sessionManager.unlockWithBiometricAuth()
+            _biometricEnabled.value = sessionManager.isBiometricEnabled()
             onResult(res)
         }
     }
@@ -201,6 +217,7 @@ class AdereViewModel(
     fun recoverVaultWithKey(recoveryKey: String, newMasterPassword: String, onResult: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
             val res = sessionManager.recoverVaultWithKey(recoveryKey, newMasterPassword.toCharArray())
+            _biometricEnabled.value = configStore.isBiometricEnabled
             onResult(res)
         }
     }
@@ -218,6 +235,7 @@ class AdereViewModel(
 
     fun lockVault() {
         sessionManager.lock()
+        _biometricEnabled.value = sessionManager.isBiometricEnabled()
     }
 
     fun saveItem(item: VaultItem, onResult: (Result<Unit>) -> Unit = {}) {
@@ -243,27 +261,50 @@ class AdereViewModel(
         }
     }
 
-    // Generator methods
-    fun updateGeneratorOptions(newOptions: PasswordGenerator.GeneratorOptions) {
-        configStore.generatorLength = newOptions.length
-        configStore.generatorIncludeUppercase = newOptions.includeUppercase
-        configStore.generatorIncludeLowercase = newOptions.includeLowercase
-        configStore.generatorIncludeDigits = newOptions.includeDigits
-        configStore.generatorIncludeSymbols = newOptions.includeSymbols
-        configStore.generatorExcludeAmbiguous = newOptions.excludeAmbiguous
-        _generatorOptions.value = newOptions
-        regeneratePassword()
-    }
-
-    fun regeneratePassword() {
-        _generatedResult.value = PasswordGenerator.generate(_generatorOptions.value)
-    }
-
     // Backup & Restore
+    fun refreshBackupHistory() {
+        _backupHistory.value = configStore.getBackupHistory()
+        _lastBackupTimestamp.value = configStore.lastBackupTimestamp
+    }
+
+    fun clearBackupHistory() {
+        configStore.clearBackupHistory()
+        _backupHistory.value = emptyList<BackupHistoryEntry>()
+    }
+
+    fun inspectBackupHeader(content: String): Result<BackupManager.BackupHeaderInfo> {
+        return BackupManager.validateBackupHeader(content)
+    }
+
+    fun previewBackup(
+        content: String,
+        passphrase: String,
+        onResult: (Result<BackupManager.RestorePreview>) -> Unit
+    ) {
+        viewModelScope.launch {
+            sessionManager.recordInteraction()
+            val res = repository.validateBackup(content, passphrase.toCharArray())
+            onResult(res)
+        }
+    }
+
     fun exportBackup(passphrase: String, onResult: (Result<BackupManager.BackupExportResult>) -> Unit) {
         viewModelScope.launch {
             sessionManager.recordInteraction()
             val res = repository.exportEncryptedBackup(passphrase.toCharArray())
+            if (res.isSuccess) {
+                val exportData = res.getOrThrow()
+                val entry = BackupHistoryEntry(
+                    id = java.util.UUID.randomUUID().toString(),
+                    timestamp = exportData.timestamp,
+                    itemCount = exportData.itemCount,
+                    fileSizeBytes = exportData.fileSizeBytes,
+                    actionType = com.example.adere.domain.model.BackupActionType.BACKUP_CREATED,
+                    fileName = exportData.defaultFileName
+                )
+                configStore.addBackupHistoryEntry(entry)
+                refreshBackupHistory()
+            }
             onResult(res)
         }
     }
@@ -280,12 +321,38 @@ class AdereViewModel(
         }
     }
 
-    fun restoreBackup(content: String, passphrase: String, onResult: (Result<Int>) -> Unit) {
+    fun restoreBackupWithMode(
+        content: String,
+        passphrase: String,
+        mode: BackupManager.RestoreMode,
+        fileName: String = "Adere_Backup.adere",
+        onResult: (Result<Int>) -> Unit
+    ) {
         viewModelScope.launch {
             sessionManager.recordInteraction()
-            val res = repository.restoreFromEncryptedBackup(content, passphrase.toCharArray())
+            val res = repository.restoreFromEncryptedBackup(content, passphrase.toCharArray(), mode)
+            if (res.isSuccess) {
+                val count = res.getOrThrow()
+                val entry = BackupHistoryEntry(
+                    id = java.util.UUID.randomUUID().toString(),
+                    timestamp = System.currentTimeMillis(),
+                    itemCount = count,
+                    fileSizeBytes = content.toByteArray(Charsets.UTF_8).size.toLong(),
+                    actionType = if (mode == BackupManager.RestoreMode.REPLACE)
+                        com.example.adere.domain.model.BackupActionType.BACKUP_RESTORED_REPLACE
+                    else
+                        com.example.adere.domain.model.BackupActionType.BACKUP_RESTORED_MERGE,
+                    fileName = fileName
+                )
+                configStore.addBackupHistoryEntry(entry)
+                refreshBackupHistory()
+            }
             onResult(res)
         }
+    }
+
+    fun restoreBackup(content: String, passphrase: String, onResult: (Result<Int>) -> Unit) {
+        restoreBackupWithMode(content, passphrase, BackupManager.RestoreMode.MERGE, onResult = onResult)
     }
 
     fun changeMasterPassword(oldPass: String, newPass: String, onResult: (Result<Unit>) -> Unit) {
@@ -298,14 +365,36 @@ class AdereViewModel(
     fun setBiometric(enabled: Boolean, onResult: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
             val res = sessionManager.setBiometricEnabled(enabled)
-            _biometricEnabled.value = configStore.isBiometricEnabled
+            _biometricEnabled.value = sessionManager.isBiometricEnabled()
             onResult(res)
         }
     }
 
-    fun setAutoLockSeconds(seconds: Int) {
-        configStore.autoLockSeconds = seconds
-        _autoLockSeconds.value = seconds
+    fun refreshBiometricState() {
+        if (sessionManager.isBiometricEnabled()) {
+            sessionManager.prepareBiometricCipher()
+        }
+        _biometricEnabled.value = sessionManager.isBiometricEnabled()
+    }
+
+    fun setAutoLockSeconds(seconds: Int, onResult: (Result<Unit>) -> Unit = {}) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    check(seconds in VaultConfigStore.AUTO_LOCK_OPTIONS_SECONDS) {
+                        "Unsupported auto-lock interval."
+                    }
+                    check(configStore.persistAutoLockSeconds(seconds)) {
+                        "Auto-lock settings could not be saved."
+                    }
+                }
+            }
+            if (result.isSuccess) {
+                sessionManager.recordInteraction()
+                _autoLockSeconds.value = seconds
+            }
+            onResult(result)
+        }
     }
 
     fun setScreenshotProtection(enabled: Boolean) {
@@ -331,15 +420,6 @@ class AdereViewModel(
     fun setThemePalette(palette: com.example.ui.theme.VaultThemePalette) {
         configStore.themePalette = palette.name
         _themePalette.value = palette
-    }
-
-    fun resetVault(onComplete: () -> Unit) {
-        viewModelScope.launch {
-            repository.deleteAllItems()
-            configStore.resetVault()
-            sessionManager.lock()
-            onComplete()
-        }
     }
 
     class Factory(

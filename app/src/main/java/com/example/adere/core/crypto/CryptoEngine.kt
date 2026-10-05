@@ -29,6 +29,7 @@ object CryptoEngine {
 
     const val PBKDF2_ITERATIONS = 100_000
     const val KEY_SIZE_BITS = 256
+    const val KDF_DISPLAY_NAME = "PBKDF2-HMAC-SHA256"
     const val SALT_SIZE_BYTES = 32
     const val GCM_IV_SIZE_BYTES = 12
     const val GCM_TAG_LENGTH_BITS = 128

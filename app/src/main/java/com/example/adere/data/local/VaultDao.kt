@@ -39,4 +39,10 @@ interface VaultDao {
 
     @Query("SELECT COUNT(*) FROM vault_items")
     suspend fun getItemCount(): Int
+
+    @androidx.room.Transaction
+    suspend fun replaceAll(items: List<VaultItemEntity>) {
+        deleteAll()
+        insertAll(items)
+    }
 }

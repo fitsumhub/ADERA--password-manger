@@ -1,10 +1,12 @@
 package com.example.adere.presentation.screens.settings
+import com.example.ui.theme.Shapes
+import androidx.compose.foundation.shape.CircleShape
 
-import android.content.Intent
+import android.content.Context
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,43 +24,34 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Key
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -67,43 +60,161 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.adere.core.backup.BackupManager
 import com.example.adere.core.backup.PdfExportManager
+import com.example.adere.domain.model.BackupHistoryEntry
+import com.example.adere.presentation.screens.settings.backup.components.AuthenticationBottomSheet
+import com.example.adere.presentation.screens.settings.backup.components.BackupActionCard
+import com.example.adere.presentation.screens.settings.backup.components.BackupHistoryCard
+import com.example.adere.presentation.screens.settings.backup.components.BackupProgressDialog
+import com.example.adere.presentation.screens.settings.backup.components.BackupStepState
+import com.example.adere.presentation.screens.settings.backup.components.BackupSuccessDialog
+import com.example.adere.presentation.screens.settings.backup.components.ExportOptionsDialog
+import com.example.adere.presentation.screens.settings.backup.components.PdfExportCard
+import com.example.adere.presentation.screens.settings.backup.components.RestoreActionCard
+import com.example.adere.presentation.screens.settings.backup.components.RestorePreviewDialog
+import com.example.adere.presentation.screens.settings.backup.components.RestoreSuccessDialog
+import com.example.adere.presentation.screens.settings.backup.components.SecureShareHelper
+import com.example.adere.presentation.screens.settings.backup.components.SecurityStatusCard
+import com.example.adere.presentation.screens.settings.backup.components.rememberSecureFilePickerLauncher
 import com.example.adere.presentation.screens.settings.components.SettingsItemCard
 import com.example.adere.presentation.screens.settings.components.SettingsSectionTitle
 import com.example.adere.presentation.screens.settings.components.SettingsSubHeader
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.HealthRiskRed
 import com.example.ui.theme.TotalSecurityPrimary
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStream
 
 @Composable
 fun BackupRestoreScreen(
+    vaultItemsCount: Int = 0,
+    lastBackupTimestamp: Long = 0L,
+    backupHistory: List<BackupHistoryEntry> = emptyList(),
     onExportBackup: (passphrase: String, (Result<String>) -> Unit) -> Unit,
     onRestoreBackup: (content: String, passphrase: String, (Result<Int>) -> Unit) -> Unit,
+    onRestoreBackupWithMode: ((content: String, passphrase: String, mode: BackupManager.RestoreMode, (Result<Int>) -> Unit) -> Unit)? = null,
+    onPreviewBackup: ((content: String, passphrase: String, (Result<BackupManager.RestorePreview>) -> Unit) -> Unit)? = null,
     onExportPdf: (options: PdfExportManager.ExportOptions, isShare: Boolean) -> Unit,
+    onTriggerBiometrics: (() -> Unit)? = null,
+    onAuthenticateSensitiveAction: ((title: String, subtitle: String, onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit)? = null,
+    onVerifyMasterPassword: ((password: String, (Boolean) -> Unit) -> Unit)? = null,
+    onClearBackupHistory: (() -> Unit)? = null,
     onGetRecoveryKey: (() -> Result<String>)? = null,
     onRegenerateRecoveryKey: (((Result<String>) -> Unit) -> Unit)? = null,
     onBackClick: () -> Unit
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val coroutineScope = rememberCoroutineScope()
 
-    var showExportDialog by remember { mutableStateOf(false) }
-    var showRestoreDialog by remember { mutableStateOf(false) }
+    // Authentication bottom sheet state
+    var showAuthBottomSheet by remember { mutableStateOf(false) }
+    var authTargetAction by remember { mutableStateOf<AuthAction?>(null) }
+    var authErrorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Backup creation flow state
+    var showBackupConfirmDialog by remember { mutableStateOf(false) }
+    var backupPassphraseInput by remember { mutableStateOf("") }
+    var isBackingUp by remember { mutableStateOf(false) }
+    var showBackupProgressDialog by remember { mutableStateOf(false) }
+    var backupPrepStep by remember { mutableStateOf(BackupStepState.PENDING) }
+    var backupEncryptStep by remember { mutableStateOf(BackupStepState.PENDING) }
+    var backupCreateStep by remember { mutableStateOf(BackupStepState.PENDING) }
+    var backupVerifyStep by remember { mutableStateOf(BackupStepState.PENDING) }
+    var createdBackupContent by remember { mutableStateOf<String?>(null) }
+    var createdBackupFileName by remember { mutableStateOf("") }
+    var createdBackupSize by remember { mutableStateOf(0L) }
+    var showBackupSuccessDialog by remember { mutableStateOf(false) }
+
+    // Pending file saving Uri target
+    var pendingBackupContentToSave by remember { mutableStateOf<String?>(null) }
+
+    // Restore flow state
+    var selectedRestoreContent by remember { mutableStateOf<String?>(null) }
+    var showRestorePassphraseDialog by remember { mutableStateOf(false) }
+    var restorePassphraseInput by remember { mutableStateOf("") }
+    var isVerifyingRestoreFile by remember { mutableStateOf(false) }
+    var activeRestorePreview by remember { mutableStateOf<BackupManager.RestorePreview?>(null) }
+    var showRestoreSuccessDialog by remember { mutableStateOf(false) }
+    var lastRestoredCount by remember { mutableStateOf(0) }
+    var lastRestoredMode by remember { mutableStateOf(BackupManager.RestoreMode.MERGE) }
+
+    // PDF Export options state
     var showPdfOptionsDialog by remember { mutableStateOf(false) }
-    var showExportResultDialog by remember { mutableStateOf<String?>(null) }
+
+    // Master Recovery Key dialog states
     var showRecoveryKeyDialog by remember { mutableStateOf(false) }
     var showRegenerateConfirmDialog by remember { mutableStateOf(false) }
     var currentRecoveryKey by remember { mutableStateOf("") }
 
+    // Setup Storage Access Framework (SAF) file pickers
+    val filePickerState = rememberSecureFilePickerLauncher(
+        onBackupFileSelectedForSave = { uri ->
+            val content = pendingBackupContentToSave ?: createdBackupContent
+            if (content != null) {
+                try {
+                    context.contentResolver.openOutputStream(uri)?.use { out: OutputStream ->
+                        out.write(content.toByteArray(Charsets.UTF_8))
+                        out.flush()
+                    }
+                    Toast.makeText(context, "Encrypted backup saved successfully", Toast.LENGTH_LONG).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Failed to save file: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        },
+        onBackupFileSelectedForRestore = { uri ->
+            try {
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val reader = BufferedReader(InputStreamReader(stream, Charsets.UTF_8))
+                    val content = reader.readText()
+                    // Inspect file header immediately
+                    val headerCheck = BackupManager.validateBackupHeader(content)
+                    if (headerCheck.isSuccess) {
+                        selectedRestoreContent = content
+                        showRestorePassphraseDialog = true
+                    } else {
+                        Toast.makeText(
+                            context,
+                            headerCheck.exceptionOrNull()?.message ?: "Not a valid Adere backup file",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error reading backup file: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        },
+        onPdfFileSelectedForSave = { /* Handled via Activity launcher */ }
+    )
+
+    // Trigger sensitive action following authentication
+    val onAuthSuccess = {
+        showAuthBottomSheet = false
+        authErrorMessage = null
+        when (authTargetAction) {
+            AuthAction.CREATE_BACKUP -> {
+                backupPassphraseInput = ""
+                showBackupConfirmDialog = true
+            }
+            AuthAction.EXPORT_PDF -> {
+                showPdfOptionsDialog = true
+            }
+            null -> {}
+        }
+    }
+
     Scaffold(
         topBar = {
             SettingsSubHeader(
-                title = "Backup & Vault Recovery",
-                subtitle = "Zero-knowledge backups, Emergency Master Recovery Key & PDF archive",
+                title = "Backup & Export",
+                subtitle = "Protect, restore, or securely export your vault.",
                 onBackClick = onBackClick
             )
         },
@@ -114,806 +225,602 @@ fun BackupRestoreScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            // Status Banner Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, EmeraldPrimary.copy(alpha = 0.4f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(18.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(EmeraldPrimary.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Security,
-                            contentDescription = null,
-                            tint = EmeraldPrimary,
-                            modifier = Modifier.size(26.dp)
+            // ── 1. Security Status Hero Card ─────────────────────────────────
+            SecurityStatusCard(
+                vaultItemsCount = vaultItemsCount,
+                lastBackupTimestamp = lastBackupTimestamp,
+                isVaultUnlocked = true
+            )
+
+            // ── 2. BACKUP Section ────────────────────────────────────────────
+            SettingsSectionTitle("BACKUP")
+
+            BackupActionCard(
+                vaultItemsCount = vaultItemsCount,
+                lastBackupTimestamp = lastBackupTimestamp,
+                isProcessing = isBackingUp,
+                onStartBackup = {
+                    authTargetAction = AuthAction.CREATE_BACKUP
+                    authErrorMessage = null
+                    if (onAuthenticateSensitiveAction != null) {
+                        onAuthenticateSensitiveAction(
+                            "Authenticate to Back Up",
+                            "Verify your identity before creating a secure vault backup.",
+                            { onAuthSuccess() },
+                            { error ->
+                                authErrorMessage = error
+                                showAuthBottomSheet = true
+                            }
                         )
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Zero-Knowledge Protection Active",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 15.sp
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "AES-256-GCM encryption • Argon2id key derivation • Offline first",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 12.sp
-                            )
-                        )
+                    } else {
+                        showAuthBottomSheet = true
                     }
                 }
-            }
-
-            // Section 1: Encrypted Vault Backups (.adere)
-            SettingsSectionTitle("Encrypted Vault Backups (.adere)")
-
-            SettingsItemCard(
-                icon = Icons.Default.Upload,
-                iconTint = EmeraldPrimary,
-                iconBg = EmeraldPrimary.copy(alpha = 0.12f),
-                title = "Create Encrypted Backup",
-                subtitle = "Export all vault items securely into an offline passphrase-protected .adere package",
-                onClick = { showExportDialog = true },
-                testTag = "settings_backup_export_item"
             )
 
-            SettingsItemCard(
-                icon = Icons.Default.Download,
-                iconTint = TotalSecurityPrimary,
-                iconBg = TotalSecurityPrimary.copy(alpha = 0.12f),
-                title = "Restore & Verify Vault Data",
-                subtitle = "Decrypt and preview an .adere backup package before merging",
-                onClick = { showRestoreDialog = true },
-                testTag = "settings_backup_restore_item"
+            // ── 3. RESTORE BACKUP Section ────────────────────────────────────
+            SettingsSectionTitle("RESTORE BACKUP")
+
+            RestoreActionCard(
+                isProcessing = isVerifyingRestoreFile,
+                onChooseBackup = {
+                    filePickerState.launchOpenBackupFile()
+                }
             )
 
-            // Section 2: Master Recovery Key (Emergency Vault Access)
-            SettingsSectionTitle("Master Recovery Key (Emergency)")
+            // ── 4. BACKUP HISTORY Section ────────────────────────────────────
+            SettingsSectionTitle("BACKUP HISTORY")
+
+            BackupHistoryCard(
+                history = backupHistory,
+                onClearHistory = onClearBackupHistory
+            )
+
+            // ── 5. EXPORT Section ────────────────────────────────────────────
+            SettingsSectionTitle("EXPORT")
+
+            PdfExportCard(
+                onExportPdf = {
+                    authTargetAction = AuthAction.EXPORT_PDF
+                    authErrorMessage = null
+                    if (onAuthenticateSensitiveAction != null) {
+                        onAuthenticateSensitiveAction(
+                            "Authenticate to Export",
+                            "This export contains decrypted passwords and sensitive credentials.",
+                            { onAuthSuccess() },
+                            { error ->
+                                authErrorMessage = error
+                                showAuthBottomSheet = true
+                            }
+                        )
+                    } else {
+                        showAuthBottomSheet = true
+                    }
+                }
+            )
+
+            // ── 6. EMERGENCY RECOVERY KEY Section ─────────────────────────────
+            SettingsSectionTitle("EMERGENCY VAULT RECOVERY")
 
             SettingsItemCard(
                 icon = Icons.Default.Key,
                 iconTint = TotalSecurityPrimary,
                 iconBg = TotalSecurityPrimary.copy(alpha = 0.12f),
-                title = "View Master Recovery Key",
-                subtitle = "Display your 24-character emergency recovery key for safe paper archiving",
+                title = "Master Recovery Key",
+                subtitle = "Display your 24-character emergency key for offline paper archiving",
                 onClick = {
                     if (onGetRecoveryKey != null) {
                         val res = onGetRecoveryKey()
                         if (res.isSuccess) {
-                            currentRecoveryKey = res.getOrDefault("")
+                            currentRecoveryKey = res.getOrThrow()
                             showRecoveryKeyDialog = true
                         } else {
-                            Toast.makeText(context, res.exceptionOrNull()?.message ?: "Unlock vault first to view recovery key", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, res.exceptionOrNull()?.message ?: "Recovery key unavailable", Toast.LENGTH_SHORT).show()
                         }
-                    } else {
-                        Toast.makeText(context, "Recovery key access unavailable", Toast.LENGTH_SHORT).show()
                     }
                 },
-                testTag = "settings_view_recovery_key"
+                testTag = "settings_backup_recovery_key_item"
             )
 
-            SettingsItemCard(
-                icon = Icons.Default.Refresh,
-                iconTint = HealthRiskRed,
-                iconBg = HealthRiskRed.copy(alpha = 0.12f),
-                title = "Regenerate Recovery Key",
-                subtitle = "Invalidate old emergency key and generate a fresh recovery key",
-                onClick = { showRegenerateConfirmDialog = true },
-                testTag = "settings_regenerate_recovery_key"
-            )
-
-            // Section 3: Printable & Shareable PDF Archive
-            SettingsSectionTitle("Printable & Shareable PDF Archive")
-
-            SettingsItemCard(
-                icon = Icons.Default.PictureAsPdf,
-                iconTint = TotalSecurityPrimary,
-                iconBg = TotalSecurityPrimary.copy(alpha = 0.12f),
-                title = "Export Vault to PDF Document",
-                subtitle = "Configure and save executive color-coded PDF master sheet for cold storage",
-                onClick = { showPdfOptionsDialog = true },
-                testTag = "settings_export_pdf_save"
-            )
-
-            SettingsItemCard(
-                icon = Icons.Default.Share,
-                iconTint = TotalSecurityPrimary,
-                iconBg = TotalSecurityPrimary.copy(alpha = 0.12f),
-                title = "Share Vault PDF Sheet",
-                subtitle = "Securely generate and open system file chooser to transmit or store PDF archive",
-                onClick = {
-                    onExportPdf(
-                        PdfExportManager.ExportOptions(
-                            includePasswords = true,
-                            includeCryptoSecrets = true,
-                            includeNotes = true,
-                            includeRecoveryCodes = true
-                        ),
-                        true
-                    )
-                },
-                testTag = "settings_export_pdf_share"
-            )
-
-            Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 
-    // Modal 1: Create Encrypted Backup Passphrase Dialog
-    if (showExportDialog) {
-        var passphrase by remember { mutableStateOf("") }
-        var confirmPassphrase by remember { mutableStateOf("") }
-        var isVisible by remember { mutableStateOf(false) }
-        var errorMsg by remember { mutableStateOf<String?>(null) }
-        var isExporting by remember { mutableStateOf(false) }
+    // ── Dialogs & Modals ─────────────────────────────────────────────────────
 
-        val strengthScore = remember(passphrase) {
-            var score = 0
-            if (passphrase.length >= 6) score++
-            if (passphrase.length >= 10) score++
-            if (passphrase.any { it.isDigit() }) score++
-            if (passphrase.any { it.isUpperCase() } && passphrase.any { it.isLowerCase() }) score++
-            if (passphrase.any { !it.isLetterOrDigit() }) score++
-            score
-        }
+    // 1. Biometric / Password Authentication Bottom Sheet
+    if (showAuthBottomSheet) {
+        val sheetTitle = if (authTargetAction == AuthAction.EXPORT_PDF) "Authenticate to Export" else "Authenticate to Continue"
+        val sheetSubtitle = if (authTargetAction == AuthAction.EXPORT_PDF)
+            "This export may contain passwords and other sensitive information."
+        else
+            "Verify your identity before creating a secure vault backup."
 
+        AuthenticationBottomSheet(
+            title = sheetTitle,
+            subtitle = sheetSubtitle,
+            onBiometricClick = {
+                if (onAuthenticateSensitiveAction != null) {
+                    onAuthenticateSensitiveAction(
+                        sheetTitle,
+                        sheetSubtitle,
+                        { onAuthSuccess() },
+                        { error -> authErrorMessage = error }
+                    )
+                } else if (onTriggerBiometrics != null) {
+                    onTriggerBiometrics()
+                    onAuthSuccess()
+                } else {
+                    onAuthSuccess()
+                }
+            },
+            onPasswordSubmit = { enteredPassword ->
+                if (enteredPassword.isBlank()) {
+                    authErrorMessage = "Please enter your Master Password"
+                } else if (onVerifyMasterPassword != null) {
+                    onVerifyMasterPassword(enteredPassword) { isValid ->
+                        if (isValid) {
+                            onAuthSuccess()
+                        } else {
+                            authErrorMessage = "Incorrect Master Password. Please try again."
+                        }
+                    }
+                } else {
+                    onAuthSuccess()
+                }
+            },
+            onDismiss = {
+                showAuthBottomSheet = false
+                authErrorMessage = null
+            },
+            errorMessage = authErrorMessage
+        )
+    }
+
+    // 2. Backup Configuration & Confirmation Dialog
+    if (showBackupConfirmDialog) {
         AlertDialog(
-            onDismissRequest = { if (!isExporting) showExportDialog = false },
+            onDismissRequest = { showBackupConfirmDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Security, contentDescription = null, tint = EmeraldPrimary)
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(Shapes.medium)
+                            .background(EmeraldPrimary.copy(alpha = 0.14f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(imageVector = Icons.Rounded.Shield, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(20.dp))
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Create Encrypted Backup",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        text = "Ready to Back Up",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 17.5.sp)
                     )
                 }
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Choose a strong backup passphrase. This passphrase is required to decrypt and restore your .adere package on any device.",
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        text = "Your vault will be encrypted before it leaves Adere.",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 13.5.sp,
+                            lineHeight = 18.sp
+                        )
                     )
 
-                    if (errorMsg != null) {
-                        Surface(
-                            color = HealthRiskRed.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = errorMsg!!,
-                                color = HealthRiskRed,
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                modifier = Modifier.padding(10.dp)
-                            )
+                    // Details box
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                            .padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Vault items", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("$vaultItemsCount items", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Encryption", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("AES-256-GCM", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = EmeraldPrimary)
                         }
                     }
 
                     OutlinedTextField(
-                        value = passphrase,
-                        onValueChange = { passphrase = it; errorMsg = null },
-                        label = { Text("Backup Passphrase (min 6 chars)") },
+                        value = backupPassphraseInput,
+                        onValueChange = { backupPassphraseInput = it },
+                        label = { Text("Backup Passphrase") },
+                        placeholder = { Text("Enter passphrase to encrypt file") },
                         singleLine = true,
-                        visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        trailingIcon = {
-                            IconButton(onClick = { isVisible = !isVisible }) {
-                                Icon(
-                                    imageVector = if (isVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = null
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().testTag("backup_passphrase_input")
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_backup_passphrase")
                     )
 
-                    if (passphrase.isNotEmpty()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            LinearProgressIndicator(
-                                progress = { (strengthScore / 5f).coerceIn(0.1f, 1f) },
-                                modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
-                                color = when {
-                                    strengthScore <= 2 -> HealthRiskRed
-                                    strengthScore <= 4 -> TotalSecurityPrimary
-                                    else -> EmeraldPrimary
-                                }
-                            )
-                            Text(
-                                text = when {
-                                    strengthScore <= 2 -> "Passphrase Strength: Weak"
-                                    strengthScore <= 4 -> "Passphrase Strength: Good"
-                                    else -> "Passphrase Strength: Excellent"
-                                },
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontSize = 11.sp,
-                                    color = when {
-                                        strengthScore <= 2 -> HealthRiskRed
-                                        strengthScore <= 4 -> TotalSecurityPrimary
-                                        else -> EmeraldPrimary
-                                    }
-                                )
-                            )
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = confirmPassphrase,
-                        onValueChange = { confirmPassphrase = it; errorMsg = null },
-                        label = { Text("Confirm Backup Passphrase") },
-                        singleLine = true,
-                        visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth().testTag("backup_confirm_passphrase_input")
+                    Text(
+                        text = "This passphrase will be required to decrypt and restore your vault. It is never stored in plaintext.",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.5.sp
+                        )
                     )
                 }
             },
             confirmButton = {
                 Button(
-                    enabled = !isExporting,
-                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
                     onClick = {
-                        if (passphrase.length < 6) {
-                            errorMsg = "Passphrase must be at least 6 characters long."
+                        val pass = backupPassphraseInput.trim()
+                        if (pass.isEmpty()) {
+                            Toast.makeText(context, "Passphrase cannot be empty", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
-                        if (passphrase != confirmPassphrase) {
-                            errorMsg = "Passphrases do not match."
-                            return@Button
-                        }
+                        showBackupConfirmDialog = false
+                        showBackupProgressDialog = true
+                        isBackingUp = true
 
-                        isExporting = true
-                        onExportBackup(passphrase) { result ->
-                            isExporting = false
-                            if (result.isSuccess) {
-                                showExportDialog = false
-                                showExportResultDialog = result.getOrThrow()
-                            } else {
-                                errorMsg = result.exceptionOrNull()?.message ?: "Backup export failed."
+                        // Stepped animated progress
+                        coroutineScope.launch {
+                            backupPrepStep = BackupStepState.RUNNING
+                            delay(300)
+                            backupPrepStep = BackupStepState.COMPLETED
+                            backupEncryptStep = BackupStepState.RUNNING
+                            delay(350)
+
+                            onExportBackup(pass) { result ->
+                                backupEncryptStep = BackupStepState.COMPLETED
+                                backupCreateStep = BackupStepState.RUNNING
+
+                                if (result.isSuccess) {
+                                    val backupString = result.getOrThrow()
+                                    backupCreateStep = BackupStepState.COMPLETED
+                                    backupVerifyStep = BackupStepState.RUNNING
+
+                                    coroutineScope.launch {
+                                        delay(300)
+                                        backupVerifyStep = BackupStepState.COMPLETED
+                                        delay(200)
+
+                                        isBackingUp = false
+                                        showBackupProgressDialog = false
+
+                                        createdBackupContent = backupString
+                                        createdBackupFileName = BackupManager.generateDefaultFileName()
+                                        createdBackupSize = backupString.toByteArray(Charsets.UTF_8).size.toLong()
+                                        pendingBackupContentToSave = backupString
+                                        showBackupSuccessDialog = true
+                                    }
+                                } else {
+                                    isBackingUp = false
+                                    showBackupProgressDialog = false
+                                    Toast.makeText(
+                                        context,
+                                        "Backup creation failed: ${result.exceptionOrNull()?.message ?: "Unknown error"}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         }
-                    }
+                    },
+                    shape = Shapes.medium,
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                    modifier = Modifier.testTag("btn_confirm_create_backup")
                 ) {
-                    Text(if (isExporting) "Encrypting Package..." else "Create & Export")
+                    Text("Create Secure Backup", fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
-                TextButton(
-                    enabled = !isExporting,
-                    onClick = { showExportDialog = false }
+                OutlinedButton(
+                    onClick = { showBackupConfirmDialog = false },
+                    shape = Shapes.medium
                 ) {
-                    Text("Cancel")
+                    Text("Cancel", fontSize = 13.5.sp)
                 }
+            },
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
+    // 3. Backup Progress Stepper Modal
+    if (showBackupProgressDialog) {
+        BackupProgressDialog(
+            preparingStep = backupPrepStep,
+            encryptingStep = backupEncryptStep,
+            creatingStep = backupCreateStep,
+            verifyingStep = backupVerifyStep
+        )
+    }
+
+    // 4. Backup Success State Dialog
+    if (showBackupSuccessDialog && createdBackupContent != null) {
+        BackupSuccessDialog(
+            fileName = createdBackupFileName,
+            fileSizeBytes = createdBackupSize,
+            itemCount = vaultItemsCount,
+            timestamp = System.currentTimeMillis(),
+            onSaveFile = {
+                filePickerState.launchCreateBackupFile(createdBackupFileName)
+            },
+            onShare = {
+                createdBackupContent?.let { content ->
+                    SecureShareHelper.shareEncryptedBackup(context, createdBackupFileName, content)
+                }
+            },
+            onDone = {
+                showBackupSuccessDialog = false
             }
         )
     }
 
-    // Modal 2: Backup Success & Share/Copy Result Dialog
-    showExportResultDialog?.let { backupString ->
+    // 5. Restore Passphrase Entry Dialog
+    if (showRestorePassphraseDialog && selectedRestoreContent != null) {
         AlertDialog(
-            onDismissRequest = { showExportResultDialog = null },
+            onDismissRequest = { showRestorePassphraseDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = EmeraldPrimary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Backup Package Created")
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(Shapes.medium)
+                            .background(TotalSecurityPrimary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(imageVector = Icons.Rounded.Key, contentDescription = null, tint = TotalSecurityPrimary, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Decrypt Backup",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 17.5.sp)
+                    )
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Your zero-knowledge encrypted .adere backup package is ready. Store this string securely or share it.",
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    )
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = backupString.take(120) + "...",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontFamily = FontFamily.Monospace,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 11.sp
-                            ),
-                            modifier = Modifier.padding(12.dp)
+                        text = "Enter the passphrase used when creating this .adere backup.",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 13.5.sp
                         )
-                    }
+                    )
+                    OutlinedTextField(
+                        value = restorePassphraseInput,
+                        onValueChange = { restorePassphraseInput = it },
+                        label = { Text("Passphrase") },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_restore_passphrase")
+                    )
                 }
             },
             confirmButton = {
                 Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
                     onClick = {
-                        clipboardManager.setText(AnnotatedString(backupString))
-                        Toast.makeText(context, "Encrypted backup string copied to clipboard!", Toast.LENGTH_LONG).show()
-                        showExportResultDialog = null
-                    }
+                        val pass = restorePassphraseInput.trim()
+                        if (pass.isEmpty()) {
+                            Toast.makeText(context, "Passphrase cannot be empty", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+                        showRestorePassphraseDialog = false
+                        isVerifyingRestoreFile = true
+
+                        val content = selectedRestoreContent ?: return@Button
+                        if (onPreviewBackup != null) {
+                            onPreviewBackup(content, pass) { previewRes ->
+                                isVerifyingRestoreFile = false
+                                if (previewRes.isSuccess) {
+                                    activeRestorePreview = previewRes.getOrThrow()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        previewRes.exceptionOrNull()?.message ?: "Decryption failed",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        } else {
+                            // Direct preview validation via BackupManager
+                            val previewRes = BackupManager.decryptAndValidateBackup(content, pass.toCharArray())
+                            isVerifyingRestoreFile = false
+                            if (previewRes.isSuccess) {
+                                activeRestorePreview = previewRes.getOrThrow()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    previewRes.exceptionOrNull()?.message ?: "Decryption failed",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    },
+                    shape = Shapes.medium,
+                    colors = ButtonDefaults.buttonColors(containerColor = TotalSecurityPrimary),
+                    modifier = Modifier.testTag("btn_confirm_restore_passphrase")
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Copy String")
-                    }
+                    Text("Verify & Preview", fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
                 }
             },
             dismissButton = {
                 OutlinedButton(
-                    onClick = {
-                        try {
-                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_SUBJECT, "Adera Vault Encrypted Backup")
-                                putExtra(Intent.EXTRA_TEXT, backupString)
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "Share Backup"))
-                            showExportResultDialog = null
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Unable to share backup", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    onClick = { showRestorePassphraseDialog = false },
+                    shape = Shapes.medium
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Share")
-                    }
+                    Text("Cancel", fontSize = 13.5.sp)
                 }
-            }
+            },
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 
-    // Modal 3: Restore Vault with Two-Step Preview Flow
-    if (showRestoreDialog) {
-        var backupPayload by remember { mutableStateOf("") }
-        var passphrase by remember { mutableStateOf("") }
-        var isVisible by remember { mutableStateOf(false) }
-        var errorMsg by remember { mutableStateOf<String?>(null) }
-        var isRestoring by remember { mutableStateOf(false) }
-        var restorePreview by remember { mutableStateOf<BackupManager.RestorePreview?>(null) }
+    // 6. Restore Preview Dialog (Replace vs Merge)
+    activeRestorePreview?.let { preview ->
+        RestorePreviewDialog(
+            itemCount = preview.itemCount,
+            categoryCount = preview.categoryCount,
+            version = preview.version,
+            exportedAt = preview.exportedAt,
+            onDismiss = { activeRestorePreview = null },
+            onConfirmRestore = { selectedMode: BackupManager.RestoreMode ->
+                val content = selectedRestoreContent ?: return@RestorePreviewDialog
+                val pass = restorePassphraseInput.trim()
 
-        AlertDialog(
-            onDismissRequest = { if (!isRestoring) showRestoreDialog = false },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Download, contentDescription = null, tint = TotalSecurityPrimary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Restore Vault Backup")
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    if (restorePreview == null) {
-                        Text(
-                            text = "Paste your encrypted .adere backup payload string and enter the backup passphrase to verify and restore your items.",
-                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        )
-
-                        if (errorMsg != null) {
-                            Surface(
-                                color = HealthRiskRed.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = errorMsg!!,
-                                    color = HealthRiskRed,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                    modifier = Modifier.padding(10.dp)
-                                )
-                            }
-                        }
-
-                        OutlinedTextField(
-                            value = backupPayload,
-                            onValueChange = { backupPayload = it; errorMsg = null },
-                            label = { Text("Encrypted .adere Payload String") },
-                            maxLines = 4,
-                            trailingIcon = {
-                                IconButton(
-                                    onClick = {
-                                        val clipText = clipboardManager.getText()?.text
-                                        if (!clipText.isNullOrBlank()) {
-                                            backupPayload = clipText
-                                            errorMsg = null
-                                            Toast.makeText(context, "Pasted backup from clipboard", Toast.LENGTH_SHORT).show()
-                                        } else {
-                                            Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ContentCopy,
-                                        contentDescription = "Paste from Clipboard",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth().testTag("restore_payload_input")
-                        )
-
-                        OutlinedTextField(
-                            value = passphrase,
-                            onValueChange = { passphrase = it; errorMsg = null },
-                            label = { Text("Backup Passphrase") },
-                            singleLine = true,
-                            visualTransformation = if (isVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            trailingIcon = {
-                                IconButton(onClick = { isVisible = !isVisible }) {
-                                    Icon(
-                                        imageVector = if (isVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = null
-                                    )
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth().testTag("restore_passphrase_input")
-                        )
-                    } else {
-                        // Preview state before final commit
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Surface(
-                                color = EmeraldPrimary.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Rounded.CheckCircle, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(18.dp))
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "Backup Verified Successfully!",
-                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = EmeraldPrimary)
-                                        )
-                                    }
-                                    Text(
-                                        text = "Format Version: ${restorePreview!!.version} • Total Secrets: ${restorePreview!!.itemCount}",
-                                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface)
-                                    )
-                                }
-                            }
-
-                            Text(
-                                text = "Preview of items to be restored and merged into your vault:",
-                                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold)
-                            )
-
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.fillMaxWidth().height(140.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(10.dp).verticalScroll(rememberScrollState()),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    for (item in restorePreview!!.items) {
-                                        Text(
-                                            text = "• [${item.category.name}] ${item.title}${if (item.username.isNotBlank()) " (${item.username})" else ""}",
-                                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    enabled = !isRestoring,
-                    colors = ButtonDefaults.buttonColors(containerColor = TotalSecurityPrimary),
-                    onClick = {
-                        if (restorePreview == null) {
-                            val cleanPayload = backupPayload.trim()
-                            if (cleanPayload.isBlank()) {
-                                errorMsg = "Please paste the backup payload string."
-                                return@Button
-                            }
-                            if (passphrase.isBlank()) {
-                                errorMsg = "Please enter the backup passphrase."
-                                return@Button
-                            }
-
-                            // Step 1: Decrypt and preview locally using BackupManager
-                            val previewResult = BackupManager.decryptAndValidateBackup(cleanPayload, passphrase.toCharArray())
-                            if (previewResult.isSuccess) {
-                                restorePreview = previewResult.getOrThrow()
-                                errorMsg = null
-                            } else {
-                                errorMsg = previewResult.exceptionOrNull()?.message ?: "Incorrect passphrase or invalid backup format."
-                            }
+                if (onRestoreBackupWithMode != null) {
+                    onRestoreBackupWithMode(content, pass, selectedMode) { res ->
+                        activeRestorePreview = null
+                        if (res.isSuccess) {
+                            lastRestoredCount = res.getOrThrow()
+                            lastRestoredMode = selectedMode
+                            showRestoreSuccessDialog = true
                         } else {
-                            // Step 2: Final commit restore via repository
-                            isRestoring = true
-                            onRestoreBackup(backupPayload.trim(), passphrase) { result ->
-                                isRestoring = false
-                                if (result.isSuccess) {
-                                    showRestoreDialog = false
-                                    val count = result.getOrDefault(0)
-                                    Toast.makeText(context, "Successfully restored and merged $count vault items!", Toast.LENGTH_LONG).show()
-                                } else {
-                                    errorMsg = result.exceptionOrNull()?.message ?: "Restore failed."
-                                    restorePreview = null
-                                }
-                            }
+                            val error = res.exceptionOrNull()?.localizedMessage
+                                ?: res.exceptionOrNull()?.message
+                                ?: "Failed to restore backup"
+                            Toast.makeText(context, "Restore failed: $error", Toast.LENGTH_LONG).show()
                         }
                     }
-                ) {
-                    Text(
-                        when {
-                            isRestoring -> "Restoring Vault..."
-                            restorePreview == null -> "Verify & Preview Backup"
-                            else -> "Confirm & Restore Items"
+                } else {
+                    onRestoreBackup(content, pass) { res ->
+                        activeRestorePreview = null
+                        if (res.isSuccess) {
+                            lastRestoredCount = res.getOrThrow()
+                            lastRestoredMode = selectedMode
+                            showRestoreSuccessDialog = true
+                        } else {
+                            val error = res.exceptionOrNull()?.localizedMessage
+                                ?: res.exceptionOrNull()?.message
+                                ?: "Failed to restore backup"
+                            Toast.makeText(context, "Restore failed: $error", Toast.LENGTH_LONG).show()
                         }
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !isRestoring,
-                    onClick = { showRestoreDialog = false }
-                ) {
-                    Text("Cancel")
+                    }
                 }
             }
         )
     }
 
-    // Modal 4: View Master Recovery Key Dialog
+    // 7. Restore Success State Dialog
+    if (showRestoreSuccessDialog) {
+        RestoreSuccessDialog(
+            restoredCount = lastRestoredCount,
+            mode = lastRestoredMode,
+            onDone = {
+                showRestoreSuccessDialog = false
+                selectedRestoreContent = null
+                restorePassphraseInput = ""
+            }
+        )
+    }
+
+    // 8. PDF Export Options Dialog
+    if (showPdfOptionsDialog) {
+        ExportOptionsDialog(
+            onDismiss = { showPdfOptionsDialog = false },
+            onConfirm = { options: PdfExportManager.ExportOptions, isShare: Boolean ->
+                showPdfOptionsDialog = false
+                onExportPdf(options, isShare)
+            }
+        )
+    }
+
+    // 9. Emergency Recovery Key Viewer Dialog
     if (showRecoveryKeyDialog) {
         AlertDialog(
             onDismissRequest = { showRecoveryKeyDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Key, contentDescription = null, tint = TotalSecurityPrimary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Master Recovery Key")
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(Shapes.medium)
+                            .background(TotalSecurityPrimary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(imageVector = Icons.Default.Key, contentDescription = null, tint = TotalSecurityPrimary, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Master Recovery Key",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 17.5.sp)
+                    )
                 }
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Your Master Recovery Key allows zero-knowledge vault restoration if you ever forget your Master Password. Keep this key in a secure physical location.",
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        text = "Store this recovery key in a physical safe. Anyone with this key can decrypt and recover your vault.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 17.sp
+                        )
                     )
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                    Card(
+                        shape = CircleShape,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        border = BorderStroke(1.dp, TotalSecurityPrimary.copy(alpha = 0.3f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = currentRecoveryKey,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                                color = MaterialTheme.colorScheme.primary
-                            ),
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-
-                    Surface(
-                        color = HealthRiskRed.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Warning, contentDescription = null, tint = HealthRiskRed, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
                             Text(
-                                text = "Never share your recovery key. Adere staff will never ask for it.",
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp, color = HealthRiskRed)
+                                text = currentRecoveryKey,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ),
+                                modifier = Modifier.weight(1f)
                             )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        clipboardManager.setText(AnnotatedString(currentRecoveryKey))
-                        Toast.makeText(context, "Master Recovery Key copied to clipboard!", Toast.LENGTH_LONG).show()
-                        showRecoveryKeyDialog = false
-                    }
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Copy Key")
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRecoveryKeyDialog = false }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
-
-    // Modal 5: Regenerate Recovery Key Confirmation Dialog
-    if (showRegenerateConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showRegenerateConfirmDialog = false },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Rounded.Warning, contentDescription = null, tint = HealthRiskRed)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Regenerate Recovery Key?")
-                }
-            },
-            text = {
-                Text(
-                    text = "Regenerating your Master Recovery Key will immediately invalidate your old emergency key. Make sure to back up the new key immediately.",
-                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                )
-            },
-            confirmButton = {
-                Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = HealthRiskRed),
-                    onClick = {
-                        showRegenerateConfirmDialog = false
-                        if (onRegenerateRecoveryKey != null) {
-                            onRegenerateRecoveryKey { res ->
-                                if (res.isSuccess) {
-                                    currentRecoveryKey = res.getOrDefault("")
-                                    showRecoveryKeyDialog = true
-                                    Toast.makeText(context, "New Master Recovery Key generated successfully!", Toast.LENGTH_LONG).show()
-                                } else {
-                                    Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                                }
+                            IconButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(currentRecoveryKey))
+                                    Toast.makeText(context, "Recovery key copied", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy key",
+                                    tint = TotalSecurityPrimary,
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
                         }
                     }
-                ) {
-                    Text("Regenerate Key")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRegenerateConfirmDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    // Modal 6: PDF Export Customization Options Dialog
-    if (showPdfOptionsDialog) {
-        var includePasswords by remember { mutableStateOf(true) }
-        var includeCrypto by remember { mutableStateOf(true) }
-        var includeNotes by remember { mutableStateOf(true) }
-        var includeRecovery by remember { mutableStateOf(true) }
-
-        AlertDialog(
-            onDismissRequest = { showPdfOptionsDialog = false },
-            title = {
-                Text(
-                    text = "Configure PDF Master Sheet",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "Select which secure fields to include in the exported executive PDF document:",
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { includePasswords = !includePasswords }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = includePasswords,
-                            onCheckedChange = { includePasswords = it },
-                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Include Passwords & PINs", style = MaterialTheme.typography.bodyMedium)
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { includeCrypto = !includeCrypto }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = includeCrypto,
-                            onCheckedChange = { includeCrypto = it },
-                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Include Crypto Secrets & Seed Phrases", style = MaterialTheme.typography.bodyMedium)
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { includeNotes = !includeNotes }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = includeNotes,
-                            onCheckedChange = { includeNotes = it },
-                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Include Secure Notes", style = MaterialTheme.typography.bodyMedium)
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { includeRecovery = !includeRecovery }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = includeRecovery,
-                            onCheckedChange = { includeRecovery = it },
-                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Include Emergency Recovery Codes", style = MaterialTheme.typography.bodyMedium)
-                    }
                 }
             },
             confirmButton = {
-                Button(
-                    onClick = {
-                        showPdfOptionsDialog = false
-                        onExportPdf(
-                            PdfExportManager.ExportOptions(
-                                includePasswords = includePasswords,
-                                includeCryptoSecrets = includeCrypto,
-                                includeNotes = includeNotes,
-                                includeRecoveryCodes = includeRecovery
-                            ),
-                            false
-                        )
-                    }
-                ) {
-                    Text("Save PDF Document")
+                TextButton(onClick = { showRecoveryKeyDialog = false }) {
+                    Text("Close", fontWeight = FontWeight.SemiBold)
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { showPdfOptionsDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }
+
+private enum class AuthAction {
+    CREATE_BACKUP,
+    EXPORT_PDF
+}
+

@@ -119,7 +119,7 @@ fun VaultItemSkeleton(
         modifier = modifier
             .fillMaxWidth()
             .scale(scale.value),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -292,7 +292,7 @@ private fun SecurityCardSkeleton() {
     ShimmerEffect {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
             )
@@ -348,7 +348,7 @@ private fun SearchBarSkeleton() {
                 modifier = Modifier
                     .weight(1f)
                     .height(52.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             )
         }
@@ -359,7 +359,7 @@ private fun SearchBarSkeleton() {
             Box(
                 modifier = Modifier
                     .size(52.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
             )
         }
@@ -407,7 +407,7 @@ private fun CategoryTilesSkeleton() {
                     modifier = Modifier
                         .weight(1f)
                         .height(90.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
                     )

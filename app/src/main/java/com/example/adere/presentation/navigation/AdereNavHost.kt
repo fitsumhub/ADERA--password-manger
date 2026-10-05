@@ -33,6 +33,7 @@ import com.example.adere.domain.model.VaultCategory
 import com.example.adere.domain.repository.VaultLockState
 import com.example.adere.presentation.screens.AddEditItemScreen
 import com.example.adere.presentation.screens.CategoryAddScreen
+import com.example.adere.presentation.screens.CategoryDetailScreen
 import com.example.adere.presentation.screens.DashboardScreen
 import com.example.adere.presentation.screens.ItemDetailScreen
 import com.example.adere.presentation.screens.LockScreen
@@ -62,6 +63,7 @@ enum class NavDestination(val label: String) {
 fun AdereApp(
     viewModel: AdereViewModel,
     onTriggerBiometrics: () -> Unit,
+    onAuthenticateSensitiveAction: ((title: String, subtitle: String, onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit)? = null,
     onExportPdfSave: (PdfExportManager.ExportOptions) -> Unit = {},
     onExportPdfShare: (PdfExportManager.ExportOptions) -> Unit = {},
 ) {
@@ -81,9 +83,10 @@ fun AdereApp(
     val screenshotProtection by viewModel.screenshotProtection.collectAsStateWithLifecycle()
     val clipboardClearSeconds by viewModel.clipboardClearSeconds.collectAsStateWithLifecycle()
     val themePalette by viewModel.themePalette.collectAsStateWithLifecycle()
-    val generatorOptions by viewModel.generatorOptions.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val hideRecentAppsContent by viewModel.hideRecentAppsContent.collectAsStateWithLifecycle()
+    val lastBackupTimestamp by viewModel.lastBackupTimestamp.collectAsStateWithLifecycle()
+    val backupHistory by viewModel.backupHistory.collectAsStateWithLifecycle()
 
     var currentTab by remember { mutableStateOf(NavDestination.HOME) }
     var selectedItemIdForDetail by remember { mutableStateOf<String?>(null) }
@@ -93,6 +96,7 @@ fun AdereApp(
     var prefilledTitleForAdd by remember { mutableStateOf<String?>(null) }
     var prefilledUrlForAdd by remember { mutableStateOf<String?>(null) }
     var editingItemId by remember { mutableStateOf<String?>(null) }
+    var activeCategoryDetail by remember { mutableStateOf<VaultCategory?>(null) }
 
     fun copySecret(label: String, secret: String) {
         ClipboardSecurityHelper.copyToClipboard(
@@ -132,11 +136,6 @@ fun AdereApp(
                             Toast.makeText(context, "Vault recovered with Master Key!", Toast.LENGTH_SHORT).show()
                         }
                         cb(res)
-                    }
-                },
-                onResetVault = {
-                    viewModel.resetVault {
-                        Toast.makeText(context, "Vault has been reset", Toast.LENGTH_SHORT).show()
                     }
                 },
             )
@@ -179,6 +178,8 @@ fun AdereApp(
                                 prefilledTitleForAdd = null
                                 prefilledUrlForAdd = null
                                 Toast.makeText(context, "Item saved securely", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Failed to save: ${res.exceptionOrNull()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -196,6 +197,8 @@ fun AdereApp(
                                 if (res.isSuccess) {
                                     editingItemId = null
                                     Toast.makeText(context, "Item updated", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Failed to update: ${res.exceptionOrNull()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -217,6 +220,8 @@ fun AdereApp(
                                 if (res.isSuccess) {
                                     selectedItemIdForDetail = null
                                     Toast.makeText(context, "Item deleted", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Failed to delete: ${res.exceptionOrNull()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },
@@ -232,6 +237,36 @@ fun AdereApp(
                 } else {
                     selectedItemIdForDetail = null
                 }
+            } else if (activeCategoryDetail != null) {
+                BackHandler { activeCategoryDetail = null }
+                val currentCategory = activeCategoryDetail!!
+                CategoryDetailScreen(
+                    category = currentCategory,
+                    items = rawItems,
+                    onBackClick = { activeCategoryDetail = null },
+                    onItemClick = { id -> selectedItemIdForDetail = id },
+                    onAddItemClick = { cat ->
+                        itemCategoryForAdd = cat
+                        prefilledTitleForAdd = null
+                        prefilledUrlForAdd = null
+                        prefilledPasswordForAdd = null
+                        isAddingItem = true
+                    },
+                    onQuickCopy = { item ->
+                        val secretToCopy = when {
+                            item.payload.password.isNotBlank() -> item.payload.password
+                            item.payload.pin.isNotBlank() -> item.payload.pin
+                            item.payload.cryptoAddress.isNotBlank() -> item.payload.cryptoAddress
+                            item.payload.wifiPassword.isNotBlank() -> item.payload.wifiPassword
+                            else -> item.username
+                        }
+                        copySecret(item.title, secretToCopy)
+                    },
+                    onToggleFavorite = { id, currentFav ->
+                        viewModel.toggleFavorite(id, currentFav)
+                    },
+                    onLockClick = { viewModel.lockVault() }
+                )
             } else {
                 // Main Bottom Tabbed Navigation
                 Scaffold(
@@ -259,12 +294,29 @@ fun AdereApp(
                                     onNavigateToItemDetail = { id -> selectedItemIdForDetail = id },
                                     onNavigateToAddItem = { cat ->
                                         itemCategoryForAdd = cat
+                                        prefilledTitleForAdd = null
+                                        prefilledUrlForAdd = null
+                                        prefilledPasswordForAdd = null
                                         isAddingItem = true
                                     },
                                     onNavigateToSecurity = { currentTab = NavDestination.SECURITY },
                                     onNavigateToCategory = { cat ->
-                                        viewModel.selectCategory(cat)
-                                        currentTab = NavDestination.VAULT
+                                        if (cat == VaultCategory.ALL) {
+                                            viewModel.selectCategory(VaultCategory.ALL)
+                                            currentTab = NavDestination.VAULT
+                                        } else {
+                                            activeCategoryDetail = cat
+                                        }
+                                    },
+                                    onQuickCopy = { item ->
+                                        val secretToCopy = when {
+                                            item.payload.password.isNotBlank() -> item.payload.password
+                                            item.payload.pin.isNotBlank() -> item.payload.pin
+                                            item.payload.cryptoAddress.isNotBlank() -> item.payload.cryptoAddress
+                                            item.payload.wifiPassword.isNotBlank() -> item.payload.wifiPassword
+                                            else -> item.username
+                                        }
+                                        copySecret(item.title, secretToCopy)
                                     },
                                     onLockClick = { viewModel.lockVault() }
                                 )
@@ -279,7 +331,15 @@ fun AdereApp(
                                     onCategorySelect = { c -> viewModel.selectCategory(c) },
                                     onItemClick = { id -> selectedItemIdForDetail = id },
                                     onAddItemClick = {
-                                        currentTab = NavDestination.ADD
+                                        if (selectedCategory != VaultCategory.ALL && selectedCategory != VaultCategory.FAVORITES) {
+                                            itemCategoryForAdd = selectedCategory
+                                            prefilledTitleForAdd = null
+                                            prefilledUrlForAdd = null
+                                            prefilledPasswordForAdd = null
+                                            isAddingItem = true
+                                        } else {
+                                            currentTab = NavDestination.ADD
+                                        }
                                     },
                                     onToggleFavorite = { id, fav -> viewModel.toggleFavorite(id, fav) },
                                     onQuickCopy = { item ->
@@ -336,29 +396,30 @@ fun AdereApp(
                                     hideRecentAppsContent = hideRecentAppsContent,
                                     notificationsEnabled = notificationsEnabled,
                                     themePalette = themePalette,
-                                    generatorOptions = generatorOptions,
                                     onSelectThemePalette = { palette ->
                                         viewModel.setThemePalette(palette)
                                         Toast.makeText(context, "Theme updated: ${palette.title}", Toast.LENGTH_SHORT).show()
                                     },
-                                    onToggleBiometric = { enable ->
-                                        viewModel.setBiometric(enable) { res ->
-                                            if (res.isSuccess) {
-                                                Toast.makeText(context, "Biometric setting updated", Toast.LENGTH_SHORT).show()
-                                            } else {
-                                                Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
+                                    onToggleBiometric = { enable, callback ->
+                                        viewModel.setBiometric(enable, callback)
                                     },
-                                    onSetAutoLockSeconds = { s -> viewModel.setAutoLockSeconds(s) },
+                                    onSetAutoLockSeconds = { seconds, callback ->
+                                        viewModel.setAutoLockSeconds(seconds, callback)
+                                    },
+                                    onRefreshBiometricState = viewModel::refreshBiometricState,
                                     onToggleScreenshotProtection = { p -> viewModel.setScreenshotProtection(p) },
                                     onSetClipboardClearSeconds = { c -> viewModel.setClipboardClearSeconds(c) },
                                     onToggleHideRecentApps = { h -> viewModel.setHideRecentAppsContent(h) },
                                     onToggleNotifications = { n -> viewModel.setNotificationsEnabled(n) },
-                                    onUpdateGeneratorOptions = { opts -> viewModel.updateGeneratorOptions(opts) },
                                     onChangeMasterPassword = { old, new, cb ->
                                         viewModel.changeMasterPassword(old, new, cb)
                                     },
+                                    lastBackupTimestamp = lastBackupTimestamp,
+                                    backupHistory = backupHistory,
+                                    onClearBackupHistory = { viewModel.clearBackupHistory() },
+                                    onTriggerBiometrics = onTriggerBiometrics,
+                                    onAuthenticateSensitiveAction = onAuthenticateSensitiveAction,
+                                    onVerifyMasterPassword = { pwd, cb -> viewModel.verifyMasterPassword(pwd, cb) },
                                     onExportBackup = { pass, cb ->
                                         viewModel.exportBackup(pass) { res ->
                                             cb(res.map { it.backupString })
@@ -366,6 +427,12 @@ fun AdereApp(
                                     },
                                     onRestoreBackup = { backupContent, passphrase, cb ->
                                         viewModel.restoreBackup(backupContent, passphrase, cb)
+                                    },
+                                    onRestoreBackupWithMode = { content, passphrase, mode, cb ->
+                                        viewModel.restoreBackupWithMode(content, passphrase, mode, onResult = cb)
+                                    },
+                                    onPreviewBackup = { content, passphrase, cb ->
+                                        viewModel.previewBackup(content, passphrase, cb)
                                     },
                                     onExportPdf = { options, isShare ->
                                         if (isShare) {
@@ -378,11 +445,7 @@ fun AdereApp(
                                     onRegenerateRecoveryKey = { cb ->
                                         viewModel.regenerateRecoveryKey(cb)
                                     },
-                                    onResetVault = {
-                                        viewModel.resetVault {
-                                            Toast.makeText(context, "Vault destroyed and reset", Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
+                                    onLockClick = { viewModel.lockVault() }
                                 )
                             }
                         }

@@ -1,4 +1,5 @@
 package com.example.adere.presentation.screens.settings
+import com.example.ui.theme.Shapes
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -55,7 +56,7 @@ fun AppearanceSettingsScreen(
         topBar = {
             SettingsSubHeader(
                 title = "Appearance & Themes",
-                subtitle = "Choose your vault's color palette",
+                subtitle = "Choose your vault's color palette & visual atmosphere",
                 onBackClick = onBackClick
             )
         },
@@ -69,7 +70,7 @@ fun AppearanceSettingsScreen(
                 .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            SettingsSectionTitle("Color Palette")
+            SettingsSectionTitle("Vault Color Palettes")
 
             VaultThemePalette.entries.forEach { palette ->
                 ThemePaletteCard(
@@ -77,7 +78,7 @@ fun AppearanceSettingsScreen(
                     isSelected = currentPalette == palette,
                     onSelect = {
                         onSelectThemePalette(palette)
-                        Toast.makeText(context, "${palette.title} applied", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "${palette.title} theme applied", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -100,96 +101,122 @@ private fun ThemePaletteCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(Shapes.medium)
             .clickable(onClick = onSelect)
             .then(
                 if (isSelected)
-                    Modifier.border(2.dp, palette.primaryColor, RoundedCornerShape(16.dp))
+                    Modifier.border(2.dp, palette.primaryColor, Shapes.medium)
                 else
-                    Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+                    Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), Shapes.medium)
             )
             .testTag("theme_card_${palette.name.lowercase()}"),
-        shape = RoundedCornerShape(16.dp),
+        shape = Shapes.medium,
         colors = CardDefaults.cardColors(containerColor = palette.surfaceColor),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 4.dp else 0.dp
+            defaultElevation = if (isSelected) 4.dp else 1.dp
         )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Color swatch circle
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(palette.primaryColor),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Palette,
-                    contentDescription = null,
-                    tint = palette.surfaceColor,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                // Color swatch circle
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(palette.primaryColor),
+                    contentAlignment = Alignment.Center
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.Palette,
+                        contentDescription = null,
+                        tint = palette.surfaceColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
+                        Text(
+                            text = palette.title,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp,
+                                color = textPrimary
+                            )
+                        )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Rounded.CheckCircle,
+                                contentDescription = "Active",
+                                tint = palette.primaryColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = palette.title,
-                        style = MaterialTheme.typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = textPrimary
+                        text = palette.subtitle,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 12.sp,
+                            color = textSecondary
                         )
                     )
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Rounded.CheckCircle,
-                            contentDescription = "Active",
-                            tint = palette.primaryColor,
-                            modifier = Modifier.size(16.dp)
+                }
+
+                if (isSelected) {
+                    Surface(
+                        shape = Shapes.medium,
+                        color = palette.primaryColor.copy(alpha = 0.2f)
+                    ) {
+                        Text(
+                            text = "Active",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                color = palette.primaryColor
+                            ),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = palette.subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 12.sp,
-                        color = textSecondary
-                    )
-                )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Active badge
-            if (isSelected) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = palette.primaryColor.copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        text = "Active",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = palette.primaryColor
-                        ),
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
-                    )
-                }
+            // Swatch Row Preview
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ColorDot(palette.primaryColor)
+                ColorDot(palette.surfaceColor, border = true)
+                ColorDot(palette.bgColor, border = true)
             }
         }
     }
+}
+
+@Composable
+private fun ColorDot(color: Color, border: Boolean = false) {
+    Box(
+        modifier = Modifier
+            .size(16.dp)
+            .clip(CircleShape)
+            .background(color)
+            .then(
+                if (border) Modifier.border(1.dp, Color.Gray.copy(alpha = 0.4f), CircleShape)
+                else Modifier
+            )
+    )
 }

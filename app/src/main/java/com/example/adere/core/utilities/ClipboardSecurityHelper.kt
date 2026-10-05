@@ -6,15 +6,16 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.os.PersistableBundle
+import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Handles secure clipboard copying and timed auto-clearing.
+ * Handles secure clipboard copying, sensory haptic confirmation, and timed auto-clearing.
  *
- * Marks sensitive data on Android 13+ so recent clips UI doesn't leak secrets.
+ * Marks sensitive data on Android 13+ so recent clips UI doesn't leak secrets into OS history.
  */
 object ClipboardSecurityHelper {
 
@@ -23,12 +24,14 @@ object ClipboardSecurityHelper {
         label: String,
         text: String,
         autoClearSeconds: Int = 30,
-        coroutineScope: CoroutineScope
+        coroutineScope: CoroutineScope,
+        triggerHaptic: Boolean = true,
+        notifyOnClear: Boolean = true
     ) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager ?: return
         val clip = ClipData.newPlainText(label, text)
 
-        // Mark clip as sensitive on API 33+ (Android 13+)
+        // Mark clip as sensitive on API 33+ (Android 13+) to prevent OS keyboard clipboard logging
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             clip.description.extras = PersistableBundle().apply {
                 putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
@@ -37,10 +40,14 @@ object ClipboardSecurityHelper {
 
         clipboard.setPrimaryClip(clip)
 
+        if (triggerHaptic) {
+            HapticFeedbackHelper.confirm(context)
+        }
+
         if (autoClearSeconds > 0) {
             coroutineScope.launch(Dispatchers.Main) {
                 delay(autoClearSeconds * 1000L)
-                // Clear clipboard if primary clip matches what we set
+                // Clear clipboard if primary clip still matches what we set
                 try {
                     val primaryClip = clipboard.primaryClip
                     if (primaryClip != null && primaryClip.itemCount > 0) {
@@ -51,12 +58,16 @@ object ClipboardSecurityHelper {
                             } else {
                                 clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
                             }
+                            if (notifyOnClear) {
+                                Toast.makeText(context, "Clipboard cleared for security", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
-                } catch (e: Exception) {
-                    // Ignored
+                } catch (_: Exception) {
+                    // Suppressed
                 }
             }
         }
     }
 }
+

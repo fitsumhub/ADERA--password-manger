@@ -140,9 +140,17 @@ class VaultRepository(
         }
     }
 
-    suspend fun restoreFromEncryptedBackup(
+    suspend fun validateBackup(
         backupContent: String,
         backupPassphrase: CharArray
+    ): Result<BackupManager.RestorePreview> = withContext(Dispatchers.IO) {
+        BackupManager.decryptAndValidateBackup(backupContent, backupPassphrase)
+    }
+
+    suspend fun restoreFromEncryptedBackup(
+        backupContent: String,
+        backupPassphrase: CharArray,
+        mode: BackupManager.RestoreMode = BackupManager.RestoreMode.MERGE
     ): Result<Int> = withContext(Dispatchers.IO) {
         val dek = sessionManager.getActiveDek()
             ?: return@withContext Result.failure(IllegalStateException("Vault must be unlocked to restore backup."))
@@ -154,7 +162,14 @@ class VaultRepository(
 
         val restoredItems = previewResult.getOrThrow().items
         try {
-            val entities = restoredItems.map { item ->
+            val itemsToSave = if (mode == BackupManager.RestoreMode.MERGE) {
+                val currentItems = getAllDecryptedItems()
+                BackupManager.resolveMerge(currentItems, restoredItems).resolvedItems
+            } else {
+                restoredItems
+            }
+
+            val entities = itemsToSave.map { item ->
                 val encrypted = CryptoEngine.encryptString(item.payload.toJson(), dek)
                 VaultItemEntity(
                     id = item.id,
@@ -169,8 +184,14 @@ class VaultRepository(
                     passwordLastChanged = item.passwordLastChanged
                 )
             }
-            dao.insertAll(entities)
-            Result.success(entities.size)
+
+            if (mode == BackupManager.RestoreMode.REPLACE) {
+                dao.replaceAll(entities)
+            } else {
+                dao.insertAll(entities)
+            }
+
+            Result.success(itemsToSave.size)
         } catch (e: Exception) {
             Result.failure(e)
         }

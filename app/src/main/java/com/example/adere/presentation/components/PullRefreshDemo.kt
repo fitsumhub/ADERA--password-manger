@@ -1,4 +1,5 @@
 package com.example.adere.presentation.components
+import androidx.compose.foundation.shape.CircleShape
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,7 +45,7 @@ fun PullRefreshDemo(
 
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -84,7 +85,7 @@ fun PullRefreshDemo(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
-                shape = RoundedCornerShape(12.dp),
+                shape = CircleShape,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Trigger Refresh Manually")
@@ -125,9 +126,9 @@ fun PullRefreshDemo(
 private fun generateSampleItems(): List<VaultItem> {
     val categories = listOf(
         VaultCategory.SOCIAL to "Social Account",
-        VaultCategory.APPS to "Mobile App",
         VaultCategory.WEBSITE to "Website",
-        VaultCategory.CREDIT_CARDS to "Credit Card"
+        VaultCategory.BANKING to "Banking Card",
+        VaultCategory.NOTES to "Secure Note"
     )
     
     return categories.mapIndexed { index, (category, prefix) ->

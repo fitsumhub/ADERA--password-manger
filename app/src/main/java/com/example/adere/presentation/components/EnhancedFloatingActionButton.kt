@@ -119,13 +119,13 @@ fun EnhancedFloatingActionButton(
                 Color(0xFF5E5CE6)
             ),
             FabMenuItem(
-                VaultCategory.CREDIT_CARDS,
+                VaultCategory.BANKING,
                 Icons.Default.CreditCard,
                 "Card",
                 Color(0xFF48C9B0)
             ),
             FabMenuItem(
-                VaultCategory.APPS,
+                VaultCategory.SOCIAL,
                 Icons.Default.Smartphone,
                 "App",
                 Color(0xFFF5BA31)
@@ -143,7 +143,7 @@ fun EnhancedFloatingActionButton(
                 Color(0xFF9C27B0)
             ),
             FabMenuItem(
-                VaultCategory.SECURE_NOTES,
+                VaultCategory.NOTES,
                 Icons.Default.Key,
                 "Notes",
                 Color(0xFF607D8B)
@@ -321,7 +321,7 @@ fun EnhancedFabMenuItem(
                     }
                 )
             },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),

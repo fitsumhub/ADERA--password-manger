@@ -153,7 +153,7 @@ fun EnhancedSecurityHealthCard(
                     scaleX = scale
                     scaleY = scale
                 }
-                .shadow(6.dp, RoundedCornerShape(24.dp))
+                .shadow(6.dp, CircleShape)
                 .clickable(
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -161,7 +161,7 @@ fun EnhancedSecurityHealthCard(
                         onViewDetails()
                     }
                 ),
-            shape = RoundedCornerShape(24.dp),
+            shape = CircleShape,
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
@@ -234,7 +234,7 @@ fun EnhancedSecurityHealthCard(
                         
                         // Score badge
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = CircleShape,
                             color = healthColor.copy(alpha = 0.15f)
                         ) {
                             Row(
@@ -430,7 +430,7 @@ fun EnhancedQuickActionCard(
                         onClick()
                     }
                 ),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),

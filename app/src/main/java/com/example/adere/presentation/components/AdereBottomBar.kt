@@ -63,6 +63,8 @@ import com.example.ui.theme.LocalThemeAccents
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+import androidx.compose.foundation.layout.navigationBarsPadding
+
 @Composable
 fun AdereTotalSecurityBottomBar(
     currentTab: NavDestination,
@@ -76,62 +78,29 @@ fun AdereTotalSecurityBottomBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .background(Color.Transparent),
         contentAlignment = Alignment.BottomCenter
     ) {
-        // Glassmorphism Background Blur Effect
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)
-                        )
-                    )
-                )
-                .blur(
-                    radius = 20.dp,
-                    edgeTreatment = BlurredEdgeTreatment.Rectangle
-                )
-        )
-
-        // Enhanced floating navigation dock
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(72.dp)
                 .shadow(
-                    elevation = 24.dp,
-                    shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                    spotColor = themeAccents.primary.copy(alpha = 0.4f),
-                    ambientColor = themeAccents.primary.copy(alpha = 0.2f)
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                 ),
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-            color = Color.Transparent
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+            color = MaterialTheme.colorScheme.surface
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                            )
-                        )
-                    )
+                    .background(MaterialTheme.colorScheme.surface)
                     .border(
                         width = 1.dp,
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                themeAccents.borderGlow.copy(alpha = 0.6f),
-                                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                            )
-                        ),
-                        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                     )
             ) {
                 Row(
@@ -277,12 +246,12 @@ private fun EnhancedBottomBarItem(
         modifier = Modifier
             .size(54.dp, 42.dp)
             .scale(scale.value)
-            .clip(RoundedCornerShape(22.dp))
+            .clip(CircleShape)
             .background(backgroundColor)
             .border(
                 width = if (selected) 1.dp else 0.dp,
                 color = if (selected) themeAccents.borderGlow.copy(alpha = 0.3f) else Color.Transparent,
-                shape = RoundedCornerShape(22.dp)
+                shape = CircleShape
             )
             .pointerInput(Unit) {
                 detectTapGestures(
@@ -303,13 +272,7 @@ private fun EnhancedBottomBarItem(
                 modifier = Modifier
                     .size(32.dp)
                     .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                themeAccents.primary.copy(alpha = 0.1f),
-                                Color.Transparent
-                            ),
-                            radius = 40f
-                        ),
+                        color = Color.Transparent,
                         shape = CircleShape
                     )
             )
@@ -331,7 +294,6 @@ private fun EnhancedCenterFab(
     val themeAccents = LocalThemeAccents.current
     var isPressed by remember { mutableStateOf(false) }
     val scale = remember { Animatable(1f) }
-    val rotation = remember { Animatable(0f) }
     
     LaunchedEffect(isPressed) {
         if (isPressed) {
@@ -358,57 +320,28 @@ private fun EnhancedCenterFab(
             .offset(y = (-20).dp)
             .size(56.dp)
             .scale(scale.value)
-            .shadow(
-                elevation = 16.dp,
-                shape = CircleShape,
-                spotColor = themeAccents.primary.copy(alpha = 0.4f),
-                ambientColor = themeAccents.primary.copy(alpha = 0.2f)
-            )
+            .shadow(elevation = 2.dp, shape = CircleShape)
             .clip(CircleShape)
+            .background(themeAccents.primary)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    },
+                    onTap = { onClick() }
+                )
+            }
             .testTag("nav_tab_add"),
         contentAlignment = Alignment.Center
     ) {
-        // Glassmorphism background
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            themeAccents.primary,
-                            themeAccents.primary.copy(alpha = 0.9f)
-                        ),
-                        radius = 120f
-                    )
-                )
-                .border(
-                    width = 1.5.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.3f),
-                            Color.White.copy(alpha = 0.1f)
-                        )
-                    ),
-                    shape = CircleShape
-                )
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onPress = {
-                            isPressed = true
-                            tryAwaitRelease()
-                            isPressed = false
-                        },
-                        onTap = { onClick() }
-                    )
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add Item",
-                tint = Color.White,
-                modifier = Modifier.size(28.dp)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add Item",
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(28.dp)
+        )
     }
 }

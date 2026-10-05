@@ -1,8 +1,8 @@
 package com.example.adere.domain.repository
 
 import android.util.Base64
+import com.example.adere.core.crypto.BiometricKeyStore
 import com.example.adere.core.crypto.CryptoEngine
-import com.example.adere.core.crypto.KeystoreManager
 import com.example.adere.data.local.VaultConfigStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +23,8 @@ sealed interface VaultLockState {
  */
 class VaultSessionManager(
     private val configStore: VaultConfigStore,
-    private val keystoreManager: KeystoreManager
+    private val keystoreManager: BiometricKeyStore,
+    private val currentTimeMillis: () -> Long = System::currentTimeMillis
 ) {
 
     private val _lockState = MutableStateFlow<VaultLockState>(
@@ -32,27 +33,29 @@ class VaultSessionManager(
     val lockState: StateFlow<VaultLockState> = _lockState.asStateFlow()
 
     private var inMemoryDek: ByteArray? = null
-    private var lastActiveTime: Long = System.currentTimeMillis()
+    private var lastActiveTime: Long = currentTimeMillis()
 
     fun isVaultInitialized(): Boolean = configStore.isInitialized
 
-    fun isBiometricEnabled(): Boolean = configStore.isBiometricEnabled && keystoreManager.hasBiometricKey()
+    fun isBiometricEnabled(): Boolean =
+        configStore.isBiometricEnabled &&
+        configStore.biometricEncryptedDekBase64.isNotBlank() &&
+        configStore.biometricDekIvBase64.isNotBlank() &&
+        runCatching { keystoreManager.hasBiometricKey() }.getOrDefault(false)
 
     fun getActiveDek(): ByteArray? = inMemoryDek
 
     fun recordInteraction() {
-        lastActiveTime = System.currentTimeMillis()
+        lastActiveTime = currentTimeMillis()
     }
 
     fun checkAutoLock() {
         if (_lockState.value != VaultLockState.Unlocked) return
         val timeoutSeconds = configStore.autoLockSeconds
-        if (timeoutSeconds <= 0) {
-            // Immediate lock on background check
-            lock()
-            return
-        }
-        val elapsed = (System.currentTimeMillis() - lastActiveTime) / 1000
+        // "Immediately" is applied when the activity leaves the foreground.
+        // It must not lock continuously while the user is actively in the app.
+        if (timeoutSeconds <= 0) return
+        val elapsed = (currentTimeMillis() - lastActiveTime) / 1000
         if (elapsed >= timeoutSeconds) {
             lock()
         }
@@ -90,16 +93,14 @@ class VaultSessionManager(
             configStore.hasRecoveryKey = true
 
             if (enableBiometric) {
-                try {
-                    val biometricEncrypted = keystoreManager.encryptDek(newDek)
-                    configStore.biometricEncryptedDekBase64 = biometricEncrypted.toBase64Ciphertext()
-                    configStore.biometricDekIvBase64 = biometricEncrypted.toBase64Iv()
-                    configStore.isBiometricEnabled = true
-                } catch (e: Exception) {
-                    configStore.isBiometricEnabled = false
-                }
+                val biometricEncrypted = keystoreManager.encryptDek(newDek)
+                configStore.biometricEncryptedDekBase64 = biometricEncrypted.toBase64Ciphertext()
+                configStore.biometricDekIvBase64 = biometricEncrypted.toBase64Iv()
+                configStore.isBiometricEnabled = true
+                configStore.isBiometricUserDisabled = false
             } else {
                 configStore.isBiometricEnabled = false
+                configStore.isBiometricUserDisabled = true
                 keystoreManager.deleteBiometricKey()
             }
 
@@ -109,7 +110,7 @@ class VaultSessionManager(
 
             // Retain active DEK in memory
             inMemoryDek = newDek.clone()
-            lastActiveTime = System.currentTimeMillis()
+            lastActiveTime = currentTimeMillis()
             _lockState.value = VaultLockState.Unlocked
 
             Result.success(Unit)
@@ -140,7 +141,7 @@ class VaultSessionManager(
             configStore.failedAttempts = 0
             configStore.lockoutUntilMs = 0L
             inMemoryDek = decryptedDek
-            lastActiveTime = System.currentTimeMillis()
+            lastActiveTime = currentTimeMillis()
             _lockState.value = VaultLockState.Unlocked
 
             // Auto-provision Master Recovery Key for legacy vaults if missing
@@ -159,6 +160,16 @@ class VaultSessionManager(
                     configStore.storedRecoveryKeyEncBase64 = storedRecoveryKeyEnc.toBase64Ciphertext()
                     configStore.storedRecoveryKeyIvBase64 = storedRecoveryKeyEnc.toBase64Iv()
                     configStore.hasRecoveryKey = true
+                } catch (_: Exception) {}
+            }
+
+            // Auto-provision or re-encrypt Biometric DEK if biometric is not user-disabled
+            if (!configStore.isBiometricUserDisabled) {
+                try {
+                    val biometricEncrypted = keystoreManager.encryptDek(decryptedDek)
+                    configStore.biometricEncryptedDekBase64 = biometricEncrypted.toBase64Ciphertext()
+                    configStore.biometricDekIvBase64 = biometricEncrypted.toBase64Iv()
+                    configStore.isBiometricEnabled = true
                 } catch (_: Exception) {}
             }
 
@@ -195,6 +206,8 @@ class VaultSessionManager(
             // Biometric enrollment changed — purge the key so user is forced to re-enroll
             keystoreManager.deleteBiometricKey()
             configStore.isBiometricEnabled = false
+            configStore.biometricEncryptedDekBase64 = ""
+            configStore.biometricDekIvBase64 = ""
             null
         } catch (_: Exception) {
             null
@@ -222,7 +235,36 @@ class VaultSessionManager(
             configStore.failedAttempts = 0
             configStore.lockoutUntilMs = 0L
             inMemoryDek = decryptedDek
-            lastActiveTime = System.currentTimeMillis()
+            lastActiveTime = currentTimeMillis()
+            _lockState.value = VaultLockState.Unlocked
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Completes vault unlock using the Keystore key after BiometricPrompt has verified the user.
+     */
+    fun unlockWithBiometricAuth(): Result<Unit> {
+        if (!configStore.isBiometricEnabled || configStore.biometricEncryptedDekBase64.isBlank() || configStore.biometricDekIvBase64.isBlank()) {
+            return Result.failure(IllegalStateException("Biometric unlock is not set up. Please unlock with Master Password."))
+        }
+        return try {
+            val ciphertext = com.example.adere.core.crypto.Base64Codec.decode(
+                configStore.biometricEncryptedDekBase64
+            )
+            val iv = com.example.adere.core.crypto.Base64Codec.decode(
+                configStore.biometricDekIvBase64
+            )
+            val decryptResult = keystoreManager.decryptDek(ciphertext, iv)
+            val decryptedDek = decryptResult.getOrThrow()
+
+            configStore.failedAttempts = 0
+            configStore.lockoutUntilMs = 0L
+            inMemoryDek = decryptedDek
+            lastActiveTime = currentTimeMillis()
             _lockState.value = VaultLockState.Unlocked
 
             Result.success(Unit)
@@ -242,15 +284,39 @@ class VaultSessionManager(
                 configStore.biometricEncryptedDekBase64 = biometricEncrypted.toBase64Ciphertext()
                 configStore.biometricDekIvBase64 = biometricEncrypted.toBase64Iv()
                 configStore.isBiometricEnabled = true
+                configStore.isBiometricUserDisabled = false
             } else {
                 keystoreManager.deleteBiometricKey()
                 configStore.isBiometricEnabled = false
+                configStore.isBiometricUserDisabled = true
                 configStore.biometricEncryptedDekBase64 = ""
                 configStore.biometricDekIvBase64 = ""
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e)
+            val msg = e.localizedMessage ?: e.message ?: "Failed to configure biometric encryption key"
+            Result.failure(Exception(msg, e))
+        }
+    }
+
+    /**
+     * Cryptographically verifies whether the given Master Password matches the vault.
+     * Derives key using Argon2id and tests decryption against stored encrypted DEK.
+     * Does NOT unlock or modify vault state.
+     */
+    fun verifyMasterPassword(password: CharArray): Boolean {
+        if (!configStore.isInitialized) return false
+        return try {
+            val salt = com.example.adere.core.crypto.Base64Codec.decode(configStore.masterSaltBase64)
+            val ciphertext = com.example.adere.core.crypto.Base64Codec.decode(configStore.encryptedDekBase64)
+            val iv = com.example.adere.core.crypto.Base64Codec.decode(configStore.encryptedDekIvBase64)
+
+            val masterKey = CryptoEngine.deriveKey(password, salt)
+            val decryptedDek = CryptoEngine.decrypt(ciphertext, iv, masterKey)
+            Arrays.fill(decryptedDek, 0.toByte())
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -393,7 +459,7 @@ class VaultSessionManager(
             configStore.lockoutUntilMs = 0L
 
             inMemoryDek = recoveredDek
-            lastActiveTime = System.currentTimeMillis()
+            lastActiveTime = currentTimeMillis()
             _lockState.value = VaultLockState.Unlocked
 
             Result.success(Unit)

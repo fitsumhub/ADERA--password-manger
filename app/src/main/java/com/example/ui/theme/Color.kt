@@ -1,100 +1,69 @@
-@file:Suppress("unused")
-
 package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ==========================================
-// Total Security Palette
-// ==========================================
-val TotalSecurityPrimary = Color(0xFF5E5CE6) // Royal Indigo / Periwinkle
-val TotalSecurityPrimaryLight = Color(0xFF7E7CF6)
-val TotalSecurityPrimaryDark = Color(0xFF4341B8)
-val TotalSecurityPrimaryContainer = Color(0xFFEEF0FF) // Lavender password card container
-val TotalSecurityOnPrimaryContainer = Color(0xFF27237E)
-
-// Category Colors
-val CategorySocialBlue = Color(0xFF5E5CE6) // Social tile
-val CategoryAppsYellow = Color(0xFFF5BA31) // Apps tile
-val CategoryCardTeal = Color(0xFF48C9B0)   // Card tile
-val CategoryCoral = Color(0xFFFF6B6B)
-
-// Action & Utility Colors
-val ActionCopyGreen = Color(0xFF6EE7B7)    // "Copy to clipboard" button
-val ActionCopyGreenText = Color(0xFF065F46)
-val ActionRefreshYellow = Color(0xFFFEF08A) // Circular refresh button
-val ActionRefreshYellowIcon = Color(0xFF78350F)
-
-// Health Ring Colors
-val HealthSafeBlue = Color(0xFF5E5CE6)
-val HealthRefusedYellow = Color(0xFFF5BA31)
-val HealthRiskRed = Color(0xFFEF4444)
-val HealthCompromisedTeal = Color(0xFF48C9B0)
-
-// Surfaces & Backgrounds
-val CleanBg = Color(0xFFF7F8FC)
+val CleanBg = Color(0xFFF6F7F9)
 val CleanSurface = Color(0xFFFFFFFF)
-val CleanSurfaceVariant = Color(0xFFF1F3F9)
-val CleanBorder = Color(0xFFECEEF5)
-val CleanBorderSubtle = Color(0xFFF3F4F8)
+val CleanSurfaceVariant = Color(0xFFEEF1F5)
+val CleanBorder = Color(0xFFDDE2E9)
+val CleanBorderSubtle = Color(0xFFE8ECF1)
 
-// Typography Colors
-val TextDarkPrimary = Color(0xFF1A1C29)
-val TextDarkSecondary = Color(0xFF737A8C)
-val TextDarkMuted = Color(0xFFA1A7B7)
+val CharcoalBg = Color(0xFF11151B)
+val CharcoalSurface = Color(0xFF191F27)
+val CharcoalSurfaceVariant = Color(0xFF222A35)
+val CharcoalSurfaceElevated = Color(0xFF28313E)
+val CharcoalBorder = Color(0xFF35404E)
+val CharcoalBorderSubtle = Color(0xFF2B3440)
 
-// Backward Compatibility Aliases
-val CharcoalBg = CleanBg
-val CharcoalSurface = CleanSurface
-val CharcoalSurfaceVariant = CleanSurfaceVariant
-val CharcoalSurfaceElevated = CleanSurface
-val CharcoalBorder = CleanBorder
-val CharcoalBorderSubtle = CleanBorderSubtle
-val CharcoalBorderGlow = Color(0xFFD6DAE8)
+val TextDarkPrimary = Color(0xFF09090B)
+val TextDarkSecondary = Color(0xFF71717A)
+val TextDarkMuted = Color(0xFFA1A1AA)
 
-val EmeraldPrimary = TotalSecurityPrimary
-val EmeraldLight = TotalSecurityPrimaryLight
-val EmeraldDark = TotalSecurityPrimaryDark
-val EmeraldContainer = TotalSecurityPrimaryContainer
-val OnEmeraldContainer = TotalSecurityOnPrimaryContainer
-val EmeraldGlow = Color(0x265E5CE6)
-
-val GoldAccent = CategoryAppsYellow
-val GoldLight = Color(0xFFFBBF24)
-val GoldContainer = Color(0xFFFEF3C7)
-val OnGoldContainer = Color(0xFF78350F)
-val GoldGlow = Color(0x33F5BA31)
-
-// Sapphire Palette for theme switcher
-val SapphirePrimary = Color(0xFF38BDF8)
-val SapphireLight = Color(0xFF7DD3FC)
-val SapphireDark = Color(0xFF0369A1)
-val SapphireContainer = Color(0xFF0C4A6E)
-val SapphireGlow = Color(0x3338BDF8)
-val SapphireBg = Color(0xFF060B12)
-val SapphireSurface = Color(0xFF0D1726)
-val SapphireSurfaceVariant = Color(0xFF132238)
-val SapphireBorder = Color(0xFF1D3557)
+val LightTextPrimary = Color(0xFFFAFAFA)
+val LightTextSecondary = Color(0xFFA1A1AA)
 
 val TextPrimary = TextDarkPrimary
 val TextSecondary = TextDarkSecondary
 val TextMuted = TextDarkMuted
 
-val SecurityGreen = HealthCompromisedTeal
-val SecurityYellow = HealthRefusedYellow
-val SecurityOrange = Color(0xFFF97316)
-val SecurityRed = HealthRiskRed
-val SecurityBlue = TotalSecurityPrimary
-val SecurityPurple = Color(0xFFA855F7)
+val TotalSecurityPrimary = Color(0xFF334155)
+val TotalSecurityPrimaryLight = Color(0xFF475569)
+val TotalSecurityPrimaryDark = Color(0xFF1E293B)
+val TotalSecurityPrimaryContainer = Color(0xFFE2E8F0)
+val TotalSecurityOnPrimaryContainer = Color(0xFF1E293B)
 
-val LightBg = CleanBg
-val LightSurface = CleanSurface
-val LightSurfaceVariant = CleanSurfaceVariant
-val LightBorder = CleanBorder
-val LightTextPrimary = TextDarkPrimary
-val LightTextSecondary = TextDarkSecondary
+val EmeraldPrimary = Color(0xFF10B981)
+val EmeraldLight = Color(0xFF34D399)
+val EmeraldDark = Color(0xFF059669)
+val EmeraldContainer = Color(0xFF064E3B)
+val OnEmeraldContainer = Color(0xFF10B981)
 
-// Theme Palette Enum
+val SapphirePrimary = Color(0xFF3B82F6)
+val SapphireLight = Color(0xFF60A5FA)
+val SapphireDark = Color(0xFF2563EB)
+val SapphireContainer = Color(0xFF1E3A8A)
+val SapphireBg = Color(0xFF101722)
+val SapphireSurface = Color(0xFF182231)
+val SapphireSurfaceVariant = Color(0xFF222E40)
+val SapphireBorder = Color(0xFF35445A)
+
+val CategorySocialBlue = Color(0xFF2563EB) 
+val CategoryAppsYellow = Color(0xFFD97706) 
+val CategoryCardTeal = Color(0xFF0D9488)   
+val CategoryCoral = Color(0xFFE11D48)
+
+val HealthSafeBlue = Color(0xFF3B82F6)
+val HealthRefusedYellow = Color(0xFFD97706)
+val HealthRiskRed = Color(0xFFE11D48)
+val HealthCompromisedTeal = Color(0xFF0D9488)
+
+val SecurityOrange = Color(0xFFF59E0B)
+val SecurityRed = Color(0xFFE11D48)
+val SecurityYellow = Color(0xFFFBBF24)
+
+val GoldAccent = CategoryAppsYellow
+val GoldLight = Color(0xFFF59E0B)
+
 enum class VaultThemePalette(
     val title: String,
     val subtitle: String,
@@ -103,24 +72,24 @@ enum class VaultThemePalette(
     val bgColor: Color,
 ) {
     TOTAL_SECURITY(
-        title = "Total Security",
-        subtitle = "Clean Purple & Modern (Image Theme)",
-        primaryColor = Color(0xFF5E5CE6),
+        title = "Quiet Graphite",
+        subtitle = "Soft slate with a clean, light canvas",
+        primaryColor = TotalSecurityPrimary,
         surfaceColor = Color(0xFFFFFFFF),
-        bgColor = Color(0xFFF7F8FC)
+        bgColor = CleanBg
     ),
     OBSIDIAN_EMERALD(
-        title = "Obsidian Emerald",
-        subtitle = "Dark Cyber Cipher",
+        title = "Graphite Emerald",
+        subtitle = "Layered charcoal with a calm emerald accent",
         primaryColor = Color(0xFF10B981),
-        surfaceColor = Color(0xFF0F1715),
-        bgColor = Color(0xFF070B0A)
+        surfaceColor = CharcoalSurface,
+        bgColor = CharcoalBg
     ),
     MIDNIGHT_SAPPHIRE(
-        title = "Midnight Sapphire",
-        subtitle = "Deep Defense Oceanic",
-        primaryColor = Color(0xFF38BDF8),
-        surfaceColor = Color(0xFF0D1726),
-        bgColor = Color(0xFF060B12)
+        title = "Midnight Slate",
+        subtitle = "Deep blue-gray with a restrained cobalt accent",
+        primaryColor = Color(0xFF3B82F6),
+        surfaceColor = SapphireSurface,
+        bgColor = SapphireBg
     )
 }

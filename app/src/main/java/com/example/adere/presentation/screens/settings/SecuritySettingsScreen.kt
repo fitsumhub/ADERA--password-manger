@@ -1,4 +1,6 @@
 package com.example.adere.presentation.screens.settings
+import com.example.ui.theme.Shapes
+import androidx.compose.foundation.shape.CircleShape
 
 import android.widget.Toast
 import androidx.biometric.BiometricManager
@@ -86,8 +88,9 @@ fun formatAutoLockLabel(seconds: Int): String = when (seconds) {
 fun SecuritySettingsScreen(
     biometricEnabled: Boolean,
     autoLockSeconds: Int,
-    onToggleBiometric: (Boolean) -> Unit,
-    onSetAutoLockSeconds: (Int) -> Unit,
+    onToggleBiometric: (Boolean, (Result<Unit>) -> Unit) -> Unit,
+    onSetAutoLockSeconds: (Int, (Result<Unit>) -> Unit) -> Unit,
+    onRefreshBiometricState: () -> Unit,
     onChangeMasterPassword: (old: String, new: String, (Result<Unit>) -> Unit) -> Unit,
     onGetRecoveryKey: () -> Result<String>,
     onRegenerateRecoveryKey: ((Result<String>) -> Unit) -> Unit,
@@ -155,7 +158,12 @@ fun SecuritySettingsScreen(
                         else "Biometrics not supported on this device."
                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                     } else {
-                        onToggleBiometric(enable)
+                        onToggleBiometric(enable) { res ->
+                            if (!res.isSuccess) {
+                                Toast.makeText(context, "Failed to toggle biometric: ${res.exceptionOrNull()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
+                                onRefreshBiometricState()
+                            }
+                        }
                     }
                 },
                 enabled = biometricAvailable,
@@ -229,7 +237,13 @@ fun SecuritySettingsScreen(
                 3600 to "1 hour"
             ),
             selectedOption = autoLockSeconds,
-            onSelectOption = { onSetAutoLockSeconds(it) },
+            onSelectOption = {
+                onSetAutoLockSeconds(it) { res ->
+                    if (!res.isSuccess) {
+                        Toast.makeText(context, "Failed to set auto-lock: ${res.exceptionOrNull()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
             onDismiss = { showAutoLockDialog = false }
         )
     }
@@ -297,7 +311,7 @@ fun SecuritySettingsScreen(
                                 showRecoveryKeyDialog = true
                                 Toast.makeText(context, "New recovery key generated", Toast.LENGTH_LONG).show()
                             } else {
-                                Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
@@ -357,7 +371,7 @@ private fun ChangeMasterPasswordDialog(
                 errorMsg?.let {
                     Surface(
                         color = HealthRiskRed.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = Shapes.medium
                     ) {
                         Text(
                             it,
@@ -414,7 +428,7 @@ private fun ChangeMasterPasswordDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(5.dp)
-                                .clip(RoundedCornerShape(3.dp)),
+                                .clip(Shapes.medium),
                             color = when {
                                 newStrength <= 2 -> HealthRiskRed
                                 newStrength <= 3 -> Color(0xFFF59E0B)
@@ -515,7 +529,7 @@ private fun RecoveryKeyViewDialog(
 
                 // Key display box
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = CircleShape,
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Row(
@@ -548,7 +562,7 @@ private fun RecoveryKeyViewDialog(
                 // Warning banner
                 Surface(
                     color = HealthRiskRed.copy(alpha = 0.08f),
-                    shape = RoundedCornerShape(9.dp)
+                    shape = Shapes.medium
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),

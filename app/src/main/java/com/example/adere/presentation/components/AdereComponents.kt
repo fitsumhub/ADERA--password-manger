@@ -1,4 +1,5 @@
 package com.example.adere.presentation.components
+import androidx.compose.foundation.shape.CircleShape
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -169,7 +170,7 @@ fun SecurityStatusBadge(
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(bgColor)
             .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -204,9 +205,9 @@ fun CategoryChip(
 
     Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(8.dp),
         color = bgColor,
         border = BorderStroke(1.dp, borderColor)
     ) {

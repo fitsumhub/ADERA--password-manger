@@ -112,7 +112,7 @@ fun EnhancedVaultList(
         ) { index, item ->
             EnhancedVaultItemCard(
                 item = item,
-                onItemClick = { onItemClick(item) },
+                onClick = { onItemClick(item) },
                 onToggleFavorite = { onToggleFavorite(item) },
                 onQuickCopy = { onQuickCopy(item) },
                 onDelete = if (onDelete != null) {
@@ -133,7 +133,7 @@ fun EnhancedVaultList(
 @Composable
 fun EnhancedVaultItemCard(
     item: VaultItem,
-    onItemClick: () -> Unit,
+    onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
     onQuickCopy: () -> Unit,
     onDelete: (() -> Unit)? = null,
@@ -234,7 +234,7 @@ fun EnhancedVaultItemCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .offset { IntOffset(offsetX.roundToInt(), 0) }
-                    .shadow(elevation, RoundedCornerShape(20.dp))
+                    .shadow(elevation, RoundedCornerShape(8.dp))
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(
                             onDragStart = {
@@ -299,10 +299,10 @@ fun EnhancedVaultItemCard(
                         enabled = offsetX == 0f,
                         onClick = {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onItemClick()
+                            onClick()
                         }
                     ),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
@@ -331,7 +331,7 @@ fun EnhancedVaultItemCard(
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(
                                     brush = Brush.linearGradient(
                                         colors = listOf(
@@ -434,7 +434,7 @@ fun EnhancedVaultItemCard(
                         ) {
                             Row {
                                 AnimatedCopyButton(
-                                    onClick = {
+                                    onCopy = {
                                         onQuickCopy()
                                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                                     },
@@ -445,7 +445,7 @@ fun EnhancedVaultItemCard(
                                 
                                 AnimatedFavoriteButton(
                                     isFavorite = item.isFavorite,
-                                    onClick = {
+                                    onToggle = {
                                         onToggleFavorite()
                                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                                     },
@@ -477,7 +477,7 @@ private fun SwipeActionBackground(
         modifier = Modifier
             .fillMaxWidth()
             .height(88.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(8.dp))
             .background(
                 brush = Brush.horizontalGradient(
                     colors = if (onDeleteClick != null) {
