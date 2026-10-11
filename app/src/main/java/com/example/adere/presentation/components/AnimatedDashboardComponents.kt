@@ -536,7 +536,7 @@ fun AnimatedCategoryGrid(
 ) {
     val categories = listOf(
         Triple("Social", CategorySocialBlue, Icons.Default.Share) to VaultCategory.SOCIAL,
-        Triple("Apps", CategoryAppsYellow, Icons.Default.Smartphone) to VaultCategory.WEBSITE,
+        Triple("Apps", CategoryAppsYellow, Icons.Default.Smartphone) to VaultCategory.APPS,
         Triple("Card", CategoryCardTeal, Icons.Default.CreditCard) to VaultCategory.BANKING
     )
 

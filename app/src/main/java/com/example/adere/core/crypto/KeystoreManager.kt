@@ -39,32 +39,45 @@ class KeystoreManager internal constructor(
         const val IV_SIZE = 12
     }
 
-    private fun getAndroidKeyStore(): KeyStore =
-        KeyStore.getInstance(ANDROID_KEYSTORE_PROVIDER).apply { load(null) }
+    private fun getAndroidKeyStore(): KeyStore? {
+        return try {
+            KeyStore.getInstance(ANDROID_KEYSTORE_PROVIDER).apply { load(null) }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     override fun hasBiometricKey(): Boolean {
-        return getAndroidKeyStore().containsAlias(biometricKeyAlias)
+        return try {
+            getAndroidKeyStore()?.containsAlias(biometricKeyAlias) == true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     override fun deleteBiometricKey() {
-        val keyStore = getAndroidKeyStore()
-        if (keyStore.containsAlias(biometricKeyAlias)) {
-            keyStore.deleteEntry(biometricKeyAlias)
-        }
+        try {
+            val keyStore = getAndroidKeyStore() ?: return
+            if (keyStore.containsAlias(biometricKeyAlias)) {
+                keyStore.deleteEntry(biometricKeyAlias)
+            }
+        } catch (_: Exception) {}
     }
 
     /**
      * Generates a hardware-backed AES-256 GCM key in the Android KeyStore.
      */
     fun generateBiometricKey(): SecretKey {
-        deleteBiometricKey()
+        try {
+            deleteBiometricKey()
+        } catch (_: Exception) {}
 
         val keyGenerator = KeyGenerator.getInstance(
             KeyProperties.KEY_ALGORITHM_AES,
             ANDROID_KEYSTORE_PROVIDER
         )
 
-        val spec = KeyGenParameterSpec.Builder(
+        val builder = KeyGenParameterSpec.Builder(
             biometricKeyAlias,
             KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
         )
@@ -72,14 +85,24 @@ class KeystoreManager internal constructor(
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
             .setKeySize(256)
             .setRandomizedEncryptionRequired(true)
-            .build()
 
-        keyGenerator.init(spec)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            builder.setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
+        } else {
+            @Suppress("DEPRECATION")
+            builder.setUserAuthenticationRequired(true)
+        }
+
+        keyGenerator.init(builder.build())
         return keyGenerator.generateKey()
     }
 
     private fun getSecretKey(): SecretKey? {
-        return getAndroidKeyStore().getKey(biometricKeyAlias, null) as? SecretKey
+        return try {
+            getAndroidKeyStore()?.getKey(biometricKeyAlias, null) as? SecretKey
+        } catch (_: Exception) {
+            null
+        }
     }
 
     /**
@@ -87,9 +110,29 @@ class KeystoreManager internal constructor(
      * Called when enabling biometric authentication in an active, unlocked vault session.
      */
     override fun encryptDek(dek: ByteArray): CryptoEngine.EncryptedData {
-        val key = getSecretKey() ?: generateBiometricKey()
+        val key = try {
+            getSecretKey() ?: generateBiometricKey()
+        } catch (_: Exception) {
+            try {
+                generateBiometricKey()
+            } catch (e2: Exception) {
+                throw IllegalStateException("Android Keystore initialization failed: ${e2.localizedMessage ?: e2.message}", e2)
+            }
+        }
+
         val cipher = Cipher.getInstance(TRANSFORMATION)
-        cipher.init(Cipher.ENCRYPT_MODE, key)
+        try {
+            cipher.init(Cipher.ENCRYPT_MODE, key)
+        } catch (_: Exception) {
+            try {
+                deleteBiometricKey()
+                val freshKey = generateBiometricKey()
+                cipher.init(Cipher.ENCRYPT_MODE, freshKey)
+            } catch (e2: Exception) {
+                throw IllegalStateException("Cipher encryption initialization failed: ${e2.localizedMessage ?: e2.message}", e2)
+            }
+        }
+
         val iv = cipher.iv ?: throw IllegalStateException("Cipher failed to generate IV")
         val ciphertext = cipher.doFinal(dek)
         return CryptoEngine.EncryptedData(ciphertext, iv)
@@ -109,7 +152,7 @@ class KeystoreManager internal constructor(
             val spec = GCMParameterSpec(GCM_TAG_LENGTH_BITS, iv)
             cipher.init(Cipher.DECRYPT_MODE, key, spec)
             cipher
-        } catch (e: KeyPermanentlyInvalidatedException) {
+        } catch (_: KeyPermanentlyInvalidatedException) {
             deleteBiometricKey()
             null
         } catch (_: Exception) {

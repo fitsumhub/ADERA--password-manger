@@ -1,9 +1,10 @@
 package com.example.adere.presentation.screens.settings
 import com.example.ui.theme.Shapes
 import androidx.compose.foundation.shape.CircleShape
+import com.example.adere.core.ads.AdSecurityZone
+import com.example.adere.presentation.components.AdMobBanner
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DeleteForever
@@ -87,6 +89,7 @@ fun SettingsMainScreen(
     totalCredentialsCount: Int,
     favoritesCount: Int,
     isVaultProtected: Boolean,
+    customAppName: String = "ADERA",
     onNavigateCategory: (SettingsCategory) -> Unit,
     onQuickLock: () -> Unit = {}
 ) {
@@ -97,7 +100,7 @@ fun SettingsMainScreen(
         topBar = {
             AdereTopBar(
                 title = "Settings",
-                subtitle = "Vault Security · System Controls · Preferences"
+                subtitle = "${customAppName.ifBlank { "ADERA" }} Vault · Security · Preferences"
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -158,111 +161,128 @@ fun SettingsMainScreen(
 
             val query = searchQuery.trim().lowercase()
 
+            fun matches(keywords: List<String>): Boolean {
+                if (query.isEmpty()) return true
+                return keywords.any { kw -> kw.contains(query) || query.contains(kw) }
+            }
+
             // ── Security & Protection ───────────────────────────────────────
-            if (query.isEmpty() || listOf("security", "biometric", "password", "lock", "recovery").any { it.contains(query) }) {
+            val securityMatches = matches(listOf("security", "biometric", "password", "lock", "recovery", "master"))
+            val privacyMatches = matches(listOf("privacy", "screenshot", "clipboard", "mask", "content"))
+            val backupMatches = matches(listOf("backup", "restore", "pdf", "export", "data"))
+
+            if (securityMatches || privacyMatches || backupMatches) {
                 SettingsSectionTitle("Security & Protection")
 
-                SettingsItemCard(
-                    icon = Icons.Default.Security,
-                    iconTint = primary,
-                    iconBg = primary.copy(alpha = 0.12f),
-                    title = "Security & Master Password",
-                    subtitle = "Biometrics, auto-lock timer, master password & 24-key recovery",
-                    badgeText = "Grade A+",
-                    badgeColor = EmeraldPrimary,
-                    onClick = { onNavigateCategory(SettingsCategory.SECURITY) },
-                    testTag = "settings_cat_security"
-                )
+                if (securityMatches) {
+                    SettingsItemCard(
+                        icon = Icons.Default.Security,
+                        iconTint = primary,
+                        iconBg = primary.copy(alpha = 0.12f),
+                        title = "Security & Master Password",
+                        subtitle = "Biometrics, auto-lock timer, master password & 24-key recovery",
+                        badgeText = "Grade A+",
+                        badgeColor = EmeraldPrimary,
+                        onClick = { onNavigateCategory(SettingsCategory.SECURITY) },
+                        testTag = "settings_cat_security"
+                    )
+                }
+
+                if (privacyMatches) {
+                    SettingsItemCard(
+                        icon = Icons.Default.PrivacyTip,
+                        iconTint = SecurityOrange,
+                        iconBg = SecurityOrange.copy(alpha = 0.12f),
+                        title = "Privacy & Content Protection",
+                        subtitle = "Screenshot lock, clipboard auto-clear & recent apps switcher mask",
+                        badgeText = "Protected",
+                        badgeColor = SecurityOrange,
+                        onClick = { onNavigateCategory(SettingsCategory.PRIVACY) },
+                        testTag = "settings_cat_privacy"
+                    )
+                }
+
+                if (backupMatches) {
+                    SettingsItemCard(
+                        icon = Icons.Default.Save,
+                        iconTint = Color(0xFF0EA5E9),
+                        iconBg = Color(0xFF0EA5E9).copy(alpha = 0.12f),
+                        title = "Backup & PDF Export",
+                        subtitle = "Encrypted .adere backups, vault recovery & PDF summary sheet",
+                        badgeText = "PDF Ready",
+                        badgeColor = Color(0xFF0EA5E9),
+                        onClick = { onNavigateCategory(SettingsCategory.BACKUP_RESTORE) },
+                        testTag = "settings_cat_backup"
+                    )
+                }
             }
-
-            if (query.isEmpty() || listOf("privacy", "screenshot", "clipboard", "mask", "content").any { it.contains(query) }) {
-                SettingsItemCard(
-                    icon = Icons.Default.PrivacyTip,
-                    iconTint = SecurityOrange,
-                    iconBg = SecurityOrange.copy(alpha = 0.12f),
-                    title = "Privacy & Content Protection",
-                    subtitle = "Screenshot lock, clipboard auto-clear & recent apps switcher mask",
-                    badgeText = "Protected",
-                    badgeColor = SecurityOrange,
-                    onClick = { onNavigateCategory(SettingsCategory.PRIVACY) },
-                    testTag = "settings_cat_privacy"
-                )
-            }
-
-            if (query.isEmpty() || listOf("backup", "restore", "pdf", "export", "data").any { it.contains(query) }) {
-                SettingsItemCard(
-                    icon = Icons.Default.Save,
-                    iconTint = Color(0xFF0EA5E9),
-                    iconBg = Color(0xFF0EA5E9).copy(alpha = 0.12f),
-                    title = "Backup & PDF Export",
-                    subtitle = "Encrypted .adere backups, vault recovery & PDF summary sheet",
-                    badgeText = "PDF Ready",
-                    badgeColor = Color(0xFF0EA5E9),
-                    onClick = { onNavigateCategory(SettingsCategory.BACKUP_RESTORE) },
-                    testTag = "settings_cat_backup"
-                )
-            }
-
-
 
             // ── Preferences ─────────────────────────────────────────────────
-            if (query.isEmpty() || listOf("appearance", "theme", "color", "dark", "palette").any { it.contains(query) }) {
+            val appearanceMatches = matches(listOf("preference", "preferences", "appearance", "theme", "color", "dark", "palette", "identity", "icon", "name"))
+            val notificationMatches = matches(listOf("preference", "preferences", "notification", "notifications", "alert", "alerts", "permission", "system"))
+
+            if (appearanceMatches || notificationMatches) {
                 SettingsSectionTitle("Preferences")
 
-                SettingsItemCard(
-                    icon = Icons.Default.ColorLens,
-                    iconTint = Color(0xFFA855F7),
-                    iconBg = Color(0xFFA855F7).copy(alpha = 0.12f),
-                    title = "Appearance & Themes",
-                    subtitle = "Color palettes, custom themes, dark & light vault modes",
-                    badgeText = "Active",
-                    badgeColor = Color(0xFFA855F7),
-                    onClick = { onNavigateCategory(SettingsCategory.APPEARANCE) },
-                    testTag = "settings_cat_appearance"
-                )
-            }
+                if (appearanceMatches) {
+                    SettingsItemCard(
+                        icon = Icons.Default.ColorLens,
+                        iconTint = Color(0xFFA855F7),
+                        iconBg = Color(0xFFA855F7).copy(alpha = 0.12f),
+                        title = "Appearance & Themes",
+                        subtitle = "Color palettes, custom themes, dark & light vault modes",
+                        badgeText = "Active",
+                        badgeColor = Color(0xFFA855F7),
+                        onClick = { onNavigateCategory(SettingsCategory.APPEARANCE) },
+                        testTag = "settings_cat_appearance"
+                    )
+                }
 
-
-
-            if (query.isEmpty() || listOf("notification", "alert", "permission", "system").any { it.contains(query) }) {
-                SettingsItemCard(
-                    icon = Icons.Default.Notifications,
-                    iconTint = SecurityOrange,
-                    iconBg = SecurityOrange.copy(alpha = 0.12f),
-                    title = "Notifications & Security Alerts",
-                    subtitle = "Security breach reminders & system notification permissions",
-                    badgeText = "Enabled",
-                    badgeColor = SecurityOrange,
-                    onClick = { onNavigateCategory(SettingsCategory.NOTIFICATIONS) },
-                    testTag = "settings_cat_notifications"
-                )
+                if (notificationMatches) {
+                    SettingsItemCard(
+                        icon = Icons.Default.Notifications,
+                        iconTint = SecurityOrange,
+                        iconBg = SecurityOrange.copy(alpha = 0.12f),
+                        title = "Notifications & Security Alerts",
+                        subtitle = "Security breach reminders & system notification permissions",
+                        badgeText = "Enabled",
+                        badgeColor = SecurityOrange,
+                        onClick = { onNavigateCategory(SettingsCategory.NOTIFICATIONS) },
+                        testTag = "settings_cat_notifications"
+                    )
+                }
             }
 
             // ── Information & Support ───────────────────────────────────────
-            if (query.isEmpty() || listOf("help", "faq", "guide", "contact", "support").any { it.contains(query) }) {
+            val helpMatches = matches(listOf("help", "faq", "guide", "contact", "support"))
+            val aboutMatches = matches(listOf("about", "version", "licenses", "terms", "policy", "architecture"))
+
+            if (helpMatches || aboutMatches) {
                 SettingsSectionTitle("Information & Support")
 
-                SettingsItemCard(
-                    icon = Icons.Default.HelpOutline,
-                    iconTint = primary,
-                    iconBg = primary.copy(alpha = 0.12f),
-                    title = "Help & Support",
-                    subtitle = "FAQ, zero-knowledge security guide & technical contact",
-                    onClick = { onNavigateCategory(SettingsCategory.HELP_SUPPORT) },
-                    testTag = "settings_cat_help"
-                )
-            }
+                if (helpMatches) {
+                    SettingsItemCard(
+                        icon = Icons.AutoMirrored.Filled.HelpOutline,
+                        iconTint = primary,
+                        iconBg = primary.copy(alpha = 0.12f),
+                        title = "Help & Support",
+                        subtitle = "FAQ, zero-knowledge security guide & technical contact",
+                        onClick = { onNavigateCategory(SettingsCategory.HELP_SUPPORT) },
+                        testTag = "settings_cat_help"
+                    )
+                }
 
-            if (query.isEmpty() || listOf("about", "version", "licenses", "terms", "policy").any { it.contains(query) }) {
-                SettingsItemCard(
-                    icon = Icons.Default.Info,
-                    iconTint = primary,
-                    iconBg = primary.copy(alpha = 0.12f),
-                    title = "About ADERE",
-                    subtitle = "Version 1.0.0 · Architecture · Terms & Privacy Policy",
-                    onClick = { onNavigateCategory(SettingsCategory.ABOUT) },
-                    testTag = "settings_cat_about"
-                )
+                if (aboutMatches) {
+                    SettingsItemCard(
+                        icon = Icons.Default.Info,
+                        iconTint = primary,
+                        iconBg = primary.copy(alpha = 0.12f),
+                        title = "About ADERE",
+                        subtitle = "Version 1.0.0 · Architecture · Terms & Privacy Policy",
+                        onClick = { onNavigateCategory(SettingsCategory.ABOUT) },
+                        testTag = "settings_cat_about"
+                    )
+                }
             }
 
 

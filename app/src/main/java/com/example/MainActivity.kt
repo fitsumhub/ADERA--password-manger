@@ -1,7 +1,6 @@
 package com.example
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.Toast
@@ -18,6 +17,8 @@ import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.adere.AdereApplication
+import com.example.adere.core.ads.AdMobManager
+import com.example.adere.core.ads.ConsentManager
 import com.example.adere.core.backup.PdfExportManager
 import com.example.adere.core.utilities.AppErrorHandler
 import com.example.adere.core.utilities.AppErrorHandler.Operation
@@ -84,18 +85,41 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleSecurityIntent(intent)
         enableEdgeToEdge()
-        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        if (viewModel.configStore.isScreenshotProtectionEnabled) {
+            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
 
         setContent {
             val themePalette by viewModel.themePalette.collectAsStateWithLifecycle()
             val screenshotProtection by viewModel.screenshotProtection.collectAsStateWithLifecycle()
+            val lockState by viewModel.lockState.collectAsStateWithLifecycle()
+
+            LaunchedEffect(lockState) {
+                com.example.adere.core.ads.AdMobAppOpenManager.getInstance(application)
+                    .setVaultLockedState(lockState != com.example.adere.domain.repository.VaultLockState.Unlocked)
+            }
 
             LaunchedEffect(screenshotProtection) {
                 if (screenshotProtection) {
                     window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
                 } else {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                ConsentManager.getInstance(this@MainActivity).gatherConsent(
+                    activity = this@MainActivity,
+                    isDebug = BuildConfig.DEBUG
+                ) { canRequestAds ->
+                    if (canRequestAds) {
+                        AdMobManager.getInstance(this@MainActivity).preloadInterstitial()
+                        AdMobManager.getInstance(this@MainActivity).preloadRewardedAd()
+                    }
                 }
             }
 
@@ -110,7 +134,18 @@ class MainActivity : FragmentActivity() {
                         createPdfDocumentLauncher.launch("adere_vault_passwords_${System.currentTimeMillis()}.pdf")
                     },
                     onExportPdfShare = ::sharePdfDocument,
+                    onRequestManageAdPrivacy = ::manageAdPrivacyOptions,
                 )
+            }
+        }
+    }
+
+    private fun manageAdPrivacyOptions() {
+        ConsentManager.getInstance(this).showPrivacyOptionsForm(this) { success ->
+            if (success) {
+                Toast.makeText(this, "Privacy preferences updated", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Privacy options form unavailable", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -217,21 +252,38 @@ class MainActivity : FragmentActivity() {
             .setAllowedAuthenticators(authenticators)
             .build()
 
+        val preparedCipher = viewModel.prepareBiometricCipher()
+
         val biometricPrompt = BiometricPrompt(
             this,
             executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    viewModel.unlockWithBiometricAuth { unlockResult ->
-                        if (unlockResult.isSuccess) {
-                            Toast.makeText(this@MainActivity, "Vault unlocked with biometrics", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val msg = AppErrorHandler.getMessage(
-                                unlockResult.exceptionOrNull(),
-                                Operation.BIOMETRIC_UNLOCK
-                            )
-                            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+                    val cipher = result.cryptoObject?.cipher
+                    if (cipher != null) {
+                        viewModel.unlockWithBiometric(cipher) { unlockResult ->
+                            if (unlockResult.isSuccess) {
+                                Toast.makeText(this@MainActivity, "Vault unlocked with biometrics", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val msg = AppErrorHandler.getMessage(
+                                    unlockResult.exceptionOrNull(),
+                                    Operation.BIOMETRIC_UNLOCK
+                                )
+                                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } else {
+                        viewModel.unlockWithBiometricAuth { unlockResult ->
+                            if (unlockResult.isSuccess) {
+                                Toast.makeText(this@MainActivity, "Vault unlocked with biometrics", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val msg = AppErrorHandler.getMessage(
+                                    unlockResult.exceptionOrNull(),
+                                    Operation.BIOMETRIC_UNLOCK
+                                )
+                                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 }
@@ -268,7 +320,19 @@ class MainActivity : FragmentActivity() {
             }
         )
 
-        biometricPrompt.authenticate(promptInfo)
+        try {
+            if (preparedCipher != null) {
+                try {
+                    biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(preparedCipher))
+                } catch (_: Exception) {
+                    biometricPrompt.authenticate(promptInfo)
+                }
+            } else {
+                biometricPrompt.authenticate(promptInfo)
+            }
+        } catch (_: Exception) {
+            Toast.makeText(this, "Biometric authentication prompt error. Please use Master Password.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun triggerBiometricVerification(
@@ -326,10 +390,6 @@ class MainActivity : FragmentActivity() {
                         else -> onError(biometricPromptErrorMessage(errorCode))
                     }
                 }
-
-                override fun onAuthenticationFailed() {
-                    super.onAuthenticationFailed()
-                }
             }
         )
 
@@ -348,5 +408,23 @@ class MainActivity : FragmentActivity() {
             "Biometric authentication is locked. Please use your master password."
         else ->
             "Biometric authentication could not be completed. Please try again or use your master password."
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleSecurityIntent(intent)
+    }
+
+    private fun handleSecurityIntent(intent: Intent?) {
+        if (intent?.getBooleanExtra("EXTRA_UNAUTHORIZED_DEACTIVATION_ATTEMPT", false) == true) {
+            viewModel.lockVault()
+            viewModel.refreshSecurityAuditState()
+            Toast.makeText(
+                this,
+                "⚠️ Security Alert: Device Admin deactivation attempted outside ADERA!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }

@@ -1,6 +1,5 @@
 package com.example.adere.core.crypto
 
-import android.util.Base64
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
@@ -54,7 +53,9 @@ object CryptoEngine {
         val factory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
         val rawBytes = factory.generateSecret(spec).encoded
         spec.clearPassword()
-        return SecretKeySpec(rawBytes, AES_KEY_ALGORITHM)
+        val keySpec = SecretKeySpec(rawBytes, AES_KEY_ALGORITHM)
+        java.util.Arrays.fill(rawBytes, 0.toByte())
+        return keySpec
     }
 
     data class EncryptedData(

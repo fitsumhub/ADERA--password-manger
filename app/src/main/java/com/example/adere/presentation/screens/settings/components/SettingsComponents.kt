@@ -60,7 +60,8 @@ import androidx.compose.ui.window.Dialog
 fun SettingsSubHeader(
     title: String,
     subtitle: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    trailingAction: (@Composable () -> Unit)? = null
 ) {
     Surface(
         tonalElevation = 0.dp,
@@ -115,6 +116,11 @@ fun SettingsSubHeader(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                }
+
+                if (trailingAction != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    trailingAction()
                 }
             }
             Box(

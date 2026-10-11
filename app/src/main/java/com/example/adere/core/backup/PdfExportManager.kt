@@ -53,6 +53,11 @@ object PdfExportManager {
 
     private fun getCategoryStyle(category: VaultCategory): CategoryStyle {
         return when (category) {
+            VaultCategory.APPS -> CategoryStyle(
+                primaryColor = Color.rgb(139, 92, 246), // Vibrant Purple
+                badgeBgColor = Color.rgb(245, 243, 255),
+                label = "APPS PASSWORDS"
+            )
             VaultCategory.SOCIAL -> CategoryStyle(
                 primaryColor = Color.rgb(37, 99, 235), // Royal Blue
                 badgeBgColor = Color.rgb(239, 246, 255),
@@ -212,14 +217,14 @@ object PdfExportManager {
                 color = Color.rgb(30, 41, 59) // Slate 800
                 textSize = 8.5f
                 isAntiAlias = true
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+                typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             }
 
             val boldPaint = Paint().apply {
                 color = Color.rgb(15, 23, 42) // Slate 900
                 textSize = 10.5f
                 isAntiAlias = true
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             }
 
             val monoPaint = Paint().apply {
@@ -233,7 +238,7 @@ object PdfExportManager {
                 color = Color.rgb(2, 132, 199) // Sky 600
                 textSize = 8.5f
                 isAntiAlias = true
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+                typeface = Typeface.create("sans-serif", Typeface.NORMAL)
             }
 
             val monoSecretBgPaint = Paint().apply {
@@ -245,7 +250,8 @@ object PdfExportManager {
                 color = Color.rgb(100, 116, 139) // Slate 500
                 textSize = 7.5f
                 isAntiAlias = true
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                letterSpacing = 0.05f
             }
 
             val brandBannerPaint1 = Paint().apply {
@@ -326,10 +332,28 @@ object PdfExportManager {
             val dateFormatter = SimpleDateFormat("MMMM dd, yyyy • HH:mm:ss z", Locale.getDefault())
             val exportTimestamp = dateFormatter.format(Date())
 
+            val watermarkPaint = Paint().apply {
+                color = Color.argb(12, 15, 23, 42) // Very transparent dark slate
+                textSize = 58f
+                typeface = Typeface.create("sans-serif", Typeface.BOLD)
+                isAntiAlias = true
+                textAlign = Paint.Align.CENTER
+                letterSpacing = 0.2f
+            }
+
             var pageNumber = 1
             var pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create()
             var page = document.startPage(pageInfo)
             var canvas = page.canvas
+
+            fun drawWatermark() {
+                canvas.save()
+                canvas.translate(PAGE_WIDTH / 2f, PAGE_HEIGHT / 2f)
+                canvas.rotate(-45f)
+                canvas.drawText("ADERE CONFIDENTIAL", 0f, 0f, watermarkPaint)
+                canvas.drawText("OFFLINE VAULT EXPORT", 0f, 60f, watermarkPaint)
+                canvas.restore()
+            }
 
             fun drawFooter() {
                 val footerY = PAGE_HEIGHT - MARGIN + 10f
@@ -346,21 +370,35 @@ object PdfExportManager {
             }
 
             // ================= PAGE 1: EXECUTIVE COVER SHEET =================
+            drawWatermark()
+            
             val barHalf = USABLE_WIDTH / 2f
             canvas.drawRect(MARGIN, MARGIN, MARGIN + barHalf, MARGIN + 6f, brandBannerPaint1)
             canvas.drawRect(MARGIN + barHalf, MARGIN, MARGIN + USABLE_WIDTH, MARGIN + 6f, brandBannerPaint2)
 
-            var currentY = MARGIN + 28f
+            var currentY = MARGIN + 32f
+
+            // Draw vector shield logo
+            val shieldPath = android.graphics.Path().apply {
+                moveTo(MARGIN + 12f, currentY - 14f)
+                lineTo(MARGIN + 24f, currentY - 18f)
+                lineTo(MARGIN + 36f, currentY - 14f)
+                lineTo(MARGIN + 36f, currentY - 2f)
+                cubicTo(MARGIN + 36f, currentY + 8f, MARGIN + 28f, currentY + 16f, MARGIN + 24f, currentY + 20f)
+                cubicTo(MARGIN + 20f, currentY + 16f, MARGIN + 12f, currentY + 8f, MARGIN + 12f, currentY - 2f)
+                close()
+            }
+            canvas.drawPath(shieldPath, brandBannerPaint2) // Emerald shield
 
             // Brand title
-            boldPaint.textSize = 22f
+            boldPaint.textSize = 24f
             boldPaint.color = Color.rgb(15, 23, 42)
-            canvas.drawText("ADERE", MARGIN, currentY, boldPaint)
+            canvas.drawText("ADERE", MARGIN + 48f, currentY + 4f, boldPaint)
 
-            currentY += 18f
+            currentY += 22f
             boldPaint.textSize = 14f
             boldPaint.color = Color.rgb(79, 70, 229)
-            canvas.drawText("SECURE VAULT EXPORT", MARGIN, currentY, boldPaint)
+            canvas.drawText("SECURE VAULT EXPORT", MARGIN + 48f, currentY, boldPaint)
 
             // Confidentiality badge on top right
             val confBadgePaint = Paint().apply {
@@ -466,6 +504,8 @@ object PdfExportManager {
 
                 // Header for item pages
                 fun drawSubsequentHeader() {
+                    drawWatermark()
+
                     canvas.drawRect(MARGIN, MARGIN, MARGIN + barHalf, MARGIN + 3f, brandBannerPaint1)
                     canvas.drawRect(MARGIN + barHalf, MARGIN, MARGIN + USABLE_WIDTH, MARGIN + 3f, brandBannerPaint2)
 

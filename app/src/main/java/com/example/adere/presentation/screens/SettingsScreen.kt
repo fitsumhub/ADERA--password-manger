@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.adere.core.backup.BackupManager
 import com.example.adere.core.backup.PdfExportManager
+import com.example.adere.core.utilities.AppIconManager
 import com.example.adere.domain.model.BackupHistoryEntry
 import com.example.adere.presentation.screens.settings.AboutScreen
 import com.example.adere.presentation.screens.settings.AppearanceSettingsScreen
@@ -27,18 +28,23 @@ fun SettingsScreen(
     isVaultProtected: Boolean = true,
     biometricEnabled: Boolean = false,
     autoLockSeconds: Int = 60,
+    customAppName: String = "ADERA",
+    selectedAppIcon: String = "default",
     screenshotProtection: Boolean = false,
     clipboardClearSeconds: Int = 30,
     hideRecentAppsContent: Boolean = false,
     notificationsEnabled: Boolean = true,
     themePalette: VaultThemePalette = VaultThemePalette.TOTAL_SECURITY,
     onSelectThemePalette: (VaultThemePalette) -> Unit = {},
+    onSetCustomAppName: (String) -> Unit = {},
+    onSetSelectedAppIcon: (AppIconManager.AppIconPreset) -> Unit = {},
     onToggleBiometric: (Boolean, (Result<Unit>) -> Unit) -> Unit,
     onSetAutoLockSeconds: (Int, (Result<Unit>) -> Unit) -> Unit,
     onRefreshBiometricState: () -> Unit,
     onToggleScreenshotProtection: (Boolean) -> Unit = {},
     onSetClipboardClearSeconds: (Int) -> Unit = {},
     onToggleHideRecentApps: (Boolean) -> Unit = {},
+    onRequestManageAdPrivacy: () -> Unit = {},
     onViewFAQ: () -> Unit = {},
     onViewSecurityGuide: () -> Unit = {},
     onContactSupport: () -> Unit = {},
@@ -53,6 +59,9 @@ fun SettingsScreen(
     onToggleNotifications: (Boolean) -> Unit = {},
     onChangeMasterPassword: (old: String, new: String, (Result<Unit>) -> Unit) -> Unit = { _, _, cb -> cb(Result.success(Unit)) },
     lastBackupTimestamp: Long = 0L,
+    lastTamperingTimestamp: Long = 0L,
+    hasPendingSecurityAlert: Boolean = false,
+    onDismissSecurityAlert: () -> Unit = {},
     backupHistory: List<BackupHistoryEntry> = emptyList(),
     onClearBackupHistory: (() -> Unit)? = null,
     onTriggerBiometrics: (() -> Unit)? = null,
@@ -81,6 +90,7 @@ fun SettingsScreen(
                 totalCredentialsCount = totalCredentialsCount,
                 favoritesCount = favoritesCount,
                 isVaultProtected = isVaultProtected,
+                customAppName = customAppName,
                 onNavigateCategory = { cat -> activeCategory = cat },
                 onQuickLock = onLockClick
             )
@@ -90,12 +100,18 @@ fun SettingsScreen(
             SecuritySettingsScreen(
                 biometricEnabled = biometricEnabled,
                 autoLockSeconds = autoLockSeconds,
+                lastBackupTimestamp = lastBackupTimestamp,
+                lastTamperingTimestamp = lastTamperingTimestamp,
+                hasPendingSecurityAlert = hasPendingSecurityAlert,
                 onToggleBiometric = onToggleBiometric,
                 onSetAutoLockSeconds = onSetAutoLockSeconds,
                 onRefreshBiometricState = onRefreshBiometricState,
                 onChangeMasterPassword = onChangeMasterPassword,
                 onGetRecoveryKey = onGetRecoveryKey,
                 onRegenerateRecoveryKey = onRegenerateRecoveryKey,
+                onNavigateToBackup = { activeCategory = SettingsCategory.BACKUP_RESTORE },
+                onDismissSecurityAlert = onDismissSecurityAlert,
+                onTriggerBiometrics = onTriggerBiometrics,
                 onBackClick = { activeCategory = null }
             )
         }
@@ -108,6 +124,7 @@ fun SettingsScreen(
                 onToggleScreenshotProtection = onToggleScreenshotProtection,
                 onToggleAppMasking = onToggleHideRecentApps,
                 onSetClipboardAutoClear = onSetClipboardClearSeconds,
+                onRequestManageAdPrivacy = onRequestManageAdPrivacy,
                 onBackClick = { activeCategory = null }
             )
         }
@@ -135,7 +152,11 @@ fun SettingsScreen(
         SettingsCategory.APPEARANCE -> {
             AppearanceSettingsScreen(
                 currentPalette = themePalette,
+                customAppName = customAppName,
+                selectedAppIcon = selectedAppIcon,
                 onSelectThemePalette = onSelectThemePalette,
+                onSetCustomAppName = onSetCustomAppName,
+                onSetSelectedAppIcon = onSetSelectedAppIcon,
                 onBackClick = { activeCategory = null }
             )
         }
@@ -162,6 +183,7 @@ fun SettingsScreen(
 
         SettingsCategory.ABOUT -> {
             AboutScreen(
+                customAppName = customAppName,
                 onViewArchitecture = onViewArchitecture,
                 onViewPrivacyPolicy = onViewPrivacyPolicy,
                 onViewTermsOfService = onViewTermsOfService,

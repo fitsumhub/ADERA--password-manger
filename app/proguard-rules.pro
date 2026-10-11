@@ -20,6 +20,14 @@
 # Biometric & Keystore
 -keep class androidx.biometric.** { *; }
 
+# Google Mobile Ads (AdMob) & User Messaging Platform (UMP) Keep Rules
+-keep class com.google.android.gms.ads.** { *; }
+-keep interface com.google.android.gms.ads.** { *; }
+-keep class com.google.android.ump.** { *; }
+-keep interface com.google.android.ump.** { *; }
+-keepclassmembers class com.example.adere.core.ads.** { *; }
+-keep class com.example.adere.core.ads.** { *; }
+
 # Kotlin Coroutines & Flow
 -keepclassmembers class kotlinx.coroutines.** { *; }
 

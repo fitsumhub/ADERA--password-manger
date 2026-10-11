@@ -8,7 +8,7 @@
 [![Security](https://img.shields.io/badge/Encryption-AES--256--GCM-red.svg)](#security)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **ADERE** (*አደረ* - "I made it secure" in Amharic) is a professional-grade password manager that combines military-level encryption with an intuitive, enterprise-quality user interface.
+> **ADERE** (*አደራ* - "Sacred Deposit / Vault" in Amharic) is a professional-grade password manager that combines military-level encryption with an intuitive, enterprise-quality user interface.
 
 ## ✨ Features
 

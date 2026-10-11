@@ -1,6 +1,5 @@
 package com.example.adere.domain.repository
 
-import android.util.Base64
 import com.example.adere.core.crypto.BiometricKeyStore
 import com.example.adere.core.crypto.CryptoEngine
 import com.example.adere.data.local.VaultConfigStore
@@ -65,9 +64,10 @@ class VaultSessionManager(
      * Initializes a brand new vault with the chosen Master Password.
      */
     suspend fun initializeVault(masterPassword: CharArray, enableBiometric: Boolean): Result<Unit> = withContext(Dispatchers.Default) {
+        val passCopy = masterPassword.clone()
         return@withContext try {
             val salt = CryptoEngine.generateSalt()
-            val masterKey = CryptoEngine.deriveKey(masterPassword, salt)
+            val masterKey = CryptoEngine.deriveKey(passCopy, salt)
             val newDek = CryptoEngine.generateDek()
 
             // Encrypt DEK with Master Key
@@ -116,6 +116,8 @@ class VaultSessionManager(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        } finally {
+            Arrays.fill(passCopy, '\u0000')
         }
     }
 
@@ -129,12 +131,13 @@ class VaultSessionManager(
             return@withContext Result.failure(IllegalStateException("Vault locked due to multiple failed attempts. Wait $remainingSec seconds or reset."))
         }
 
+        val passCopy = masterPassword.clone()
         return@withContext try {
             val salt = com.example.adere.core.crypto.Base64Codec.decode(configStore.masterSaltBase64)
             val ciphertext = com.example.adere.core.crypto.Base64Codec.decode(configStore.encryptedDekBase64)
             val iv = com.example.adere.core.crypto.Base64Codec.decode(configStore.encryptedDekIvBase64)
 
-            val masterKey = CryptoEngine.deriveKey(masterPassword, salt)
+            val masterKey = CryptoEngine.deriveKey(passCopy, salt)
             val decryptedDek = CryptoEngine.decrypt(ciphertext, iv, masterKey)
 
             // Successfully unlocked
@@ -182,6 +185,8 @@ class VaultSessionManager(
                 configStore.lockoutUntilMs = System.currentTimeMillis() + (30_000L * (attempts - 4))
             }
             Result.failure(IllegalArgumentException("Incorrect master password."))
+        } finally {
+            Arrays.fill(passCopy, '\u0000')
         }
     }
 
@@ -301,22 +306,25 @@ class VaultSessionManager(
 
     /**
      * Cryptographically verifies whether the given Master Password matches the vault.
-     * Derives key using Argon2id and tests decryption against stored encrypted DEK.
+     * Derives key using PBKDF2-HMAC-SHA256 and tests decryption against stored encrypted DEK.
      * Does NOT unlock or modify vault state.
      */
     fun verifyMasterPassword(password: CharArray): Boolean {
         if (!configStore.isInitialized) return false
+        val passCopy = password.clone()
         return try {
             val salt = com.example.adere.core.crypto.Base64Codec.decode(configStore.masterSaltBase64)
             val ciphertext = com.example.adere.core.crypto.Base64Codec.decode(configStore.encryptedDekBase64)
             val iv = com.example.adere.core.crypto.Base64Codec.decode(configStore.encryptedDekIvBase64)
 
-            val masterKey = CryptoEngine.deriveKey(password, salt)
+            val masterKey = CryptoEngine.deriveKey(passCopy, salt)
             val decryptedDek = CryptoEngine.decrypt(ciphertext, iv, masterKey)
             Arrays.fill(decryptedDek, 0.toByte())
             true
         } catch (_: Exception) {
             false
+        } finally {
+            Arrays.fill(passCopy, '\u0000')
         }
     }
 
@@ -326,13 +334,17 @@ class VaultSessionManager(
      */
     suspend fun changeMasterPassword(oldPassword: CharArray, newPassword: CharArray): Result<Unit> = withContext(Dispatchers.Default) {
         val dek = inMemoryDek ?: return@withContext Result.failure(IllegalStateException("Vault is locked."))
-        // Verify old password first
+        val newPassCopy = newPassword.clone()
+        // Verify old password first (unlockWithMasterPassword clones and wipes oldPassword)
         val unlockTest = unlockWithMasterPassword(oldPassword)
-        if (unlockTest.isFailure) return@withContext unlockTest
+        if (unlockTest.isFailure) {
+            Arrays.fill(newPassCopy, '\u0000')
+            return@withContext unlockTest
+        }
 
         return@withContext try {
             val newSalt = CryptoEngine.generateSalt()
-            val newMasterKey = CryptoEngine.deriveKey(newPassword, newSalt)
+            val newMasterKey = CryptoEngine.deriveKey(newPassCopy, newSalt)
             val encryptedDek = CryptoEngine.encrypt(dek, newMasterKey)
 
             configStore.masterSaltBase64 = com.example.adere.core.crypto.Base64Codec.encode(newSalt)
@@ -342,6 +354,8 @@ class VaultSessionManager(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        } finally {
+            Arrays.fill(newPassCopy, '\u0000')
         }
     }
 
@@ -411,6 +425,12 @@ class VaultSessionManager(
      * Derives DEK from Recovery Key, generates new Master Password key, and re-encrypts DEK.
      */
     suspend fun recoverVaultWithKey(recoveryKeyInput: String, newMasterPassword: CharArray): Result<Unit> = withContext(Dispatchers.Default) {
+        val now = System.currentTimeMillis()
+        if (now < configStore.lockoutUntilMs) {
+            val remainingSec = ((configStore.lockoutUntilMs - now) / 1000).coerceAtLeast(1)
+            return@withContext Result.failure(IllegalStateException("Vault locked due to multiple failed attempts. Wait $remainingSec seconds or reset."))
+        }
+
         val normalized = com.example.adere.core.crypto.RecoveryKeyManager.normalizeKey(recoveryKeyInput)
         if (!com.example.adere.core.crypto.RecoveryKeyManager.isValidKeyFormat(normalized)) {
             return@withContext Result.failure(IllegalArgumentException("Invalid recovery key format. Expected 24 alphanumeric characters."))
@@ -420,6 +440,7 @@ class VaultSessionManager(
             return@withContext Result.failure(IllegalStateException("No recovery key found for this vault."))
         }
 
+        val newPassCopy = newMasterPassword.clone()
         return@withContext try {
             val recoverySalt = com.example.adere.core.crypto.Base64Codec.decode(configStore.recoverySaltBase64)
             val recoveryCiphertext = com.example.adere.core.crypto.Base64Codec.decode(configStore.recoveryEncryptedDekBase64)
@@ -431,7 +452,7 @@ class VaultSessionManager(
 
             // Successfully decrypted DEK! Re-encrypt with new Master Password
             val newMasterSalt = CryptoEngine.generateSalt()
-            val newMasterKey = CryptoEngine.deriveKey(newMasterPassword, newMasterSalt)
+            val newMasterKey = CryptoEngine.deriveKey(newPassCopy, newMasterSalt)
             val newEncryptedDek = CryptoEngine.encrypt(recoveredDek, newMasterKey)
 
             configStore.masterSaltBase64 = com.example.adere.core.crypto.Base64Codec.encode(newMasterSalt)
@@ -464,7 +485,14 @@ class VaultSessionManager(
 
             Result.success(Unit)
         } catch (e: Exception) {
+            val attempts = configStore.failedAttempts + 1
+            configStore.failedAttempts = attempts
+            if (attempts >= 5) {
+                configStore.lockoutUntilMs = System.currentTimeMillis() + (30_000L * (attempts - 4))
+            }
             Result.failure(IllegalArgumentException("Incorrect Master Recovery Key. Verification failed."))
+        } finally {
+            Arrays.fill(newPassCopy, '\u0000')
         }
     }
 

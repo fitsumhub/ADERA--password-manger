@@ -1,7 +1,6 @@
 package com.example.adere.presentation.screens.settings
 
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -27,26 +26,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContactSupport
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -74,11 +72,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.adere.core.ads.AdSecurityZone
+import com.example.adere.presentation.components.AdMobBanner
+import com.example.adere.presentation.components.AdMobNativeView
 import com.example.adere.presentation.screens.settings.components.SettingsItemCard
 import com.example.adere.presentation.screens.settings.components.SettingsSectionTitle
 import com.example.adere.presentation.screens.settings.components.SettingsSubHeader
 import com.example.ui.theme.EmeraldPrimary
-import com.example.ui.theme.SecurityOrange
+import com.example.ui.theme.Shapes
 import com.example.ui.theme.TotalSecurityPrimary
 
 @Composable
@@ -95,23 +96,25 @@ fun HelpSupportScreen(
     val clipboardManager = LocalClipboardManager.current
     val primary = MaterialTheme.colorScheme.primary
 
+    val developerEmail = "Fitsumenunu21@gmail.com"
+
     var showFaqDialog by remember { mutableStateOf(false) }
     var showSecurityGuideDialog by remember { mutableStateOf(false) }
     var showTutorialDialog by remember { mutableStateOf(false) }
     var showFeedbackDialog by remember { mutableStateOf(false) }
+    var userFeedbackText by remember { mutableStateOf("") }
 
     fun sendEmail(subject: String, body: String = "") {
-        val email = "support@aderevault.com"
         val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:$email")
+            data = Uri.parse("mailto:$developerEmail")
             putExtra(Intent.EXTRA_SUBJECT, subject)
             putExtra(Intent.EXTRA_TEXT, body)
         }
         try {
             context.startActivity(Intent.createChooser(intent, "Send Email"))
         } catch (_: ActivityNotFoundException) {
-            clipboardManager.setText(AnnotatedString(email))
-            Toast.makeText(context, "Support email copied: $email", Toast.LENGTH_LONG).show()
+            clipboardManager.setText(AnnotatedString(developerEmail))
+            Toast.makeText(context, "Developer email copied: $developerEmail", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -138,7 +141,7 @@ fun HelpSupportScreen(
         topBar = {
             SettingsSubHeader(
                 title = "Help & Support",
-                subtitle = "FAQ · Security guide · Support contact · Community",
+                subtitle = "FAQ · Security guide · Developer support · Feedback",
                 onBackClick = onBackClick
             )
         },
@@ -185,7 +188,85 @@ fun HelpSupportScreen(
                 testTag = "help_tutorial_item"
             )
 
-            // ── Support & Feedback ────────────────────────────────────────────
+            // ── Developer Contact & Direct Support Banner ────────────────────────
+            SettingsSectionTitle("Developer Support & Direct Contact")
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = Shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(primary.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Fitsum Enunu",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "Founder & Developer · Ethiopia 🇪🇹",
+                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(Shapes.small)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Email, contentDescription = null, tint = primary, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = developerEmail,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = primary
+                                )
+                            )
+                        }
+
+                        IconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(developerEmail))
+                                Toast.makeText(context, "Email copied: $developerEmail", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy Email", tint = primary, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+
+            // ── Support Actions ───────────────────────────────────────────────
             SettingsSectionTitle("Support & Feedback")
 
             SettingsItemCard(
@@ -193,11 +274,11 @@ fun HelpSupportScreen(
                 iconTint = primary,
                 iconBg = primary.copy(alpha = 0.12f),
                 title = "Contact Support",
-                subtitle = "Reach out to technical support via email: support@aderevault.com",
+                subtitle = "Direct developer inquiry: $developerEmail",
                 onClick = {
                     sendEmail(
-                        subject = "[ADERE Support] Technical Inquiry",
-                        body = "\n\n--- Device Info ---\nApp Version: 1.0.0\nDevice: ${Build.MANUFACTURER} ${Build.MODEL}\nAndroid: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+                        subject = "[Adera Support] Technical Inquiry",
+                        body = "\n\n--- Device Info ---\nApp Version: 1.0.0\nDevice: ${Build.MANUFACTURER} ${Build.MODEL}\nAndroid OS: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
                     )
                 },
                 testTag = "help_contact_item"
@@ -208,10 +289,10 @@ fun HelpSupportScreen(
                 iconTint = Color(0xFFF59E0B),
                 iconBg = Color(0xFFF59E0B).copy(alpha = 0.12f),
                 title = "Report a Bug",
-                subtitle = "Submit issue report with automatic device diagnostic details",
+                subtitle = "Submit issue report to $developerEmail with diagnostic info",
                 onClick = {
                     sendEmail(
-                        subject = "[ADERE Bug Report] Issue Description",
+                        subject = "[Adera Bug Report] Issue Description",
                         body = "Please describe the problem:\n\nSteps to reproduce:\n1.\n2.\n3.\n\n--- Diagnostic Info ---\nApp Version: 1.0.0 (Build 100)\nDevice: ${Build.MANUFACTURER} ${Build.MODEL}\nAndroid OS: ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})\nSecurity Patch: ${Build.VERSION.SECURITY_PATCH}"
                     )
                 },
@@ -219,19 +300,17 @@ fun HelpSupportScreen(
             )
 
             SettingsItemCard(
-                icon = Icons.Default.Lightbulb,
+                icon = Icons.Default.Feedback,
                 iconTint = Color(0xFF0EA5E9),
                 iconBg = Color(0xFF0EA5E9).copy(alpha = 0.12f),
-                title = "Feature Suggestion",
-                subtitle = "Suggest new security features or user interface improvements",
-                onClick = {
-                    sendEmail(
-                        subject = "[ADERE Feature Suggestion]",
-                        body = "I would love to see this feature in ADERE:\n\nWhy this would be useful:\n"
-                    )
-                },
+                title = "In-App Feedback & Suggestions",
+                subtitle = "Compose feedback or feature suggestions directly to $developerEmail",
+                onClick = { showFeedbackDialog = true },
                 testTag = "help_feature_item"
             )
+
+            // ── Native Advanced Ad ────────────────────────────────────────────
+            AdMobNativeView(zone = AdSecurityZone.SAFE_ZONE)
 
             // ── Community & Rating ────────────────────────────────────────────
             SettingsSectionTitle("Community & Rating")
@@ -240,7 +319,7 @@ fun HelpSupportScreen(
                 icon = Icons.Default.Star,
                 iconTint = Color(0xFFF59E0B),
                 iconBg = Color(0xFFF59E0B).copy(alpha = 0.12f),
-                title = "Rate ADERE on Google Play",
+                title = "Rate Adera on Google Play",
                 subtitle = "Support independent zero-knowledge offline security software",
                 onClick = { rateApp() },
                 testTag = "help_rate_item"
@@ -256,15 +335,69 @@ fun HelpSupportScreen(
                 testTag = "help_community_item"
             )
 
+            // ── Banner Ad ───────────────────────────────────────────────────
+            AdMobBanner(zone = AdSecurityZone.SAFE_ZONE)
+
             Spacer(modifier = Modifier.height(80.dp))
         }
+    }
+
+    // ── In-App Feedback Dialog ─────────────────────────────────────────────────
+    if (showFeedbackDialog) {
+        AlertDialog(
+            onDismissRequest = { showFeedbackDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Feedback, contentDescription = null, tint = primary, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text("In-App Feedback", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Your feedback is sent directly to developer Fitsum Enunu ($developerEmail).",
+                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+
+                    OutlinedTextField(
+                        value = userFeedbackText,
+                        onValueChange = { userFeedbackText = it },
+                        placeholder = { Text("Type your suggestions, thoughts, or bug reports here...") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp),
+                        shape = Shapes.medium
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val body = userFeedbackText.trim()
+                        sendEmail("[Adera Feedback]", body)
+                        showFeedbackDialog = false
+                    }
+                ) {
+                    Text("Send Email")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFeedbackDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     // ── FAQ Dialog ─────────────────────────────────────────────────────────────
     if (showFaqDialog) {
         val faqs = listOf(
             "How does zero-knowledge offline encryption work?" to
-                    "ADERE is 100% offline. It has zero INTERNET permissions declared in AndroidManifest. Your master password derives an AES-256-GCM encryption key using PBKDF2 with 100,000 iterations locally. Nobody, including the developers, can access your data.",
+                    "Adera is 100% offline. It has zero INTERNET permissions declared in AndroidManifest. Your master password derives an AES-256-GCM encryption key using PBKDF2 with 100,000 iterations locally. Nobody, including the developer, can access your data.",
 
             "What if I forget my Master Password?" to
                     "Because of zero-knowledge architecture, lost master passwords cannot be reset over email. However, your 24-character Master Recovery Key allows you to safely reset your Master Password without losing your encrypted records.",
@@ -276,7 +409,7 @@ fun HelpSupportScreen(
                     "Go to Settings > Backup & PDF Export. You can export a strongly encrypted '.adere' file protected with a custom passphrase. You can then move this file via USB, SD card, or local Bluetooth to another device and restore it.",
 
             "Are my passwords in the system clipboard safe?" to
-                    "ADERE includes an automatic clipboard scrub timer (configurable in Settings > Privacy). Copied credentials are automatically wiped from memory after your configured duration (default: 30 seconds)."
+                    "Adera includes an automatic clipboard scrub timer (configurable in Settings > Privacy). Copied credentials are automatically wiped from memory after your configured duration (default: 30 seconds)."
         )
 
         var expandedIndex by remember { mutableIntStateOf(-1) }
@@ -369,7 +502,7 @@ fun HelpSupportScreen(
                 ) {
                     SecurityGuideSection(
                         title = "1. Pure Offline Operation",
-                        desc = "ADERE does not contain internet permissions. No telemetry, no trackers, no remote analytics, and zero cloud synchronization."
+                        desc = "Adera does not contain internet permissions. No telemetry, no trackers, no remote analytics, and zero cloud synchronization."
                     )
                     SecurityGuideSection(
                         title = "2. AES-256-GCM Encryption",

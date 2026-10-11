@@ -1,0 +1,5 @@
+# ADERA Authorized Digital Sellers (app-ads.txt)
+# Registered Google AdMob Publisher ID: pub-2695951066960188
+# Host this file at the root of your developer website (e.g., https://yourdomain.com/app-ads.txt).
+
+google.com, pub-2695951066960188, DIRECT, f08c47fec0942fa0

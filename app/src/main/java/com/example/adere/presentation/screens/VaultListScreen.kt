@@ -40,10 +40,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.adere.core.ads.AdSecurityZone
 import com.example.adere.domain.model.VaultCategory
 import com.example.adere.domain.model.VaultItem
 import com.example.adere.presentation.components.AdereTopBar
-import com.example.adere.presentation.components.AdMobTestBanner
+import com.example.adere.presentation.components.AdMobBanner
 import com.example.adere.presentation.components.CategoryChip
 import com.example.adere.presentation.components.VaultItemAvatar
 import com.example.ui.theme.Shapes
@@ -63,7 +64,7 @@ fun VaultListScreen(
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { AdMobTestBanner() },
+        bottomBar = { AdMobBanner(zone = AdSecurityZone.SAFE_ZONE) },
         topBar = {
             AdereTopBar(
                 title = "Secure Vault",
@@ -199,7 +200,7 @@ fun VaultListScreen(
                                 item = item,
                                 onClick = { onItemClick(item.id) },
                                 onToggleFavorite = { onToggleFavorite(item.id, !item.isFavorite) },
-                                onMoreClick = { /* Handle more action */ }
+                                onMoreClick = { onQuickCopy(item) }
                             )
                         }
                     }

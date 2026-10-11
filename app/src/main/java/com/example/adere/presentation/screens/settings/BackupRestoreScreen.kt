@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import com.example.adere.core.backup.BackupManager
 import com.example.adere.core.backup.PdfExportManager
 import com.example.adere.domain.model.BackupHistoryEntry
+import com.example.adere.presentation.components.MasterRecoveryKeyCard
 import com.example.adere.presentation.screens.settings.backup.components.AuthenticationBottomSheet
 import com.example.adere.presentation.screens.settings.backup.components.BackupActionCard
 import com.example.adere.presentation.screens.settings.backup.components.BackupHistoryCard
@@ -767,45 +768,13 @@ fun BackupRestoreScreen(
                         )
                     )
 
-                    Card(
-                        shape = CircleShape,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        border = BorderStroke(1.dp, TotalSecurityPrimary.copy(alpha = 0.3f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = currentRecoveryKey,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontFamily = FontFamily.Monospace,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                ),
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(
-                                onClick = {
-                                    clipboardManager.setText(AnnotatedString(currentRecoveryKey))
-                                    Toast.makeText(context, "Recovery key copied", Toast.LENGTH_SHORT).show()
-                                },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = "Copy key",
-                                    tint = TotalSecurityPrimary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
+                    MasterRecoveryKeyCard(
+                        recoveryKey = currentRecoveryKey,
+                        onCopyKey = {
+                            clipboardManager.setText(AnnotatedString(currentRecoveryKey))
+                            Toast.makeText(context, "Recovery key copied", Toast.LENGTH_SHORT).show()
                         }
-                    }
+                    )
                 }
             },
             confirmButton = {
@@ -813,7 +782,7 @@ fun BackupRestoreScreen(
                     Text("Close", fontWeight = FontWeight.SemiBold)
                 }
             },
-            shape = CircleShape,
+            shape = Shapes.medium,
             containerColor = MaterialTheme.colorScheme.surface
         )
     }

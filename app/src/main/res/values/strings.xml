@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Adera</string>
+    <string name="app_name">Adera Password Manager</string>
     <string name="app_tagline">Your private vault for passwords, accounts, and digital secrets.</string>
 
     <!-- Navigation -->

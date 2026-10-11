@@ -1,7 +1,7 @@
 package com.example.adere.presentation.screens
 import com.example.ui.theme.Shapes
 
-import android.widget.Toast
+import com.example.adere.presentation.components.InteractiveSeedPhraseDisplay
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -72,6 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.adere.presentation.components.PaymentCardView
 import com.example.adere.core.backup.PdfExportManager
 import com.example.adere.core.crypto.TOTPGenerator
 import com.example.adere.domain.model.VaultCategory
@@ -214,6 +215,7 @@ fun ItemDetailScreen(
                         title = item.title,
                         category = item.category,
                         url = item.payload.url,
+                        customEmoji = item.payload.customEmoji,
                         size = 52.dp,
                         iconSize = 28.dp,
                         cornerRadius = 14.dp
@@ -250,13 +252,9 @@ fun ItemDetailScreen(
                 VaultCategory.CRYPTO -> {
                     // Crypto Seed Phrase & Private Key
                     if (item.payload.cryptoSeedPhrase.isNotBlank()) {
-                        SecretFieldCard(
-                            label = "Crypto Seed Phrase (12/24 Words)",
-                            secretText = item.payload.cryptoSeedPhrase,
-                            isRevealed = isSeedRevealed,
-                            onToggleReveal = { isSeedRevealed = !isSeedRevealed },
-                            onCopy = { onCopySecret("Seed Phrase", item.payload.cryptoSeedPhrase) },
-                            testTag = "detail_copy_seed"
+                        InteractiveSeedPhraseDisplay(
+                            seedPhrase = item.payload.cryptoSeedPhrase,
+                            onCopy = { onCopySecret("Seed Phrase", item.payload.cryptoSeedPhrase) }
                         )
                     }
 
@@ -282,6 +280,18 @@ fun ItemDetailScreen(
                 }
 
                 VaultCategory.BANKING -> {
+                    if (item.payload.cardNumber.isNotBlank() || item.payload.cardHolder.isNotBlank()) {
+                        PaymentCardView(
+                            cardNumber = item.payload.cardNumber,
+                            cardHolder = item.payload.cardHolder,
+                            cardExpiry = item.payload.cardExpiry,
+                            cardCvv = item.payload.cardCvv,
+                            bankName = item.payload.bankName,
+                            onCopy = onCopySecret
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
                     if (item.payload.pin.isNotBlank()) {
                         SecretFieldCard(
                             label = "Card / Bank PIN",

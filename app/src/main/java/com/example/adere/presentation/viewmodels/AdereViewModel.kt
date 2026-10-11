@@ -1,8 +1,12 @@
 package com.example.adere.presentation.viewmodels
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.adere.core.utilities.AppIconManager
 import com.example.adere.core.backup.BackupManager
 import com.example.adere.core.crypto.PasswordHealthAnalyzer
 import com.example.adere.core.crypto.TOTPGenerator
@@ -100,17 +104,39 @@ class AdereViewModel(
     private val _themePalette = MutableStateFlow(
         try {
             com.example.ui.theme.VaultThemePalette.valueOf(configStore.themePalette)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             com.example.ui.theme.VaultThemePalette.TOTAL_SECURITY
         }
     )
     val themePalette: StateFlow<com.example.ui.theme.VaultThemePalette> = _themePalette.asStateFlow()
+
+    private val _customAppName = MutableStateFlow(configStore.customAppName)
+    val customAppName: StateFlow<String> = _customAppName.asStateFlow()
+
+    private val _selectedAppIcon = MutableStateFlow(configStore.selectedAppIcon)
+    val selectedAppIcon: StateFlow<String> = _selectedAppIcon.asStateFlow()
 
     private val _backupHistory = MutableStateFlow<List<BackupHistoryEntry>>(configStore.getBackupHistory())
     val backupHistory: StateFlow<List<BackupHistoryEntry>> = _backupHistory.asStateFlow()
 
     private val _lastBackupTimestamp = MutableStateFlow<Long>(configStore.lastBackupTimestamp)
     val lastBackupTimestamp: StateFlow<Long> = _lastBackupTimestamp.asStateFlow()
+
+    private val _lastTamperingTimestamp = MutableStateFlow<Long>(configStore.lastTamperingAttemptTimestamp)
+    val lastTamperingTimestamp: StateFlow<Long> = _lastTamperingTimestamp.asStateFlow()
+
+    private val _hasPendingSecurityAlert = MutableStateFlow<Boolean>(configStore.hasPendingSecurityAlert)
+    val hasPendingSecurityAlert: StateFlow<Boolean> = _hasPendingSecurityAlert.asStateFlow()
+
+    fun dismissSecurityAlert() {
+        configStore.hasPendingSecurityAlert = false
+        _hasPendingSecurityAlert.value = false
+    }
+
+    fun refreshSecurityAuditState() {
+        _lastTamperingTimestamp.value = configStore.lastTamperingAttemptTimestamp
+        _hasPendingSecurityAlert.value = configStore.hasPendingSecurityAlert
+    }
 
     init {
         viewModelScope.launch {
@@ -420,6 +446,34 @@ class AdereViewModel(
     fun setThemePalette(palette: com.example.ui.theme.VaultThemePalette) {
         configStore.themePalette = palette.name
         _themePalette.value = palette
+    }
+
+    fun setCustomAppName(name: String) {
+        configStore.customAppName = name
+        _customAppName.value = configStore.customAppName
+    }
+
+    fun setSelectedAppIcon(preset: AppIconManager.AppIconPreset, context: Context) {
+        configStore.selectedAppIcon = preset.id
+        _selectedAppIcon.value = preset.id
+        AppIconManager.applyAppIcon(context, preset)
+    }
+
+    fun requestInAppUninstall(
+        context: Context,
+        onResult: (Result<Unit>) -> Unit
+    ) {
+        try {
+            val packageName = context.packageName
+            val intent = Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:$packageName")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            onResult(Result.success(Unit))
+        } catch (e: Exception) {
+            onResult(Result.failure(e))
+        }
     }
 
     class Factory(

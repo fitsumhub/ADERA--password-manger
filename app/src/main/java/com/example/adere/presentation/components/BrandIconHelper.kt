@@ -3,6 +3,7 @@ package com.example.adere.presentation.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
@@ -26,15 +28,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.adere.domain.model.VaultCategory
-import com.example.ui.theme.EmeraldContainer
-import com.example.ui.theme.EmeraldLight
 
 data class BrandInfo(
     val id: String,
@@ -46,6 +49,40 @@ data class BrandInfo(
 )
 
 object BrandIconHelper {
+
+    val POPULAR_BANK_BRANDS = listOf(
+        BrandInfo("cbe", "Commercial Bank of Ethiopia", "https://combanketh.et", VaultCategory.BANKING, R.drawable.ic_brand_cbe, Color(0xFF581C87)),
+        BrandInfo("cbebirr", "CBE Birr", "https://combanketh.et", VaultCategory.BANKING, R.drawable.ic_brand_cbebirr, Color(0xFF581C87)),
+        BrandInfo("telebirr", "Telebirr", "https://telebirr.et", VaultCategory.BANKING, R.drawable.ic_brand_telebirr, Color(0xFF0284C7)),
+        BrandInfo("chapa", "Chapa Payment Gateway", "https://chapa.co", VaultCategory.BANKING, R.drawable.ic_brand_chapa, Color(0xFF059669)),
+        BrandInfo("santimpay", "SantimPay", "https://santimpay.com", VaultCategory.BANKING, R.drawable.ic_brand_santimpay, Color(0xFF0F172A)),
+        BrandInfo("arifpay", "ArifPay", "https://arifpay.net", VaultCategory.BANKING, R.drawable.ic_brand_arifpay, Color(0xFF1D4ED8)),
+        BrandInfo("kacha", "Kacha Digital Financial", "https://kacha.et", VaultCategory.BANKING, R.drawable.ic_brand_kacha, Color(0xFF7C3AED)),
+        BrandInfo("amole", "Amole Digital Wallet", "https://dashenbanksc.com", VaultCategory.BANKING, R.drawable.ic_brand_amole, Color(0xFF047857)),
+        BrandInfo("ebirr", "E-Birr Mobile Money", "https://e-birr.com", VaultCategory.BANKING, R.drawable.ic_brand_ebirr, Color(0xFF0284C7)),
+        BrandInfo("yenepay", "YenePay", "https://yenepay.com", VaultCategory.BANKING, R.drawable.ic_brand_yenepay, Color(0xFFDC2626)),
+        BrandInfo("dashen", "Dashen Bank", "https://dashenbanksc.com", VaultCategory.BANKING, R.drawable.ic_brand_dashen, Color(0xFF047857)),
+        BrandInfo("awash", "Awash Bank", "https://awashbank.com", VaultCategory.BANKING, R.drawable.ic_brand_awash, Color(0xFF0284C7)),
+        BrandInfo("abyssinia", "Bank of Abyssinia", "https://bankofabyssinia.com", VaultCategory.BANKING, R.drawable.ic_brand_abyssinia, Color(0xFFD97706)),
+        BrandInfo("coop", "Cooperative Bank of Oromia", "https://coopbankoromia.com.et", VaultCategory.BANKING, R.drawable.ic_brand_coop, Color(0xFF0284C7)),
+        BrandInfo("hibret", "Hibret Bank", "https://hibretbank.com.et", VaultCategory.BANKING, R.drawable.ic_brand_hibret, Color(0xFFE11D48)),
+        BrandInfo("zemen", "Zemen Bank", "https://zemenbank.com", VaultCategory.BANKING, R.drawable.ic_brand_zemen, Color(0xFF0F172A)),
+        BrandInfo("lion", "Lion International Bank (Anbesa)", "https://anbesabank.com", VaultCategory.BANKING, R.drawable.ic_brand_lion, Color(0xFFF59E0B)),
+        BrandInfo("addis", "Addis International Bank", "https://addisbanksc.com", VaultCategory.BANKING, R.drawable.ic_brand_addis, Color(0xFF1D4ED8)),
+        BrandInfo("ahadu", "Ahadu Bank", "https://ahadubank.com", VaultCategory.BANKING, R.drawable.ic_brand_ahadu, Color(0xFFF97316)),
+        BrandInfo("gadaa", "Gadaa Bank", "https://gadaabank.com.et", VaultCategory.BANKING, R.drawable.ic_brand_gadaa, Color(0xFF000000)),
+        BrandInfo("rammis", "Rammis Bank", "https://rammisbank.com", VaultCategory.BANKING, R.drawable.ic_brand_rammis, Color(0xFF047857)),
+        BrandInfo("wegagen", "Wegagen Bank", "https://wegagen.com", VaultCategory.BANKING, R.drawable.ic_brand_wegagen, Color(0xFFEA580C)),
+        BrandInfo("nib", "Nib International Bank", "https://nibbank.com.et", VaultCategory.BANKING, R.drawable.ic_brand_nib, Color(0xFFEAB308)),
+        BrandInfo("bunna", "Bunna International Bank", "https://bunnabanksc.com", VaultCategory.BANKING, R.drawable.ic_brand_bunna, Color(0xFF78350F)),
+        BrandInfo("berhan", "Berhan Bank", "https://berhanbanksc.com", VaultCategory.BANKING, R.drawable.ic_brand_berhan, Color(0xFFFACC15)),
+        BrandInfo("abay", "Abay Bank", "https://abaybank.com.et", VaultCategory.BANKING, R.drawable.ic_brand_abay, Color(0xFF0284C7)),
+        BrandInfo("amhara", "Amhara Bank", "https://amharabank.com.et", VaultCategory.BANKING, R.drawable.ic_brand_amhara, Color(0xFF991B1B)),
+        BrandInfo("enat", "Enat Bank", "https://enatbanksc.com", VaultCategory.BANKING, R.drawable.ic_brand_enat, Color(0xFFEC4899)),
+        BrandInfo("siinqee", "Siinqee Bank", "https://siinqeebank.com.et", VaultCategory.BANKING, R.drawable.ic_brand_siinqee, Color(0xFF15803D)),
+        BrandInfo("hijra", "Hijra Bank", "https://hijra-bank.com", VaultCategory.BANKING, R.drawable.ic_brand_hijra, Color(0xFF047857)),
+        BrandInfo("zamzam", "ZamZam Bank", "https://zamzambank.com", VaultCategory.BANKING, R.drawable.ic_brand_zamzam, Color(0xFF0D9488)),
+    )
 
     val POPULAR_SOCIAL_BRANDS = listOf(
         BrandInfo("instagram", "Instagram", "https://instagram.com", VaultCategory.SOCIAL, R.drawable.ic_brand_instagram, Color(0xFFC13584)),
@@ -68,7 +105,7 @@ object BrandIconHelper {
     )
 
     val POPULAR_CRYPTO_BRANDS = listOf(
-        BrandInfo("opensea", "OpenSea NFT Account", "https://opensea.io", VaultCategory.CRYPTO, R.drawable.ic_brand_opensea, Color(0xFF2081E2)),
+        BrandInfo("seed_phrase_vault", "12 / 24-Word Seed Vault", "https://bip39.org", VaultCategory.CRYPTO, R.drawable.ic_brand_seedphrase, Color(0xFF10B981)),
         BrandInfo("uniswap", "Uniswap Protocol", "https://app.uniswap.org", VaultCategory.CRYPTO, R.drawable.ic_brand_uniswap, Color(0xFFFF007A)),
         BrandInfo("pancakeswap", "PancakeSwap", "https://pancakeswap.finance", VaultCategory.CRYPTO, R.drawable.ic_brand_pancakeswap, Color(0xFF1FC7D4)),
         BrandInfo("aave", "Aave DeFi Account", "https://app.aave.com", VaultCategory.CRYPTO, R.drawable.ic_brand_aave, Color(0xFFB6509E)),
@@ -91,11 +128,16 @@ object BrandIconHelper {
         BrandInfo("okx", "OKX Exchange", "https://okx.com", VaultCategory.CRYPTO, R.drawable.ic_brand_okx, Color(0xFF000000)),
         BrandInfo("cryptocom", "Crypto.com App", "https://crypto.com", VaultCategory.CRYPTO, R.drawable.ic_brand_cryptocom, Color(0xFF002D72)),
         BrandInfo("trustwallet", "Trust Wallet", "https://trustwallet.com", VaultCategory.CRYPTO, R.drawable.ic_brand_trustwallet, Color(0xFF3375BB)),
+        BrandInfo("exodus", "Exodus Web3 Wallet", "https://exodus.com", VaultCategory.CRYPTO, R.drawable.ic_brand_exodus, Color(0xFF3B28CC)),
+        BrandInfo("backpack", "Backpack Wallet", "https://backpack.app", VaultCategory.CRYPTO, R.drawable.ic_brand_backpack, Color(0xFFE11D48)),
+        BrandInfo("trezor", "Trezor Suite", "https://trezor.io", VaultCategory.CRYPTO, R.drawable.ic_brand_trezor, Color(0xFF008542)),
+        BrandInfo("subwallet", "SubWallet Polkadot", "https://subwallet.app", VaultCategory.CRYPTO, R.drawable.ic_brand_subwallet, Color(0xFF00E5FF)),
+        BrandInfo("tonkeeper", "Tonkeeper TON Wallet", "https://tonkeeper.com", VaultCategory.CRYPTO, R.drawable.ic_brand_tonkeeper, Color(0xFF0098EA)),
+        BrandInfo("ronin", "Ronin Gaming Wallet", "https://roninchain.com", VaultCategory.CRYPTO, R.drawable.ic_brand_ronin, Color(0xFF1273EA)),
         BrandInfo("robinhood", "Robinhood Crypto", "https://robinhood.com", VaultCategory.CRYPTO, R.drawable.ic_brand_robinhood, Color(0xFF00C805)),
         BrandInfo("ledger", "Ledger Live", "https://ledger.com", VaultCategory.CRYPTO, R.drawable.ic_brand_ledger, Color(0xFF101010)),
         BrandInfo("bitcoin", "Bitcoin Wallet", "https://bitcoin.org", VaultCategory.CRYPTO, R.drawable.ic_brand_bitcoin, Color(0xFFF7931A)),
         BrandInfo("ethereum", "Ethereum Wallet", "https://ethereum.org", VaultCategory.CRYPTO, R.drawable.ic_brand_ethereum, Color(0xFF627EEA)),
-        BrandInfo("seed_phrase", "12/24-Word Seed Phrase", "https://ethereum.org", VaultCategory.CRYPTO, R.drawable.ic_brand_ethereum, Color(0xFF10B981)),
     )
 
     val POPULAR_EMAIL_BRANDS = listOf(
@@ -104,9 +146,45 @@ object BrandIconHelper {
         BrandInfo("apple_id", "iCloud / Apple ID", "https://appleid.apple.com", VaultCategory.EMAIL, R.drawable.ic_brand_apple, Color(0xFF1E293B)),
     )
 
+    val ALL_POPULAR_BRANDS by lazy {
+        (POPULAR_SOCIAL_BRANDS + POPULAR_EMAIL_BRANDS + POPULAR_BANK_BRANDS + POPULAR_CRYPTO_BRANDS).distinctBy { it.id }
+    }
+
     fun resolveBrandDrawable(title: String, url: String? = null): Int? {
         val query = (title + " " + (url ?: "")).lowercase().trim()
         return when {
+            query.contains("cbe birr") || query.contains("cbebirr") -> R.drawable.ic_brand_cbebirr
+            query.contains("telebirr") || query.contains("ethio telecom") -> R.drawable.ic_brand_telebirr
+            query.contains("cbe") || query.contains("commercial bank of ethiopia") -> R.drawable.ic_brand_cbe
+            query.contains("chapa") -> R.drawable.ic_brand_chapa
+            query.contains("santim") || query.contains("santimpay") -> R.drawable.ic_brand_santimpay
+            query.contains("arifpay") || query.contains("arif") -> R.drawable.ic_brand_arifpay
+            query.contains("kacha") -> R.drawable.ic_brand_kacha
+            query.contains("amole") -> R.drawable.ic_brand_amole
+            query.contains("ebirr") || query.contains("e-birr") -> R.drawable.ic_brand_ebirr
+            query.contains("yenepay") -> R.drawable.ic_brand_yenepay
+            query.contains("dashen") -> R.drawable.ic_brand_dashen
+            query.contains("awash") -> R.drawable.ic_brand_awash
+            query.contains("abyssinia") -> R.drawable.ic_brand_abyssinia
+            query.contains("coop") || query.contains("cooperative") -> R.drawable.ic_brand_coop
+            query.contains("hibret") || query.contains("united bank") -> R.drawable.ic_brand_hibret
+            query.contains("zemen") -> R.drawable.ic_brand_zemen
+            query.contains("telebirr") || query.contains("ethio telecom") -> R.drawable.ic_brand_telebirr
+            query.contains("lion") || query.contains("anbesa") -> R.drawable.ic_brand_lion
+            query.contains("addis") -> R.drawable.ic_brand_addis
+            query.contains("ahadu") -> R.drawable.ic_brand_ahadu
+            query.contains("gadaa") -> R.drawable.ic_brand_gadaa
+            query.contains("rammis") -> R.drawable.ic_brand_rammis
+            query.contains("wegagen") -> R.drawable.ic_brand_wegagen
+            query.contains("nib") -> R.drawable.ic_brand_nib
+            query.contains("bunna") -> R.drawable.ic_brand_bunna
+            query.contains("berhan") -> R.drawable.ic_brand_berhan
+            query.contains("abay") -> R.drawable.ic_brand_abay
+            query.contains("amhara") -> R.drawable.ic_brand_amhara
+            query.contains("enat") -> R.drawable.ic_brand_enat
+            query.contains("siinqee") -> R.drawable.ic_brand_siinqee
+            query.contains("hijra") -> R.drawable.ic_brand_hijra
+            query.contains("zamzam") -> R.drawable.ic_brand_zamzam
             query.contains("opensea") -> R.drawable.ic_brand_opensea
             query.contains("uniswap") -> R.drawable.ic_brand_uniswap
             query.contains("pancakeswap") || query.contains("pancake") -> R.drawable.ic_brand_pancakeswap
@@ -127,7 +205,14 @@ object BrandIconHelper {
             query.contains("bybit") -> R.drawable.ic_brand_bybit
             query.contains("okx") -> R.drawable.ic_brand_okx
             query.contains("crypto.com") || query.contains("cryptocom") -> R.drawable.ic_brand_cryptocom
+            query.contains("seed") || query.contains("mnemonic") || query.contains("24-word") -> R.drawable.ic_brand_seedphrase
             query.contains("trust") || query.contains("trustwallet") -> R.drawable.ic_brand_trustwallet
+            query.contains("exodus") -> R.drawable.ic_brand_exodus
+            query.contains("backpack") -> R.drawable.ic_brand_backpack
+            query.contains("trezor") -> R.drawable.ic_brand_trezor
+            query.contains("subwallet") -> R.drawable.ic_brand_subwallet
+            query.contains("tonkeeper") || query.contains("ton") -> R.drawable.ic_brand_tonkeeper
+            query.contains("ronin") -> R.drawable.ic_brand_ronin
             query.contains("phantom") -> R.drawable.ic_brand_phantom
             query.contains("robinhood") -> R.drawable.ic_brand_robinhood
             query.contains("ledger") -> R.drawable.ic_brand_ledger
@@ -157,6 +242,7 @@ object BrandIconHelper {
 
     fun getCategoryFallbackIcon(category: VaultCategory): ImageVector {
         return when (category) {
+            VaultCategory.APPS -> Icons.Default.Smartphone
             VaultCategory.CRYPTO -> Icons.Default.CurrencyBitcoin
             VaultCategory.WALLETS -> Icons.Default.AccountBalanceWallet
             VaultCategory.EMAIL -> Icons.Default.Email
@@ -176,6 +262,7 @@ object BrandIconHelper {
 
     fun getCategoryEmoji(category: VaultCategory): String {
         return when (category) {
+            VaultCategory.APPS -> "📱"
             VaultCategory.SOCIAL -> "🔐"
             VaultCategory.EMAIL -> "✉️"
             VaultCategory.BANKING -> "🏦"
@@ -197,6 +284,7 @@ object BrandIconHelper {
 
     fun getCategoryColor(category: VaultCategory): Color {
         return when (category) {
+            VaultCategory.APPS -> Color(0xFF8B5CF6)
             VaultCategory.SOCIAL -> Color(0xFF2563EB)
             VaultCategory.EMAIL -> Color(0xFFEA580C)
             VaultCategory.BANKING -> Color(0xFF059669)
@@ -219,30 +307,80 @@ object BrandIconHelper {
 
 /**
  * Renders the real brand logo if matching a known brand (OpenSea, Uniswap, MetaMask, Phantom, etc.),
- * or falls back to the clean category-specific vector icon.
+ * or falls back to the clean category-specific vector icon with 3D glass background.
  */
 @Composable
 fun VaultItemAvatar(
     title: String,
     category: VaultCategory,
+    modifier: Modifier = Modifier,
     url: String? = null,
+    customEmoji: String? = null,
     size: Dp = 42.dp,
     iconSize: Dp = 22.dp,
     cornerRadius: Dp = 10.dp,
-    modifier: Modifier = Modifier,
 ) {
     val brandDrawable = BrandIconHelper.resolveBrandDrawable(title, url)
-    if (brandDrawable != null) {
+    val categoryColor = BrandIconHelper.getCategoryColor(category)
+
+    if (!customEmoji.isNullOrBlank()) {
         Box(
             modifier = modifier
                 .size(size)
-                .clip(RoundedCornerShape(cornerRadius)),
+                .shadow(3.dp, RoundedCornerShape(cornerRadius), spotColor = categoryColor.copy(alpha = 0.25f))
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            categoryColor.copy(alpha = 0.22f),
+                            categoryColor.copy(alpha = 0.08f)
+                        )
+                    )
+                )
+                .border(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = 0.7f), categoryColor.copy(alpha = 0.25f))
+                    ),
+                    RoundedCornerShape(cornerRadius)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.material3.Text(
+                text = customEmoji,
+                fontSize = (size.value * 0.5f).sp
+            )
+        }
+    } else if (brandDrawable != null) {
+        Box(
+            modifier = modifier
+                .size(size)
+                .shadow(4.dp, RoundedCornerShape(cornerRadius), spotColor = categoryColor.copy(alpha = 0.25f))
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White,
+                            Color(0xFFF8FAFC)
+                        )
+                    )
+                )
+                .border(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(Color.White, Color.LightGray.copy(alpha = 0.35f))
+                    ),
+                    RoundedCornerShape(cornerRadius)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Image(
                 painter = painterResource(id = brandDrawable),
                 contentDescription = title,
-                modifier = Modifier.size(size)
+                modifier = Modifier
+                    .size(size * 0.72f)
+                    .shadow(1.dp, RoundedCornerShape(cornerRadius * 0.4f))
+                    .clip(RoundedCornerShape(cornerRadius * 0.4f))
             )
         }
     } else {
@@ -250,14 +388,29 @@ fun VaultItemAvatar(
         Box(
             modifier = modifier
                 .size(size)
+                .shadow(3.dp, RoundedCornerShape(cornerRadius), spotColor = categoryColor.copy(alpha = 0.25f))
                 .clip(RoundedCornerShape(cornerRadius))
-                .background(EmeraldContainer),
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            categoryColor.copy(alpha = 0.22f),
+                            categoryColor.copy(alpha = 0.08f)
+                        )
+                    )
+                )
+                .border(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = 0.7f), categoryColor.copy(alpha = 0.25f))
+                    ),
+                    RoundedCornerShape(cornerRadius)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = fallbackIcon,
                 contentDescription = null,
-                tint = EmeraldLight,
+                tint = categoryColor,
                 modifier = Modifier.size(iconSize)
             )
         }

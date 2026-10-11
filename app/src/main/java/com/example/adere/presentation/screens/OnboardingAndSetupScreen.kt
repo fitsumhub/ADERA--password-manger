@@ -3,16 +3,13 @@ import com.example.ui.theme.Shapes
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -24,6 +21,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -100,6 +98,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.adere.core.crypto.PasswordGenerator
+import com.example.adere.presentation.components.MasterRecoveryKeyCard
 import com.example.adere.presentation.components.PasswordStrengthBar
 import com.example.adere.presentation.components.TotalSecurityHeroIllustration
 import com.example.ui.theme.CategoryAppsYellow
@@ -176,8 +175,8 @@ fun OnboardingAndSetupScreen(
             OnboardingSlideData(
                 categoryBadge = "ADVANCED AUDITING",
                 title = "Security Health\n& Built-In 2FA",
-                description = "Detect weak and reused passwords instantly. Generate strong high-entropy passphrases and offline two-factor TOTP codes.",
-                chips = listOf("📊 Health Audit", "⏱️ TOTP Codes", "🎲 Passphrase Engine")
+                description = "Detect weak and reused passwords instantly. Real-time password strength evaluation and offline two-factor TOTP codes.",
+                chips = listOf("📊 Health Audit", "⏱️ TOTP Codes", "🛡️ Real-Time Audit")
             )
         )
     }
@@ -234,7 +233,7 @@ fun OnboardingAndSetupScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "ADERE · አደረ",
+                                    text = "ADERE · አደራ",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = TotalSecurityPrimary,
                                         fontWeight = FontWeight.ExtraBold,
@@ -471,84 +470,118 @@ fun OnboardingAndSetupScreen(
 
                     // Top Back & Title Bar
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            showSetupForm = false
-                        }) {
+                        IconButton(
+                            onClick = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                showSetupForm = false
+                            }
+                        ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
                                 tint = TextDarkPrimary
                             )
                         }
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Column {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Create Master Key",
                                 style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.ExtraBold,
                                     color = TextDarkPrimary,
-                                    fontSize = 20.sp
+                                    fontSize = 22.sp
                                 )
                             )
                             Text(
-                                text = "Your single key to encrypt the entire vault",
-                                style = MaterialTheme.typography.bodySmall.copy(color = TextDarkSecondary)
+                                text = "Your single key to encrypt the entire local vault",
+                                style = MaterialTheme.typography.bodySmall.copy(color = TextDarkSecondary, fontSize = 12.5.sp)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Main Setup Card
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(6.dp, Shapes.medium, spotColor = Color.Black.copy(alpha = 0.06f)),
-                        shape = Shapes.medium,
+                            .shadow(8.dp, RoundedCornerShape(20.dp), spotColor = Color.Black.copy(alpha = 0.08f)),
+                        shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = CleanSurface),
                         border = BorderStroke(1.dp, CleanBorder)
                     ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
+                        Column(modifier = Modifier.padding(22.dp)) {
                             // Header badge
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(38.dp)
-                                        .clip(CircleShape)
-                                        .background(TotalSecurityPrimaryContainer),
-                                    contentAlignment = Alignment.Center
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Security,
-                                        contentDescription = null,
-                                        tint = TotalSecurityPrimary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(42.dp)
+                                            .clip(CircleShape)
+                                            .background(TotalSecurityPrimaryContainer),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Security,
+                                            contentDescription = null,
+                                            tint = TotalSecurityPrimary,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = "Master Password Setup",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                color = TextDarkPrimary,
+                                                fontSize = 16.sp
+                                            )
+                                        )
+                                        Text(
+                                            text = "100k PBKDF2 · AES-256-GCM",
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                color = EmeraldPrimary,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp
+                                            )
+                                        )
+                                    }
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = TotalSecurityPrimaryContainer,
+                                    border = BorderStroke(1.dp, TotalSecurityPrimary.copy(alpha = 0.25f))
+                                ) {
                                     Text(
-                                        text = "Master Password Setup",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = TextDarkPrimary
-                                        )
-                                    )
-                                    Text(
-                                        text = "100k PBKDF2 iterations · AES-256-GCM",
+                                        text = "ZERO KNOWLEDGE",
                                         style = MaterialTheme.typography.labelSmall.copy(
-                                            color = EmeraldPrimary,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = TotalSecurityPrimary,
+                                            fontSize = 9.5.sp,
+                                            letterSpacing = 0.5.sp
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(18.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
 
                             // Password Text Field
                             OutlinedTextField(
@@ -586,7 +619,7 @@ fun OnboardingAndSetupScreen(
                                     focusedTextColor = TextDarkPrimary,
                                     unfocusedTextColor = TextDarkPrimary
                                 ),
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("setup_master_password_input")
@@ -594,26 +627,29 @@ fun OnboardingAndSetupScreen(
 
                             // Password Strength Bar
                             if (password.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(12.dp))
                                 PasswordStrengthBar(strength = strength, entropyBits = entropy)
 
-                                // Checklist chips
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(
+                                // Checklist chips wrapped dynamically
+                                Spacer(modifier = Modifier.height(10.dp))
+                                FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     val is8Chars = password.length >= 8
                                     val hasUpper = password.any { it.isUpperCase() }
                                     val hasDigit = password.any { it.isDigit() }
+                                    val hasSymbol = password.any { !it.isLetterOrDigit() }
 
                                     StrengthCheckChip(label = "8+ Chars", satisfied = is8Chars)
                                     StrengthCheckChip(label = "Uppercase", satisfied = hasUpper)
                                     StrengthCheckChip(label = "Numbers", satisfied = hasDigit)
+                                    StrengthCheckChip(label = "Symbol", satisfied = hasSymbol)
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             // Confirm Password Field
                             OutlinedTextField(
@@ -651,7 +687,7 @@ fun OnboardingAndSetupScreen(
                                     focusedTextColor = TextDarkPrimary,
                                     unfocusedTextColor = TextDarkPrimary
                                 ),
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(14.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("setup_confirm_password_input")
@@ -660,7 +696,7 @@ fun OnboardingAndSetupScreen(
                             // Match Indicator
                             if (confirmPassword.isNotEmpty()) {
                                 val match = password == confirmPassword
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = if (match) Icons.Default.CheckCircle else Icons.Default.Warning,
@@ -681,9 +717,40 @@ fun OnboardingAndSetupScreen(
 
                             Spacer(modifier = Modifier.height(18.dp))
 
+                            // Zero-Knowledge Security Notice Callout
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = CategoryAppsYellow.copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, CategoryAppsYellow.copy(alpha = 0.35f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = TotalSecurityPrimary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = "Important: ADERE is zero-knowledge. Your Master Password cannot be recovered if forgotten without your Master Recovery Key.",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = TextDarkPrimary,
+                                            fontSize = 12.sp,
+                                            lineHeight = 17.sp
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
                             // Biometrics Toggle Card
                             Surface(
-                                shape = CircleShape,
+                                shape = RoundedCornerShape(14.dp),
                                 color = CleanSurfaceVariant,
                                 border = BorderStroke(1.dp, CleanBorder),
                                 modifier = Modifier
@@ -693,12 +760,12 @@ fun OnboardingAndSetupScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(14.dp),
+                                        .padding(16.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(36.dp)
+                                            .size(40.dp)
                                             .clip(CircleShape)
                                             .background(TotalSecurityPrimaryContainer),
                                         contentAlignment = Alignment.Center
@@ -707,23 +774,24 @@ fun OnboardingAndSetupScreen(
                                             imageVector = Icons.Default.Fingerprint,
                                             contentDescription = null,
                                             tint = TotalSecurityPrimary,
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(22.dp)
                                         )
                                     }
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Spacer(modifier = Modifier.width(14.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = "Biometric Unlock",
                                             style = MaterialTheme.typography.titleSmall.copy(
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextDarkPrimary
+                                                color = TextDarkPrimary,
+                                                fontSize = 14.5.sp
                                             )
                                         )
                                         Text(
                                             text = "Unlock with fingerprint or face recognition",
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 color = TextDarkSecondary,
-                                                fontSize = 11.5.sp
+                                                fontSize = 12.sp
                                             )
                                         )
                                     }
@@ -740,15 +808,15 @@ fun OnboardingAndSetupScreen(
 
                             // Error Message
                             if (errorMessage != null) {
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(14.dp))
                                 Surface(
-                                    shape = Shapes.medium,
+                                    shape = RoundedCornerShape(12.dp),
                                     color = HealthRiskRed.copy(alpha = 0.08f),
                                     border = BorderStroke(1.dp, HealthRiskRed.copy(alpha = 0.2f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(10.dp),
+                                        modifier = Modifier.padding(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(
@@ -757,17 +825,20 @@ fun OnboardingAndSetupScreen(
                                             tint = HealthRiskRed,
                                             modifier = Modifier.size(16.dp)
                                         )
-                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Spacer(modifier = Modifier.width(10.dp))
                                         Text(
-                                            text = errorMessage!!,
+                                            text = errorMessage ?: "",
                                             color = HealthRiskRed,
-                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 12.sp
+                                            )
                                         )
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(22.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
 
                             // Submit Button
                             Button(
@@ -803,10 +874,10 @@ fun OnboardingAndSetupScreen(
                                 enabled = !isProcessing,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(52.dp)
-                                    .shadow(8.dp, Shapes.medium, spotColor = TotalSecurityPrimary)
+                                    .height(54.dp)
+                                    .shadow(8.dp, RoundedCornerShape(16.dp), spotColor = TotalSecurityPrimary)
                                     .testTag("setup_initialize_button"),
-                                shape = Shapes.medium,
+                                shape = RoundedCornerShape(16.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = TotalSecurityPrimary,
                                     contentColor = Color.White
@@ -887,58 +958,15 @@ fun OnboardingAndSetupScreen(
                             )
                         )
 
-                        // Key display box with monospace formatting
-                        Surface(
-                            shape = CircleShape,
-                            color = CleanSurfaceVariant,
-                            border = BorderStroke(1.dp, CleanBorder),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(14.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = activeRecoveryKey!!,
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontFamily = FontFamily.Monospace,
-                                        color = TotalSecurityPrimary,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        letterSpacing = 1.2.sp,
-                                        fontSize = 14.sp
-                                    ),
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-
-                        // Copy Button
-                        OutlinedButton(
-                            onClick = {
+                        // Master Recovery Key Chunked Grid Card
+                        MasterRecoveryKeyCard(
+                            recoveryKey = activeRecoveryKey ?: "",
+                            onCopyKey = {
                                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                clipboardManager.setText(AnnotatedString(activeRecoveryKey!!))
+                                clipboardManager.setText(AnnotatedString(activeRecoveryKey ?: ""))
                                 Toast.makeText(context, "Recovery key copied to clipboard", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(46.dp)
-                                .testTag("setup_copy_recovery_key_button"),
-                            shape = CircleShape,
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TotalSecurityPrimary),
-                            border = BorderStroke(1.dp, TotalSecurityPrimary.copy(alpha = 0.35f))
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Copy Recovery Key", fontWeight = FontWeight.Bold)
                             }
-                        }
+                        )
 
                         // Confirmation checkbox
                         Surface(
@@ -995,7 +1023,7 @@ fun OnboardingAndSetupScreen(
                     }
                 },
                 containerColor = CleanSurface,
-                shape = CircleShape
+                shape = RoundedCornerShape(16.dp)
             )
         }
     }

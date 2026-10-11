@@ -6,6 +6,7 @@ enum class VaultCategory(
 ) {
     ALL("All Items", "Everything in your vault"),
     FAVORITES("Favorites", "Starred accounts & secrets"),
+    APPS("Apps Passwords", "Mobile and desktop application passwords"),
     SOCIAL("Social Media", "Social accounts, logins, and recovery codes"),
     EMAIL("Email", "Personal and work email accounts"),
     BANKING("Banking", "Bank logins, cards, and customer IDs"),

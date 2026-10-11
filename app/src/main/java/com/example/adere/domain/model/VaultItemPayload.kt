@@ -32,6 +32,7 @@ data class VaultItemPayload(
     val bankName: String = "",
     val docType: String = "",
     val docNumber: String = "",
+    val customEmoji: String = "",
     val recoveryCodes: List<String> = emptyList(),
     val customFields: Map<String, String> = emptyMap()
 ) {
@@ -59,6 +60,7 @@ data class VaultItemPayload(
         json.put("bankName", bankName)
         json.put("docType", docType)
         json.put("docNumber", docNumber)
+        json.put("customEmoji", customEmoji)
 
         val codesArray = JSONArray()
         for (code in recoveryCodes) {
@@ -121,6 +123,7 @@ data class VaultItemPayload(
                     bankName = json.optString("bankName", custom["bankName"] ?: ""),
                     docType = json.optString("docType", custom["docType"] ?: ""),
                     docNumber = json.optString("docNumber", custom["docNumber"] ?: ""),
+                    customEmoji = json.optString("customEmoji", custom["customEmoji"] ?: ""),
                     recoveryCodes = codes,
                     customFields = custom
                 )

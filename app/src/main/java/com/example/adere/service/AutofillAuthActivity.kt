@@ -133,28 +133,30 @@ class AutofillAuthActivity : FragmentActivity() {
                 domainMatches && item.payload.password.isNotBlank()
             }
 
-            if (bestMatch != null) {
-                val presentation = RemoteViews(packageName, R.layout.autofill_dataset_item).apply {
-                    setTextViewText(R.id.autofill_title, bestMatch.title)
-                    setTextViewText(R.id.autofill_subtitle, bestMatch.username)
-                }
+            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                if (bestMatch != null) {
+                    val presentation = RemoteViews(packageName, R.layout.autofill_dataset_item).apply {
+                        setTextViewText(R.id.autofill_title, bestMatch.title)
+                        setTextViewText(R.id.autofill_subtitle, bestMatch.username)
+                    }
 
-                val datasetBuilder = Dataset.Builder(presentation)
-                if (usernameId != null && bestMatch.username.isNotBlank()) {
-                    datasetBuilder.setValue(usernameId, AutofillValue.forText(bestMatch.username))
-                }
-                if (passwordId != null && bestMatch.payload.password.isNotBlank()) {
-                    datasetBuilder.setValue(passwordId, AutofillValue.forText(bestMatch.payload.password))
-                }
+                    val datasetBuilder = Dataset.Builder(presentation)
+                    if (usernameId != null && bestMatch.username.isNotBlank()) {
+                        datasetBuilder.setValue(usernameId, AutofillValue.forText(bestMatch.username))
+                    }
+                    if (passwordId != null && bestMatch.payload.password.isNotBlank()) {
+                        datasetBuilder.setValue(passwordId, AutofillValue.forText(bestMatch.payload.password))
+                    }
 
-                val replyIntent = Intent().apply {
-                    putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, datasetBuilder.build())
+                    val replyIntent = Intent().apply {
+                        putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, datasetBuilder.build())
+                    }
+                    setResult(Activity.RESULT_OK, replyIntent)
+                } else {
+                    setResult(Activity.RESULT_CANCELED)
                 }
-                setResult(Activity.RESULT_OK, replyIntent)
-            } else {
-                setResult(Activity.RESULT_CANCELED)
+                finish()
             }
-            finish()
         }
     }
 }

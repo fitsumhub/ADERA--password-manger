@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.VpnKey
@@ -66,6 +65,7 @@ fun AdereApp(
     onAuthenticateSensitiveAction: ((title: String, subtitle: String, onSuccess: () -> Unit, onError: (String) -> Unit) -> Unit)? = null,
     onExportPdfSave: (PdfExportManager.ExportOptions) -> Unit = {},
     onExportPdfShare: (PdfExportManager.ExportOptions) -> Unit = {},
+    onRequestManageAdPrivacy: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -80,6 +80,8 @@ fun AdereApp(
 
     val biometricEnabled by viewModel.biometricEnabled.collectAsStateWithLifecycle()
     val autoLockSeconds by viewModel.autoLockSeconds.collectAsStateWithLifecycle()
+    val customAppName by viewModel.customAppName.collectAsStateWithLifecycle()
+    val selectedAppIcon by viewModel.selectedAppIcon.collectAsStateWithLifecycle()
     val screenshotProtection by viewModel.screenshotProtection.collectAsStateWithLifecycle()
     val clipboardClearSeconds by viewModel.clipboardClearSeconds.collectAsStateWithLifecycle()
     val themePalette by viewModel.themePalette.collectAsStateWithLifecycle()
@@ -87,6 +89,8 @@ fun AdereApp(
     val hideRecentAppsContent by viewModel.hideRecentAppsContent.collectAsStateWithLifecycle()
     val lastBackupTimestamp by viewModel.lastBackupTimestamp.collectAsStateWithLifecycle()
     val backupHistory by viewModel.backupHistory.collectAsStateWithLifecycle()
+    val lastTamperingTimestamp by viewModel.lastTamperingTimestamp.collectAsStateWithLifecycle()
+    val hasPendingSecurityAlert by viewModel.hasPendingSecurityAlert.collectAsStateWithLifecycle()
 
     var currentTab by remember { mutableStateOf(NavDestination.HOME) }
     var selectedItemIdForDetail by remember { mutableStateOf<String?>(null) }
@@ -126,6 +130,7 @@ fun AdereApp(
         is VaultLockState.Locked -> {
             LockScreen(
                 isBiometricAvailable = biometricEnabled,
+                customAppName = customAppName,
                 onTriggerBiometrics = onTriggerBiometrics,
                 onUnlockWithPassword = { pass, cb ->
                     viewModel.unlockWithPassword(pass, cb)
@@ -164,6 +169,7 @@ fun AdereApp(
                 AddEditItemScreen(
                     initialItem = initialItem,
                     initialCategory = itemCategoryForAdd,
+                    isEditMode = false,
                     onBackClick = {
                         isAddingItem = false
                         prefilledPasswordForAdd = null
@@ -191,6 +197,7 @@ fun AdereApp(
                     AddEditItemScreen(
                         initialItem = itemToEdit,
                         initialCategory = itemToEdit.category,
+                        isEditMode = true,
                         onBackClick = { editingItemId = null },
                         onSaveItem = { updatedItem ->
                             viewModel.saveItem(updatedItem) { res ->
@@ -301,12 +308,8 @@ fun AdereApp(
                                     },
                                     onNavigateToSecurity = { currentTab = NavDestination.SECURITY },
                                     onNavigateToCategory = { cat ->
-                                        if (cat == VaultCategory.ALL) {
-                                            viewModel.selectCategory(VaultCategory.ALL)
-                                            currentTab = NavDestination.VAULT
-                                        } else {
-                                            activeCategoryDetail = cat
-                                        }
+                                        viewModel.selectCategory(cat)
+                                        currentTab = NavDestination.VAULT
                                     },
                                     onQuickCopy = { item ->
                                         val secretToCopy = when {
@@ -391,6 +394,8 @@ fun AdereApp(
                                     isVaultProtected = lockState == VaultLockState.Unlocked,
                                     biometricEnabled = biometricEnabled,
                                     autoLockSeconds = autoLockSeconds,
+                                    customAppName = customAppName,
+                                    selectedAppIcon = selectedAppIcon,
                                     screenshotProtection = screenshotProtection,
                                     clipboardClearSeconds = clipboardClearSeconds,
                                     hideRecentAppsContent = hideRecentAppsContent,
@@ -400,6 +405,8 @@ fun AdereApp(
                                         viewModel.setThemePalette(palette)
                                         Toast.makeText(context, "Theme updated: ${palette.title}", Toast.LENGTH_SHORT).show()
                                     },
+                                    onSetCustomAppName = { name -> viewModel.setCustomAppName(name) },
+                                    onSetSelectedAppIcon = { preset -> viewModel.setSelectedAppIcon(preset, context) },
                                     onToggleBiometric = { enable, callback ->
                                         viewModel.setBiometric(enable, callback)
                                     },
@@ -410,11 +417,15 @@ fun AdereApp(
                                     onToggleScreenshotProtection = { p -> viewModel.setScreenshotProtection(p) },
                                     onSetClipboardClearSeconds = { c -> viewModel.setClipboardClearSeconds(c) },
                                     onToggleHideRecentApps = { h -> viewModel.setHideRecentAppsContent(h) },
+                                    onRequestManageAdPrivacy = onRequestManageAdPrivacy,
                                     onToggleNotifications = { n -> viewModel.setNotificationsEnabled(n) },
                                     onChangeMasterPassword = { old, new, cb ->
                                         viewModel.changeMasterPassword(old, new, cb)
                                     },
                                     lastBackupTimestamp = lastBackupTimestamp,
+                                    lastTamperingTimestamp = lastTamperingTimestamp,
+                                    hasPendingSecurityAlert = hasPendingSecurityAlert,
+                                    onDismissSecurityAlert = viewModel::dismissSecurityAlert,
                                     backupHistory = backupHistory,
                                     onClearBackupHistory = { viewModel.clearBackupHistory() },
                                     onTriggerBiometrics = onTriggerBiometrics,

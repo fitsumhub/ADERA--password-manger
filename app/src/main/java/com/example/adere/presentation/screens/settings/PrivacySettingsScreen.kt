@@ -10,7 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Screenshot
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +21,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.adere.presentation.screens.settings.components.SettingsOptionDialog
 import com.example.adere.presentation.screens.settings.components.SettingsSectionTitle
@@ -39,6 +38,7 @@ fun PrivacySettingsScreen(
     onToggleScreenshotProtection: (Boolean) -> Unit,
     onToggleAppMasking: (Boolean) -> Unit,
     onSetClipboardAutoClear: (Int) -> Unit,
+    onRequestManageAdPrivacy: () -> Unit = {},
     onBackClick: () -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
@@ -101,18 +101,18 @@ fun PrivacySettingsScreen(
                 testTag = "privacy_clipboard_item"
             )
 
-            // ── Data retention ────────────────────────────────────────────────
-            SettingsSectionTitle("Session Data Retention")
+            // ── Advertising Privacy & Choices ─────────────────────────────────
+            SettingsSectionTitle("Advertising Privacy & Choices")
 
-            SettingsSwitchItem(
-                icon = Icons.Default.History,
-                iconTint = Color(0xFF6366F1),
-                iconBg = Color(0xFF6366F1).copy(alpha = 0.12f),
-                title = "Clear Vault Search Terms",
-                subtitle = "Auto-clear vault filter and search queries after session auto-lock",
-                checked = true,
-                onCheckedChange = { /* Configurable setting */ },
-                testTag = "privacy_switch_search_history"
+            SettingsValueItem(
+                icon = Icons.Default.PrivacyTip,
+                iconTint = primary,
+                iconBg = primary.copy(alpha = 0.12f),
+                title = "Ad Privacy & Consent Choices",
+                subtitle = "Manage Google UMP ad personalization, GDPR/EEA preferences, or revoke consent",
+                valueText = "Manage",
+                onClick = onRequestManageAdPrivacy,
+                testTag = "privacy_ad_consent_item"
             )
 
             Spacer(modifier = Modifier.height(80.dp))

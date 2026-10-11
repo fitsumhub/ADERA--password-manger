@@ -1,6 +1,5 @@
 package com.example.adere.domain.repository
 
-import android.util.Base64
 import com.example.adere.core.backup.BackupManager
 import com.example.adere.core.crypto.CryptoEngine
 import com.example.adere.core.crypto.PasswordHealthAnalyzer
@@ -126,8 +125,9 @@ class VaultRepository(
         options: com.example.adere.core.backup.PdfExportManager.ExportOptions,
         outputStream: java.io.OutputStream
     ): Result<Int> = withContext(Dispatchers.IO) {
-        val dek = sessionManager.getActiveDek()
-            ?: return@withContext Result.failure(IllegalStateException("Vault is locked."))
+        if (sessionManager.getActiveDek() == null) {
+            return@withContext Result.failure(IllegalStateException("Vault is locked."))
+        }
         val items = getAllDecryptedItems()
         try {
             com.example.adere.core.backup.PdfExportManager.exportToPdf(items, options, outputStream)

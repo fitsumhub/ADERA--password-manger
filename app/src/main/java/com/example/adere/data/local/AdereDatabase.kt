@@ -25,7 +25,7 @@ abstract class AdereDatabase : RoomDatabase() {
                     AdereDatabase::class.java,
                     "adere_secure_vault.db"
                 )
-                    .fallbackToDestructiveMigration(false)
+                    .fallbackToDestructiveMigrationOnDowngrade(true)
                     .build()
                 INSTANCE = instance
                 instance

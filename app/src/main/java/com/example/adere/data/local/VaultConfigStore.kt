@@ -48,6 +48,10 @@ class VaultConfigStore(context: Context) {
         private const val KEY_HIDE_RECENT_APPS = "hide_recent_apps"
         private const val KEY_LAST_BACKUP_TIMESTAMP = "last_backup_timestamp"
         private const val KEY_BACKUP_HISTORY_JSON = "backup_history_json"
+        private const val KEY_CUSTOM_APP_NAME = "custom_app_name"
+        private const val KEY_SELECTED_APP_ICON = "selected_app_icon"
+        private const val KEY_LAST_TAMPERING_TIMESTAMP = "last_tampering_timestamp"
+        private const val KEY_HAS_PENDING_SECURITY_ALERT = "has_pending_security_alert"
     }
 
     var isInitialized: Boolean
@@ -98,7 +102,7 @@ class VaultConfigStore(context: Context) {
     }
 
     var isScreenshotProtectionEnabled: Boolean
-        get() = prefs.getBoolean(KEY_SCREENSHOT_PROTECTION, false) // disabled by default so streaming emulator works
+        get() = prefs.getBoolean(KEY_SCREENSHOT_PROTECTION, true) // Enabled by default for production security
         set(value) = prefs.edit().putBoolean(KEY_SCREENSHOT_PROTECTION, value).apply()
 
     var clipboardClearSeconds: Int
@@ -119,43 +123,63 @@ class VaultConfigStore(context: Context) {
 
     var themePalette: String
         get() = prefs.getString(KEY_THEME_PALETTE, "TOTAL_SECURITY") ?: "TOTAL_SECURITY"
-        set(value) = prefs.edit().putString(KEY_THEME_PALETTE, value).apply()
+        set(value) { prefs.edit().putString(KEY_THEME_PALETTE, value).commit() }
 
     var recoverySaltBase64: String
         get() = prefs.getString(KEY_RECOVERY_SALT, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_RECOVERY_SALT, value).apply()
+        set(value) { prefs.edit().putString(KEY_RECOVERY_SALT, value).commit() }
 
     var recoveryEncryptedDekBase64: String
         get() = prefs.getString(KEY_RECOVERY_ENCRYPTED_DEK, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_RECOVERY_ENCRYPTED_DEK, value).apply()
+        set(value) { prefs.edit().putString(KEY_RECOVERY_ENCRYPTED_DEK, value).commit() }
 
     var recoveryEncryptedDekIvBase64: String
         get() = prefs.getString(KEY_RECOVERY_ENCRYPTED_DEK_IV, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_RECOVERY_ENCRYPTED_DEK_IV, value).apply()
+        set(value) { prefs.edit().putString(KEY_RECOVERY_ENCRYPTED_DEK_IV, value).commit() }
 
     var storedRecoveryKeyEncBase64: String
         get() = prefs.getString(KEY_STORED_RECOVERY_KEY_ENC, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_STORED_RECOVERY_KEY_ENC, value).apply()
+        set(value) { prefs.edit().putString(KEY_STORED_RECOVERY_KEY_ENC, value).commit() }
 
     var storedRecoveryKeyIvBase64: String
         get() = prefs.getString(KEY_STORED_RECOVERY_KEY_IV, "") ?: ""
-        set(value) = prefs.edit().putString(KEY_STORED_RECOVERY_KEY_IV, value).apply()
+        set(value) { prefs.edit().putString(KEY_STORED_RECOVERY_KEY_IV, value).commit() }
 
     var isNotificationsEnabled: Boolean
         get() = prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true)
-        set(value) = prefs.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, value).apply()
+        set(value) { prefs.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, value).commit() }
 
     var isHideRecentAppsContentEnabled: Boolean
         get() = prefs.getBoolean(KEY_HIDE_RECENT_APPS, false)
-        set(value) = prefs.edit().putBoolean(KEY_HIDE_RECENT_APPS, value).apply()
+        set(value) { prefs.edit().putBoolean(KEY_HIDE_RECENT_APPS, value).commit() }
 
     var hasRecoveryKey: Boolean
         get() = prefs.getBoolean(KEY_HAS_RECOVERY_KEY, false)
-        set(value) = prefs.edit().putBoolean(KEY_HAS_RECOVERY_KEY, value).apply()
+        set(value) { prefs.edit().putBoolean(KEY_HAS_RECOVERY_KEY, value).commit() }
 
     var lastBackupTimestamp: Long
         get() = prefs.getLong(KEY_LAST_BACKUP_TIMESTAMP, 0L)
-        set(value) = prefs.edit().putLong(KEY_LAST_BACKUP_TIMESTAMP, value).apply()
+        set(value) { prefs.edit().putLong(KEY_LAST_BACKUP_TIMESTAMP, value).commit() }
+
+    var lastTamperingAttemptTimestamp: Long
+        get() = prefs.getLong(KEY_LAST_TAMPERING_TIMESTAMP, 0L)
+        set(value) { prefs.edit().putLong(KEY_LAST_TAMPERING_TIMESTAMP, value).commit() }
+
+    var hasPendingSecurityAlert: Boolean
+        get() = prefs.getBoolean(KEY_HAS_PENDING_SECURITY_ALERT, false)
+        set(value) { prefs.edit().putBoolean(KEY_HAS_PENDING_SECURITY_ALERT, value).commit() }
+
+    var customAppName: String
+        get() = prefs.getString(KEY_CUSTOM_APP_NAME, "Adera Password Manager") ?: "Adera Password Manager"
+        set(value) {
+            val sanitized = value.trim().take(30)
+            val finalName = if (sanitized.isBlank()) "Adera Password Manager" else sanitized
+            prefs.edit().putString(KEY_CUSTOM_APP_NAME, finalName).commit()
+        }
+
+    var selectedAppIcon: String
+        get() = prefs.getString(KEY_SELECTED_APP_ICON, "default") ?: "default"
+        set(value) { prefs.edit().putString(KEY_SELECTED_APP_ICON, value).commit() }
 
     fun getBackupHistory(): List<BackupHistoryEntry> {
         val raw = prefs.getString(KEY_BACKUP_HISTORY_JSON, null) ?: return emptyList()

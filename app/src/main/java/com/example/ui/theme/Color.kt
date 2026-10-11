@@ -1,64 +1,90 @@
 package com.example.ui.theme
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val CleanBg = Color(0xFFF6F7F9)
+// Pristine Modern Canvas Tokens
+val CleanBg = Color(0xFFF8FAFC)
 val CleanSurface = Color(0xFFFFFFFF)
-val CleanSurfaceVariant = Color(0xFFEEF1F5)
-val CleanBorder = Color(0xFFDDE2E9)
-val CleanBorderSubtle = Color(0xFFE8ECF1)
+val CleanSurfaceVariant = Color(0xFFF1F5F9)
+val CleanBorder = Color(0xFFE2E8F0)
+val CleanBorderSubtle = Color(0xFFF8FAFC)
 
-val CharcoalBg = Color(0xFF11151B)
-val CharcoalSurface = Color(0xFF191F27)
-val CharcoalSurfaceVariant = Color(0xFF222A35)
-val CharcoalSurfaceElevated = Color(0xFF28313E)
-val CharcoalBorder = Color(0xFF35404E)
-val CharcoalBorderSubtle = Color(0xFF2B3440)
+// Obsidian Dark Mode Canvas Tokens
+val NavyBg = Color(0xFF0B132B)
+val NavySurface = Color(0xFF121B2E)
+val NavySurfaceVariant = Color(0xFF1B263C)
+val NavySurfaceElevated = Color(0xFF24324D)
+val NavyBorder = Color(0xFF2E3D59)
+val NavyBorderSubtle = Color(0xFF1A263D)
 
-val TextDarkPrimary = Color(0xFF09090B)
-val TextDarkSecondary = Color(0xFF71717A)
-val TextDarkMuted = Color(0xFFA1A1AA)
+// Compatibility aliases
+val CharcoalBg = NavyBg
+val CharcoalSurface = NavySurface
+val CharcoalSurfaceVariant = NavySurfaceVariant
+val CharcoalSurfaceElevated = NavySurfaceElevated
+val CharcoalBorder = NavyBorder
+val CharcoalBorderSubtle = NavyBorderSubtle
 
-val LightTextPrimary = Color(0xFFFAFAFA)
-val LightTextSecondary = Color(0xFFA1A1AA)
+// Typography Color Tokens
+val TextDarkPrimary = Color(0xFF0F172A)
+val TextDarkSecondary = Color(0xFF475569)
+val TextDarkMuted = Color(0xFF94A3B8)
 
-val TextPrimary = TextDarkPrimary
-val TextSecondary = TextDarkSecondary
-val TextMuted = TextDarkMuted
+val LightTextPrimary = Color(0xFFF8FAFC)
+val LightTextSecondary = Color(0xFF94A3B8)
 
-val TotalSecurityPrimary = Color(0xFF334155)
-val TotalSecurityPrimaryLight = Color(0xFF475569)
-val TotalSecurityPrimaryDark = Color(0xFF1E293B)
-val TotalSecurityPrimaryContainer = Color(0xFFE2E8F0)
-val TotalSecurityOnPrimaryContainer = Color(0xFF1E293B)
+val TextPrimary: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurface
 
-val EmeraldPrimary = Color(0xFF10B981)
-val EmeraldLight = Color(0xFF34D399)
-val EmeraldDark = Color(0xFF059669)
-val EmeraldContainer = Color(0xFF064E3B)
-val OnEmeraldContainer = Color(0xFF10B981)
+val TextSecondary: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
 
-val SapphirePrimary = Color(0xFF3B82F6)
-val SapphireLight = Color(0xFF60A5FA)
-val SapphireDark = Color(0xFF2563EB)
-val SapphireContainer = Color(0xFF1E3A8A)
-val SapphireBg = Color(0xFF101722)
-val SapphireSurface = Color(0xFF182231)
-val SapphireSurfaceVariant = Color(0xFF222E40)
-val SapphireBorder = Color(0xFF35445A)
+val TextMuted: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 
-val CategorySocialBlue = Color(0xFF2563EB) 
-val CategoryAppsYellow = Color(0xFFD97706) 
-val CategoryCardTeal = Color(0xFF0D9488)   
-val CategoryCoral = Color(0xFFE11D48)
+// Primary Brand Colors: Financial-Grade Deep Vault Emerald & Precision Blue
+val EmeraldPrimary = Color(0xFF059669)
+val EmeraldLight = Color(0xFF10B981)
+val EmeraldDark = Color(0xFF047857)
+val EmeraldContainer = Color(0xFFECFDF5)
+val OnEmeraldContainer = Color(0xFF065F46)
 
-val HealthSafeBlue = Color(0xFF3B82F6)
+val ElectricCyanPrimary = Color(0xFF0284C7)
+val ElectricCyanLight = Color(0xFF0EA5E9)
+val ElectricCyanDark = Color(0xFF0369A1)
+val ElectricCyanContainer = Color(0xFFE0F2FE)
+
+val TotalSecurityPrimary = EmeraldPrimary
+val TotalSecurityPrimaryLight = EmeraldLight
+val TotalSecurityPrimaryDark = EmeraldDark
+val TotalSecurityPrimaryContainer = EmeraldContainer
+val TotalSecurityOnPrimaryContainer = OnEmeraldContainer
+
+val SapphirePrimary = ElectricCyanPrimary
+val SapphireLight = ElectricCyanLight
+val SapphireDark = ElectricCyanDark
+val SapphireContainer = ElectricCyanContainer
+val SapphireBg = NavyBg
+val SapphireSurface = NavySurface
+val SapphireSurfaceVariant = NavySurfaceVariant
+val SapphireBorder = NavyBorder
+
+// Functional Category Accent Badges
+val CategorySocialBlue = Color(0xFF2563EB)
+val CategoryAppsYellow = Color(0xFFD97706)
+val CategoryCardTeal = Color(0xFF0D9488)
+val CategoryCoral = Color(0xFFF43F5E)
+
+// Security Health Status Indicators
+val HealthSafeBlue = Color(0xFF0284C7)
 val HealthRefusedYellow = Color(0xFFD97706)
-val HealthRiskRed = Color(0xFFE11D48)
+val HealthRiskRed = Color(0xFFF43F5E)
 val HealthCompromisedTeal = Color(0xFF0D9488)
 
 val SecurityOrange = Color(0xFFF59E0B)
-val SecurityRed = Color(0xFFE11D48)
+val SecurityRed = Color(0xFFF43F5E)
 val SecurityYellow = Color(0xFFFBBF24)
 
 val GoldAccent = CategoryAppsYellow
@@ -72,24 +98,24 @@ enum class VaultThemePalette(
     val bgColor: Color,
 ) {
     TOTAL_SECURITY(
-        title = "Quiet Graphite",
-        subtitle = "Soft slate with a clean, light canvas",
-        primaryColor = TotalSecurityPrimary,
-        surfaceColor = Color(0xFFFFFFFF),
+        title = "Pristine Emerald",
+        subtitle = "Clean white polished canvas with deep vault emerald accents",
+        primaryColor = EmeraldPrimary,
+        surfaceColor = CleanSurface,
         bgColor = CleanBg
     ),
     OBSIDIAN_EMERALD(
-        title = "Graphite Emerald",
-        subtitle = "Layered charcoal with a calm emerald accent",
+        title = "Obsidian Emerald",
+        subtitle = "Deep obsidian slate canvas with vibrant mint emerald accents",
         primaryColor = Color(0xFF10B981),
-        surfaceColor = CharcoalSurface,
-        bgColor = CharcoalBg
+        surfaceColor = NavySurface,
+        bgColor = NavyBg
     ),
     MIDNIGHT_SAPPHIRE(
-        title = "Midnight Slate",
-        subtitle = "Deep blue-gray with a restrained cobalt accent",
-        primaryColor = Color(0xFF3B82F6),
-        surfaceColor = SapphireSurface,
-        bgColor = SapphireBg
+        title = "Midnight Cobalt",
+        subtitle = "Deep obsidian slate with cobalt blue security accents",
+        primaryColor = Color(0xFF0284C7),
+        surfaceColor = NavySurface,
+        bgColor = NavyBg
     )
 }

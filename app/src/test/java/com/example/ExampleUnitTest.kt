@@ -1,13 +1,19 @@
 package com.example
 
+import android.content.Context
+import android.content.Intent
+import androidx.test.core.app.ApplicationProvider
 import com.example.adere.core.backup.BackupManager
 import com.example.adere.core.crypto.CryptoEngine
 import com.example.adere.core.crypto.PasswordGenerator
 import com.example.adere.core.crypto.PasswordHealthAnalyzer
 import com.example.adere.core.crypto.TOTPGenerator
+import com.example.adere.core.utilities.AppIconManager
+import com.example.adere.data.local.VaultConfigStore
 import com.example.adere.domain.model.VaultCategory
 import com.example.adere.domain.model.VaultItem
 import com.example.adere.domain.model.VaultItemPayload
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -919,6 +925,32 @@ class ExampleUnitTest {
     }
 
     @Test
+    fun testAppIdentitySettings() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configStore = VaultConfigStore(context)
+
+        // 1. Test Custom App Name defaults, user input, and validation
+        assertEquals("Adera Password Manager", configStore.customAppName)
+        configStore.customAppName = "Fitsum"
+        assertEquals("Fitsum", configStore.customAppName)
+        configStore.customAppName = "My Private Vault"
+        assertEquals("My Private Vault", configStore.customAppName)
+
+        // Test empty/whitespace fallback
+        configStore.customAppName = "   "
+        assertEquals("Adera Password Manager", configStore.customAppName)
+
+        // Test max length trimming (30 chars)
+        configStore.customAppName = "A Very Long Custom Application Name Exceeding Thirty Characters Limit"
+        assertTrue(configStore.customAppName.length <= 30)
+
+        // 2. Test App Icon Preset Selection
+        assertEquals("default", configStore.selectedAppIcon)
+        configStore.selectedAppIcon = AppIconManager.AppIconPreset.CALCULATOR.id
+        assertEquals("calculator", configStore.selectedAppIcon)
+    }
+
+    @Test
     fun testAutoLockAllOptionsValidationAndPersistence() {
         val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
         val configStore = com.example.adere.data.local.VaultConfigStore(context)
@@ -986,5 +1018,52 @@ class ExampleUnitTest {
         assertEquals(com.example.adere.domain.repository.VaultLockState.Locked, sessionManager.lockState.value)
         assertEquals(null, sessionManager.getActiveDek())
         assertTrue("Previous DEK should be scrubbed with zeros", dekRef!!.all { it == 0.toByte() })
+    }
+
+    @Test
+    fun testDashboardQuickPasswordGenerator() {
+        val options = PasswordGenerator.GeneratorOptions(
+            length = 20,
+            includeUppercase = true,
+            includeLowercase = true,
+            includeDigits = true,
+            includeSymbols = true,
+            excludeAmbiguous = true
+        )
+        val result = PasswordGenerator.generate(options)
+
+        assertEquals(20, result.password.length)
+        assertTrue(result.entropyBits > 60.0)
+        assertTrue(
+            result.strength == PasswordGenerator.PasswordStrength.STRONG ||
+                    result.strength == PasswordGenerator.PasswordStrength.VERY_STRONG
+        )
+    }
+
+    @Test
+    fun testDashboardVaultHealthCalculation() {
+        val items = listOf(
+            PasswordHealthAnalyzer.PasswordItemInfo(
+                id = "1",
+                title = "Weak Account",
+                username = "user1",
+                passwordPlaintext = "123456",
+                has2FA = false,
+                passwordLastChangedEpochMs = System.currentTimeMillis()
+            ),
+            PasswordHealthAnalyzer.PasswordItemInfo(
+                id = "2",
+                title = "Strong Account",
+                username = "user2",
+                passwordPlaintext = "Tr0ub4doR&321#Password!",
+                has2FA = true,
+                passwordLastChangedEpochMs = System.currentTimeMillis()
+            )
+        )
+
+        val report = PasswordHealthAnalyzer.analyze(items)
+        assertEquals(2, report.totalPasswords)
+        assertEquals(1, report.weakCount)
+        assertTrue(report.healthScorePercent in 0..100)
     }
 }

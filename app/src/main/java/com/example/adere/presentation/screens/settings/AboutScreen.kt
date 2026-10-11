@@ -22,7 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Architecture
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
@@ -34,6 +37,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import com.example.adere.core.ads.AdSecurityZone
+import com.example.adere.presentation.components.AdMobBanner
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,6 +55,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,6 +70,7 @@ import kotlinx.coroutines.delay
 fun AboutScreen(
     appVersion: String = "1.0.0",
     buildNumber: String = "100",
+    customAppName: String = "ADERA",
     onViewArchitecture: () -> Unit = {},
     onViewPrivacyPolicy: () -> Unit = {},
     onViewTermsOfService: () -> Unit = {},
@@ -72,6 +79,7 @@ fun AboutScreen(
     onBackClick: () -> Unit
 ) {
     val primary = MaterialTheme.colorScheme.primary
+    val appTitle = customAppName.ifBlank { "ADERA" }
 
     var showArchitectureDialog by remember { mutableStateOf(false) }
     var showUpdatesDialog by remember { mutableStateOf(false) }
@@ -82,7 +90,7 @@ fun AboutScreen(
     Scaffold(
         topBar = {
             SettingsSubHeader(
-                title = "About ADERE",
+                title = "About $appTitle",
                 subtitle = "Version $appVersion · Build $buildNumber · Security Specs",
                 onBackClick = onBackClick
             )
@@ -144,7 +152,7 @@ fun AboutScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "ADERE Password Manager",
+                                    text = "$appTitle Vault",
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp,
@@ -157,7 +165,7 @@ fun AboutScreen(
                                     color = TotalSecurityPrimary.copy(alpha = 0.15f)
                                 ) {
                                     Text(
-                                        "አደረ",
+                                        "አደራ",
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             color = TotalSecurityPrimary,
                                             fontWeight = FontWeight.Bold,
@@ -181,6 +189,128 @@ fun AboutScreen(
                             VersionPill("Build $buildNumber", TotalSecurityPrimary)
                             VersionPill("100% Offline", EmeraldPrimary)
                         }
+                    }
+                }
+            }
+
+            // ── About the Developer ───────────────────────────────────────────
+            SettingsSectionTitle("About the Developer")
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = Shapes.medium,
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = primary.copy(alpha = 0.12f),
+                            modifier = Modifier.size(52.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    "FE",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = primary
+                                    )
+                                )
+                            }
+                        }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Fitsum Enunu",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("🇪🇹", fontSize = 16.sp)
+                            }
+                            Text(
+                                text = "Founder & Developer",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "I’m Fitsum Enunu, an Ethiopian software developer and technology enthusiast focused on building secure, useful, and user-friendly digital products.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 18.sp
+                        )
+                    )
+
+                    Surface(
+                        shape = Shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Person, contentDescription = null, tint = primary, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Role: ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                Text("Founder & Developer", style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Email, contentDescription = null, tint = primary, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Email: ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                Text("Fitsumenunu21@gmail.com", style = MaterialTheme.typography.bodySmall, color = primary)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = primary, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Text("Location: ", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                                Text("Ethiopia 🇪🇹", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Developer Vision: Building secure and practical technology products that make digital life simpler, safer, and more accessible.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontStyle = FontStyle.Italic,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 17.sp
+                        )
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Built with ❤️ in Ethiopia 🇪🇹",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        )
                     }
                 }
             }
@@ -281,6 +411,8 @@ fun AboutScreen(
                     )
                 }
             }
+
+            AdMobBanner(zone = AdSecurityZone.SAFE_ZONE)
 
             Spacer(modifier = Modifier.height(80.dp))
         }

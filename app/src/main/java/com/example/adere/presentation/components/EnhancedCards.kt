@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
@@ -318,6 +319,7 @@ fun EnhancedCategoryIcon(
     
     val (icon, color) = remember(category) {
         when (category) {
+            VaultCategory.APPS -> Icons.Default.Smartphone to Color(0xFF8B5CF6)
             VaultCategory.SOCIAL -> Icons.Default.Person to Color(0xFF5E5CE6)
             VaultCategory.BANKING -> Icons.Default.CreditCard to Color(0xFF48C9B0)
             VaultCategory.NOTES -> Icons.Default.Security to Color(0xFFF5BA31)

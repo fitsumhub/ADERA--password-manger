@@ -1,6 +1,8 @@
 package com.example.adere.presentation.screens
 import com.example.ui.theme.Shapes
 
+import com.example.adere.presentation.components.InteractiveSeedPhraseInput
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +29,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CreditCard
@@ -49,6 +50,8 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -68,6 +71,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -78,13 +82,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.adere.core.crypto.PasswordGenerator
@@ -111,10 +120,10 @@ import java.util.UUID
 fun AddEditItemScreen(
     initialItem: VaultItem?,
     initialCategory: VaultCategory,
+    isEditMode: Boolean = initialItem != null,
     onBackClick: () -> Unit,
     onSaveItem: (VaultItem) -> Unit
 ) {
-    val isEditMode = initialItem != null
 
     var category by remember { mutableStateOf(initialItem?.category ?: initialCategory) }
     var title by remember { mutableStateOf(initialItem?.title ?: "") }
@@ -143,7 +152,6 @@ fun AddEditItemScreen(
     var cryptoAddress by remember { mutableStateOf(initialItem?.payload?.cryptoAddress ?: "") }
     var cryptoSeedPhrase by remember { mutableStateOf(initialItem?.payload?.cryptoSeedPhrase ?: "") }
     var cryptoPrivateKey by remember { mutableStateOf(initialItem?.payload?.cryptoPrivateKey ?: "") }
-    var seedPhraseVisible by remember { mutableStateOf(false) }
 
     // Wi-Fi fields
     var wifiSsid by remember { mutableStateOf(initialItem?.payload?.wifiSsid ?: "") }
@@ -180,6 +188,9 @@ fun AddEditItemScreen(
             TOTPGenerator.generateCurrentTotp(totpSecret)
         } else null
     }
+
+    var showEmojiDialog by remember { mutableStateOf(false) }
+    var customEmoji by remember { mutableStateOf(initialItem?.payload?.customEmoji ?: "") }
 
     Scaffold(
         topBar = {
@@ -231,6 +242,7 @@ fun AddEditItemScreen(
                                 bankName = bankName,
                                 docType = docType,
                                 docNumber = docNumber,
+                                customEmoji = customEmoji,
                                 recoveryCodes = recoveryCodes.toList(),
                                 customFields = customFields.toMap()
                             )
@@ -243,30 +255,32 @@ fun AddEditItemScreen(
                                 isFavorite = isFavorite,
                                 createdAt = initialItem?.createdAt ?: System.currentTimeMillis(),
                                 updatedAt = System.currentTimeMillis(),
-                                passwordLastChanged = if (initialItem?.payload?.password != password) {
-                                    System.currentTimeMillis()
-                                } else {
+                                passwordLastChanged = if (initialItem != null && initialItem.payload.password == password) {
                                     initialItem.passwordLastChanged
+                                } else {
+                                    System.currentTimeMillis()
                                 }
                             )
                             onSaveItem(item)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = Color.White
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        shape = Shapes.medium,
+                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier
                             .padding(end = 8.dp)
-                            .testTag("save_vault_item_button")
+                            .height(36.dp)
+                            .testTag("save_vault_item_button"),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Save", fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Save", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
             )
@@ -321,7 +335,7 @@ fun AddEditItemScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = errorMessage!!,
+                        text = errorMessage ?: "",
                         color = SecurityRed,
                         style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                         modifier = Modifier.padding(12.dp)
@@ -341,14 +355,34 @@ fun AddEditItemScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        com.example.adere.presentation.components.VaultItemAvatar(
-                            title = title,
-                            category = category,
-                            url = url,
-                            size = 52.dp,
-                            iconSize = 28.dp,
-                            cornerRadius = 14.dp
-                        )
+                        Box(modifier = Modifier.clickable { showEmojiDialog = true }) {
+                            com.example.adere.presentation.components.VaultItemAvatar(
+                                title = title,
+                                category = category,
+                                url = url,
+                                customEmoji = customEmoji,
+                                size = 52.dp,
+                                iconSize = 28.dp,
+                                cornerRadius = 14.dp
+                            )
+                            // Edit Badge
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(18.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Logo",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(10.dp)
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.width(14.dp))
                         OutlinedTextField(
                             value = title,
@@ -376,9 +410,9 @@ fun AddEditItemScreen(
                     // Credit Card / Debit Card & Banking Form
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = Shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -519,9 +553,9 @@ fun AddEditItemScreen(
                     // Identity & Official Documents
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = Shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -583,11 +617,12 @@ fun AddEditItemScreen(
                         text = "Crypto Vault: Encrypted with hardware AES-256-GCM. Never share your seed phrase or private key with anyone."
                     )
 
+                    // Card 1: Network & Address
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = Shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -629,43 +664,26 @@ fun AddEditItemScreen(
                                 shape = Shapes.medium,
                                 modifier = Modifier.fillMaxWidth()
                             )
+                        }
+                    }
 
-                            val seedWords = remember(cryptoSeedPhrase) {
-                                cryptoSeedPhrase.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-                            }
+                    // Card 2: Standalone Interactive Seed Phrase Box-by-Box Input
+                    InteractiveSeedPhraseInput(
+                        seedPhrase = cryptoSeedPhrase,
+                        onSeedPhraseChange = { cryptoSeedPhrase = it }
+                    )
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Recovery Seed Phrase (${seedWords.size} words)",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        color = if (seedWords.size == 12 || seedWords.size == 24) Color(0xFF10B981) else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-
-                                TextButton(onClick = { seedPhraseVisible = !seedPhraseVisible }) {
-                                    Text(
-                                        text = if (seedPhraseVisible) "Mask" else "Reveal",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                                    )
-                                }
-                            }
-
-                            OutlinedTextField(
-                                value = cryptoSeedPhrase,
-                                onValueChange = { cryptoSeedPhrase = it },
-                                placeholder = { Text("e.g. anchor beacon citadel delta ember falcon...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                                visualTransformation = if (seedPhraseVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                colors = cleanTextFieldColors(),
-                                shape = Shapes.medium,
-                                minLines = 3,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
+                    // Card 3: Private Key
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             OutlinedTextField(
                                 value = cryptoPrivateKey,
                                 onValueChange = { cryptoPrivateKey = it },
@@ -684,9 +702,9 @@ fun AddEditItemScreen(
                     // Wi-Fi Configuration
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = Shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -709,26 +727,12 @@ fun AddEditItemScreen(
                                 singleLine = true,
                                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                 trailingIcon = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                            Icon(
-                                                imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                        IconButton(onClick = { 
-                                            wifiPassword = PasswordGenerator.generate(
-                                                PasswordGenerator.GeneratorOptions(length = 16, includeSymbols = false)
-                                            ).password
-                                            passwordVisible = true
-                                        }) {
-                                            Icon(
-                                                imageVector = Icons.Default.AutoAwesome,
-                                                contentDescription = "Generate strong Wi-Fi password",
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(
+                                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
                                 },
                                 colors = cleanTextFieldColors(),
@@ -770,9 +774,9 @@ fun AddEditItemScreen(
                     // Standard Login Credential Fields (Social, Email, Website, etc.)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = Shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant))
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -780,9 +784,10 @@ fun AddEditItemScreen(
                         ) {
                             // Quick Domain helper chips for Email
                             if (category == VaultCategory.EMAIL) {
-                                Row(
+                                FlowRow(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     val domains = listOf("@gmail.com", "@outlook.com", "@icloud.com", "@proton.me")
                                     for (domain in domains) {
@@ -832,29 +837,12 @@ fun AddEditItemScreen(
                                     singleLine = true,
                                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                     trailingIcon = {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(end = 4.dp)
-                                        ) {
-                                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                                Icon(
-                                                    imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                                    contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                            IconButton(onClick = { 
-                                                password = PasswordGenerator.generate(
-                                                    PasswordGenerator.GeneratorOptions(length = 20)
-                                                ).password
-                                                passwordVisible = true
-                                            }) {
-                                                Icon(
-                                                    imageVector = Icons.Default.AutoAwesome,
-                                                    contentDescription = "Generate strong password",
-                                                    tint = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
+                                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                            Icon(
+                                                imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
                                         }
                                     },
                                     colors = cleanTextFieldColors(),
@@ -1163,6 +1151,176 @@ fun AddEditItemScreen(
         }
     }
 
+    // Emoji & Custom Brand Icon Selector Dialog
+    if (showEmojiDialog) {
+        var dialogTab by remember { mutableIntStateOf(0) } // 0: 3D Emojis, 1: World Brands
+
+        AlertDialog(
+            onDismissRequest = { showEmojiDialog = false },
+            title = {
+                Column {
+                    Text(
+                        text = "Choose Custom Icon / Logo",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TabRow(
+                        selectedTabIndex = dialogTab,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ) {
+                        Tab(
+                            selected = dialogTab == 0,
+                            onClick = { dialogTab = 0 },
+                            text = { Text("3D Emojis", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                        )
+                        Tab(
+                            selected = dialogTab == 1,
+                            onClick = { dialogTab = 1 },
+                            text = { Text("World Brands", fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                        )
+                    }
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(280.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    if (dialogTab == 0) {
+                        Text(
+                            text = "Select a 3D emoji icon categorized by app purpose:",
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+
+                        val emojiCategories = listOf(
+                            "Social & Chat" to listOf("🔐", "💬", "📱", "📷", "✈️", "🎵", "👻", "💼", "🤖", "👾", "💙", "🌐", "🎥"),
+                            "Finance & Banking" to listOf("🏦", "💰", "💵", "💳", "📈", "💎", "🪙", "📊", "🤑", "🏧", "🧾"),
+                            "Web3 & Crypto" to listOf("₿", "🪙", "⚡", "🦊", "🦄", "🌈", "⛓️", "🔒", "🛡️", "🚀", "🪐"),
+                            "Entertainment & Media" to listOf("🎬", "🍿", "📺", "🎧", "🎮", "🕹️", "🎨", "🎲", "🏆", "🎟️"),
+                            "Work & Productivity" to listOf("💼", "📝", "📅", "✉️", "📧", "📂", "📌", "⚙️", "🖥️", "💻", "☁️"),
+                            "Shopping & Food" to listOf("🛒", "🛍️", "📦", "🏷️", "🎁", "🏪", "👟", "👗", "🍕", "☕", "🍔")
+                        )
+
+                        for ((categoryName, emojiList) in emojiCategories) {
+                            Text(
+                                text = categoryName.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                for (emoji in emojiList) {
+                                    val isSelected = customEmoji == emoji
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant)
+                                            .clickable { customEmoji = emoji }
+                                            .border(
+                                                width = if (isSelected) 2.dp else 0.dp,
+                                                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                                shape = CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(text = emoji, fontSize = 20.sp)
+                                    }
+                                }
+                            }
+                        }
+
+                        OutlinedTextField(
+                            value = customEmoji,
+                            onValueChange = { customEmoji = it.take(2) },
+                            label = { Text("Custom Single Emoji") },
+                            placeholder = { Text("🦊") },
+                            singleLine = true,
+                            colors = cleanTextFieldColors(),
+                            shape = Shapes.medium,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        Text(
+                            text = "Tap a global brand logo to apply its official icon:",
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            for (brand in com.example.adere.presentation.components.BrandIconHelper.ALL_POPULAR_BRANDS) {
+                                Card(
+                                    modifier = Modifier
+                                        .size(width = 72.dp, height = 64.dp)
+                                        .clickable {
+                                            title = brand.name
+                                            if (brand.defaultUrl.isNotBlank()) url = brand.defaultUrl
+                                            customEmoji = "" // clear custom emoji so brand logo is used
+                                            showEmojiDialog = false
+                                        },
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxSize().padding(4.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = brand.iconRes),
+                                            contentDescription = brand.name,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = brand.name,
+                                            fontSize = 9.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showEmojiDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Save", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    customEmoji = ""
+                    showEmojiDialog = false 
+                }) {
+                    Text("Reset to Default", color = SecurityRed)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = Shapes.medium
+        )
+    }
+
     // Add Custom Field Dialog
     if (showAddCustomFieldDialog) {
         AlertDialog(
@@ -1232,11 +1390,13 @@ fun AddEditItemScreen(
 @Composable
 private fun cleanTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = MaterialTheme.colorScheme.primary,
-    unfocusedBorderColor = Color.Transparent,
-    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
     focusedTextColor = MaterialTheme.colorScheme.onSurface,
-    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
 )
 
 

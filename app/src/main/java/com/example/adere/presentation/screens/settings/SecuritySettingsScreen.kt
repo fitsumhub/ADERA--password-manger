@@ -1,12 +1,12 @@
 package com.example.adere.presentation.screens.settings
-import com.example.ui.theme.Shapes
-import androidx.compose.foundation.shape.CircleShape
 
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.biometric.BiometricManager
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Key
@@ -30,7 +31,13 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.rounded.Warning
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -40,15 +47,20 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,13 +77,17 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.adere.presentation.components.MasterRecoveryKeyCard
 import com.example.adere.presentation.screens.settings.components.SettingsItemCard
 import com.example.adere.presentation.screens.settings.components.SettingsOptionDialog
 import com.example.adere.presentation.screens.settings.components.SettingsSectionTitle
 import com.example.adere.presentation.screens.settings.components.SettingsSubHeader
 import com.example.adere.presentation.screens.settings.components.SettingsSwitchItem
 import com.example.adere.presentation.screens.settings.components.SettingsValueItem
+import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.HealthRiskRed
+import com.example.ui.theme.Shapes
+import androidx.compose.foundation.layout.Box
 
 fun formatAutoLockLabel(seconds: Int): String = when (seconds) {
     0    -> "Immediately"
@@ -88,26 +104,34 @@ fun formatAutoLockLabel(seconds: Int): String = when (seconds) {
 fun SecuritySettingsScreen(
     biometricEnabled: Boolean,
     autoLockSeconds: Int,
+    lastBackupTimestamp: Long = 0L,
+    lastTamperingTimestamp: Long = 0L,
+    hasPendingSecurityAlert: Boolean = false,
     onToggleBiometric: (Boolean, (Result<Unit>) -> Unit) -> Unit,
     onSetAutoLockSeconds: (Int, (Result<Unit>) -> Unit) -> Unit,
     onRefreshBiometricState: () -> Unit,
     onChangeMasterPassword: (old: String, new: String, (Result<Unit>) -> Unit) -> Unit,
     onGetRecoveryKey: () -> Result<String>,
     onRegenerateRecoveryKey: ((Result<String>) -> Unit) -> Unit,
-    onBackClick: () -> Unit
+    onNavigateToBackup: () -> Unit = {},
+    onDismissSecurityAlert: () -> Unit = {},
+    onTriggerBiometrics: (() -> Unit)? = null,
+    onBackClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
-    var showAutoLockDialog by remember { mutableStateOf(false) }
-    var showChangePasswordDialog by remember { mutableStateOf(false) }
-    var showRecoveryKeyDialog by remember { mutableStateOf(false) }
-    var showRegenerateConfirmDialog by remember { mutableStateOf(false) }
+    var showAutoLockDialog by remember { mutableStateOf(value = false) }
+    var showChangePasswordDialog by remember { mutableStateOf(value = false) }
+    var showRecoveryKeyDialog by remember { mutableStateOf(value = false) }
+    var showRegenerateConfirmDialog by remember { mutableStateOf(value = false) }
     var currentRecoveryKey by remember { mutableStateOf("") }
 
     val biometricManager = remember { BiometricManager.from(context) }
     val canAuth = remember {
-        biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+        biometricManager.canAuthenticate(
+            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK
+        )
     }
     val biometricAvailable = canAuth == BiometricManager.BIOMETRIC_SUCCESS
 
@@ -118,10 +142,10 @@ fun SecuritySettingsScreen(
             SettingsSubHeader(
                 title = "Security",
                 subtitle = "Biometrics · Auto-lock · Master password · Recovery key",
-                onBackClick = onBackClick
+                onBackClick = onBackClick,
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -129,8 +153,17 @@ fun SecuritySettingsScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            // ── Vault Security Overview & Cryptographic Architecture ──────────
+            VaultSecurityOverviewCard(
+                biometricEnabled = biometricEnabled && biometricAvailable,
+                autoLockSeconds = autoLockSeconds,
+                hasPendingAlert = hasPendingSecurityAlert
+            )
+
+            CryptographicEngineCard()
+
             // ── Biometric unlock ──────────────────────────────────────────────
             SettingsSectionTitle("Biometric Unlock")
 
@@ -167,7 +200,7 @@ fun SecuritySettingsScreen(
                     }
                 },
                 enabled = biometricAvailable,
-                testTag = "settings_switch_biometric"
+                testTag = "settings_switch_biometric",
             )
 
             // ── Session protection ────────────────────────────────────────────
@@ -181,7 +214,7 @@ fun SecuritySettingsScreen(
                 subtitle = "Clear DEK from memory after inactivity",
                 valueText = formatAutoLockLabel(autoLockSeconds),
                 onClick = { showAutoLockDialog = true },
-                testTag = "settings_autolock_item"
+                testTag = "settings_autolock_item",
             )
 
             // ── Master password & recovery ────────────────────────────────────
@@ -194,7 +227,7 @@ fun SecuritySettingsScreen(
                 title = "Change Master Password",
                 subtitle = "Re-encrypt vault DEK with a new passphrase",
                 onClick = { showChangePasswordDialog = true },
-                testTag = "settings_change_password_item"
+                testTag = "settings_change_password_item",
             )
 
             SettingsItemCard(
@@ -212,12 +245,119 @@ fun SecuritySettingsScreen(
                         Toast.makeText(
                             context,
                             res.exceptionOrNull()?.message ?: "Vault must be unlocked",
-                            Toast.LENGTH_SHORT
+                            Toast.LENGTH_SHORT,
                         ).show()
                     }
                 },
-                testTag = "settings_recovery_key_item"
+                testTag = "settings_recovery_key_item",
             )
+
+            // ── Vault Encrypted Backup & Secure Recovery Card ──────────────────────
+            Surface(
+                shape = Shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Backup,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Backup & Recovery Protection",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+
+                    Text(
+                        text = "Android OS wipes app data if ADERA is uninstalled. Maintain encrypted backups and keep your 24-word Master Recovery Key safe to restore your vault anytime.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+                    )
+
+                    val formattedBackupTime = if (lastBackupTimestamp > 0) {
+                        try {
+                            SimpleDateFormat("MMM d, yyyy h:mm a", Locale.getDefault()).format(Date(lastBackupTimestamp))
+                        } catch (_: Exception) {
+                            "Backup created"
+                        }
+                    } else {
+                        "No backup created yet"
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Encrypted Vault Backup",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Text(
+                                text = formattedBackupTime,
+                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            )
+                        }
+                        TextButton(
+                            onClick = onNavigateToBackup,
+                            modifier = Modifier.testTag("settings_button_navigate_backup")
+                        ) {
+                            Text("Manage Backups")
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "24-Word Master Recovery Key",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold)
+                            )
+                            Text(
+                                text = "Configured & Hardware Protected",
+                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                onGetRecoveryKey().fold(
+                                    onSuccess = { key ->
+                                        currentRecoveryKey = key
+                                        showRecoveryKeyDialog = true
+                                    },
+                                    onFailure = { err ->
+                                        Toast.makeText(
+                                            context,
+                                            err.localizedMessage ?: "Vault must be unlocked to view recovery key",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                )
+                            },
+                            modifier = Modifier.testTag("settings_button_view_recovery_key")
+                        ) {
+                            Text("View Key")
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -234,7 +374,7 @@ fun SecuritySettingsScreen(
                 60 to "1 minute",
                 300 to "5 minutes",
                 900 to "15 minutes",
-                3600 to "1 hour"
+                3600 to "1 hour",
             ),
             selectedOption = autoLockSeconds,
             onSelectOption = {
@@ -244,8 +384,9 @@ fun SecuritySettingsScreen(
                     }
                 }
             },
-            onDismiss = { showAutoLockDialog = false }
-        )
+        ) {
+            showAutoLockDialog = false
+        }
     }
 
     if (showChangePasswordDialog) {
@@ -253,8 +394,9 @@ fun SecuritySettingsScreen(
             onConfirm = { old, new, cb ->
                 onChangeMasterPassword(old, new, cb)
             },
-            onDismiss = { showChangePasswordDialog = false }
-        )
+        ) {
+            showChangePasswordDialog = false
+        }
     }
 
     if (showRecoveryKeyDialog && currentRecoveryKey.isNotBlank()) {
@@ -268,8 +410,9 @@ fun SecuritySettingsScreen(
                 showRecoveryKeyDialog = false
                 showRegenerateConfirmDialog = true
             },
-            onDismiss = { showRecoveryKeyDialog = false }
-        )
+        ) {
+            showRecoveryKeyDialog = false
+        }
     }
 
     if (showRegenerateConfirmDialog) {
@@ -281,12 +424,12 @@ fun SecuritySettingsScreen(
                         Icons.Rounded.Warning,
                         contentDescription = null,
                         tint = HealthRiskRed,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(22.dp),
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(
                         "Regenerate Recovery Key?",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                 }
             },
@@ -296,8 +439,8 @@ fun SecuritySettingsScreen(
                     "Any written copies of the old key will stop working immediately. " +
                     "Make sure to note down the new key right away.",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
                 )
             },
             confirmButton = {
@@ -314,13 +457,215 @@ fun SecuritySettingsScreen(
                                 Toast.makeText(context, "Failed: ${res.exceptionOrNull()?.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                             }
                         }
-                    }
+                    },
                 ) { Text("Regenerate") }
             },
             dismissButton = {
                 TextButton(onClick = { showRegenerateConfirmDialog = false }) { Text("Cancel") }
-            }
+            },
         )
+    }
+
+
+}
+
+// ── Vault Security Overview & Architecture Cards ─────────────────────────────
+
+@Composable
+fun VaultSecurityOverviewCard(
+    biometricEnabled: Boolean,
+    autoLockSeconds: Int,
+    hasPendingAlert: Boolean,
+    modifier: Modifier = Modifier
+) {
+    var score = 60 // Base Hardware Keystore AES-256 score
+    if (biometricEnabled) score += 20
+    if (autoLockSeconds in 1..300) score += 20 else if (autoLockSeconds > 0) score += 10
+
+    val scoreColor = when {
+        hasPendingAlert -> HealthRiskRed
+        score >= 80 -> EmeraldPrimary
+        score >= 60 -> Color(0xFFF59E0B)
+        else -> HealthRiskRed
+    }
+
+    val protectionStatusText = when {
+        hasPendingAlert -> "Security Alert Pending"
+        score >= 80 -> "Optimal Shielding (AES-256 Active)"
+        score >= 60 -> "Good Protection Level"
+        else -> "Basic Protection"
+    }
+
+    Surface(
+        shape = Shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        border = BorderStroke(1.dp, scoreColor.copy(alpha = 0.3f)),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(scoreColor.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shield,
+                            contentDescription = null,
+                            tint = scoreColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Vault Security Status",
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = protectionStatusText,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = scoreColor,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = scoreColor.copy(alpha = 0.12f)
+                ) {
+                    Text(
+                        text = "$score / 100",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = scoreColor
+                        ),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                }
+            }
+
+            // Status Badges Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SecurityBadgeItem(
+                    label = "AES-256-GCM",
+                    isActive = true,
+                    modifier = Modifier.weight(1f)
+                )
+                SecurityBadgeItem(
+                    label = if (biometricEnabled) "Biometric On" else "Biometric Off",
+                    isActive = biometricEnabled,
+                    modifier = Modifier.weight(1f)
+                )
+                SecurityBadgeItem(
+                    label = if (autoLockSeconds > 0) formatAutoLockLabel(autoLockSeconds) else "Lock Off",
+                    isActive = autoLockSeconds > 0,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SecurityBadgeItem(
+    label: String,
+    isActive: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = if (isActive) EmeraldPrimary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+    val textColor = if (isActive) EmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+
+    Surface(
+        shape = Shapes.small,
+        color = bgColor,
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = textColor,
+                modifier = Modifier.size(12.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = textColor
+                ),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun CryptographicEngineCard(
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = Shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Cryptographic Architecture & Hardware Security",
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                )
+            }
+
+            Text(
+                text = "• Cipher: AES-256-GCM authenticated encryption with unique 96-bit random IVs.\n" +
+                        "• Key Derivation: PBKDF2 with HMAC-SHA256 (100,000 iterations) + CSPRNG Salt.\n" +
+                        "• Keystore: Android System Keystore with StrongBox/TEE hardware-backed key isolation.\n" +
+                        "• Zero-Knowledge: Master key never written to disk or transmitted over networks.",
+                style = MaterialTheme.typography.bodySmall.copy(
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 17.sp,
+                    fontSize = 11.5.sp
+                )
+            )
+        }
     }
 }
 
@@ -329,15 +674,15 @@ fun SecuritySettingsScreen(
 @Composable
 private fun ChangeMasterPasswordDialog(
     onConfirm: (old: String, new: String, cb: (Result<Unit>) -> Unit) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     var currentPass by remember { mutableStateOf("") }
     var newPass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
-    var currentVisible by remember { mutableStateOf(false) }
-    var newVisible by remember { mutableStateOf(false) }
+    var currentVisible by remember { mutableStateOf(value = false) }
+    var newVisible by remember { mutableStateOf(value = false) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
-    var isSubmitting by remember { mutableStateOf(false) }
+    var isSubmitting by remember { mutableStateOf(value = false) }
 
     val newStrength = remember(newPass) {
         var s = 0
@@ -353,8 +698,12 @@ private fun ChangeMasterPasswordDialog(
         onDismissRequest = { if (!isSubmitting) onDismiss() },
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Lock, contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
                 Spacer(Modifier.width(10.dp))
                 Text("Change Master Password", fontWeight = FontWeight.Bold, fontSize = 17.sp)
             }
@@ -364,21 +713,21 @@ private fun ChangeMasterPasswordDialog(
                 Text(
                     "Re-encrypts your vault DEK. All stored secrets remain safe.",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
                 )
 
                 errorMsg?.let {
                     Surface(
                         color = HealthRiskRed.copy(alpha = 0.1f),
-                        shape = Shapes.medium
+                        shape = Shapes.medium,
                     ) {
                         Text(
                             it,
                             color = HealthRiskRed,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(10.dp)
+                            modifier = Modifier.padding(10.dp),
                         )
                     }
                 }
@@ -388,18 +737,19 @@ private fun ChangeMasterPasswordDialog(
                     onValueChange = { currentPass = it; errorMsg = null },
                     label = { Text("Current Password") },
                     singleLine = true,
+                    shape = CircleShape,
                     visualTransformation = if (currentVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
                         IconButton(onClick = { currentVisible = !currentVisible }) {
                             Icon(
                                 if (currentVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = null
+                                contentDescription = null,
                             )
                         }
                     },
                     modifier = Modifier.fillMaxWidth().testTag("input_current_password"),
-                    isError = errorMsg != null
+                    isError = errorMsg != null,
                 )
 
                 OutlinedTextField(
@@ -407,17 +757,18 @@ private fun ChangeMasterPasswordDialog(
                     onValueChange = { newPass = it; errorMsg = null },
                     label = { Text("New Password (min 8 chars)") },
                     singleLine = true,
+                    shape = CircleShape,
                     visualTransformation = if (newVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
                         IconButton(onClick = { newVisible = !newVisible }) {
                             Icon(
                                 if (newVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = null
+                                contentDescription = null,
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().testTag("input_new_password")
+                    modifier = Modifier.fillMaxWidth().testTag("input_new_password"),
                 )
 
                 // Strength bar
@@ -428,13 +779,13 @@ private fun ChangeMasterPasswordDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(5.dp)
-                                .clip(Shapes.medium),
+                                .clip(CircleShape),
                             color = when {
                                 newStrength <= 2 -> HealthRiskRed
                                 newStrength <= 3 -> Color(0xFFF59E0B)
                                 else -> Color(0xFF10B981)
                             },
-                            strokeCap = StrokeCap.Round
+                            strokeCap = StrokeCap.Round,
                         )
                         Text(
                             text = when {
@@ -448,8 +799,8 @@ private fun ChangeMasterPasswordDialog(
                                     newStrength <= 2 -> HealthRiskRed
                                     newStrength <= 3 -> Color(0xFFF59E0B)
                                     else -> Color(0xFF10B981)
-                                }
-                            )
+                                },
+                            ),
                         )
                     }
                 }
@@ -459,10 +810,11 @@ private fun ChangeMasterPasswordDialog(
                     onValueChange = { confirmPass = it; errorMsg = null },
                     label = { Text("Confirm New Password") },
                     singleLine = true,
+                    shape = CircleShape,
                     visualTransformation = if (newVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier.fillMaxWidth().testTag("input_confirm_password"),
-                    isError = confirmPass.isNotEmpty() && confirmPass != newPass
+                    isError = confirmPass.isNotEmpty() && (confirmPass != newPass),
                 )
             }
         },
@@ -470,7 +822,7 @@ private fun ChangeMasterPasswordDialog(
             Button(
                 enabled = !isSubmitting,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary,
                 ),
                 onClick = {
                     when {
@@ -487,14 +839,14 @@ private fun ChangeMasterPasswordDialog(
                             }
                         }
                     }
-                }
+                },
             ) {
                 Text(if (isSubmitting) "Updating…" else "Update Password")
             }
         },
         dismissButton = {
             TextButton(enabled = !isSubmitting, onClick = onDismiss) { Text("Cancel") }
-        }
+        },
     )
 }
 
@@ -505,14 +857,18 @@ private fun RecoveryKeyViewDialog(
     recoveryKey: String,
     onCopy: () -> Unit,
     onRegenerate: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Key, contentDescription = null,
-                    tint = Color(0xFFF59E0B), modifier = Modifier.size(22.dp))
+                Icon(
+                    Icons.Default.Key,
+                    contentDescription = null,
+                    tint = Color(0xFFF59E0B),
+                    modifier = Modifier.size(22.dp),
+                )
                 Spacer(Modifier.width(10.dp))
                 Text("Master Recovery Key", fontWeight = FontWeight.Bold, fontSize = 17.sp)
             }
@@ -520,59 +876,34 @@ private fun RecoveryKeyViewDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Text(
-                    "Write this key down and store it in a secure physical location. " +
-                    "It restores vault access if you forget your master password.",
+                    "Store this 24-character key in a secure physical location. " +
+                    "It allows complete emergency vault recovery if you ever forget your master password.",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 18.sp
+                    ),
                 )
 
-                // Key display box
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = recoveryKey,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                                letterSpacing = 1.sp,
-                                color = MaterialTheme.colorScheme.primary
-                            ),
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(onClick = onCopy) {
-                            Icon(
-                                Icons.Default.ContentCopy,
-                                contentDescription = "Copy",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
+                // Master Recovery Key Chunked Grid Card
+                MasterRecoveryKeyCard(
+                    recoveryKey = recoveryKey,
+                    onCopyKey = onCopy
+                )
 
                 // Warning banner
                 Surface(
                     color = HealthRiskRed.copy(alpha = 0.08f),
-                    shape = Shapes.medium
+                    shape = Shapes.medium,
                 ) {
                     Row(
                         modifier = Modifier.padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
                             Icons.Rounded.Warning,
                             contentDescription = null,
                             tint = HealthRiskRed,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(17.dp),
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
@@ -580,8 +911,8 @@ private fun RecoveryKeyViewDialog(
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 11.sp,
                                 color = HealthRiskRed,
-                                lineHeight = 15.sp
-                            )
+                                lineHeight = 15.sp,
+                            ),
                         )
                     }
                 }
@@ -598,6 +929,6 @@ private fun RecoveryKeyViewDialog(
                     Text("Regenerate")
                 }
             }
-        }
+        },
     )
 }

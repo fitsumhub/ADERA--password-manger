@@ -33,4 +33,4 @@ Format: `ADERE_VAULT_BACKUP:v1:<saltBase64>:<ivBase64>:<ciphertextBase64>`
 - Encrypted with AES-256-GCM. Corrupted or wrong-password attempts are rejected before parsing.
 
 ## 6. Permissions & Network Isolation
-- **No `INTERNET` permission**: Adere has zero network access declared in its manifest, rendering remote exfiltration mathematically impossible at the OS sandbox level.
+- **Minimal Permissions & Zero-Knowledge Isolation**: `INTERNET` and `ACCESS_NETWORK_STATE` permissions are declared for Google Mobile Ads (AdMob) SDK functionality. Vault cryptographic keys, passwords, seed phrases, and database secrets are processed strictly on-device in isolated memory and are NEVER transmitted over the network or exposed to any remote servers.

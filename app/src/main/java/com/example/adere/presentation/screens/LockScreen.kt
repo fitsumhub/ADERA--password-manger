@@ -1,17 +1,12 @@
 package com.example.adere.presentation.screens
-import com.example.ui.theme.Shapes
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -20,7 +15,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,16 +28,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -78,9 +70,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -94,13 +88,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
-import com.example.ui.theme.CleanBorder
+import com.example.adere.core.crypto.RecoveryKeyManager
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.HealthRiskRed
-import com.example.ui.theme.TotalSecurityPrimary
-import com.example.ui.theme.TotalSecurityPrimaryContainer
-import com.example.ui.theme.TotalSecurityPrimaryLight
-import kotlinx.coroutines.delay
+import com.example.ui.theme.Shapes
 import kotlinx.coroutines.launch
 
 private val CleanBg: Color
@@ -110,15 +101,22 @@ private val CleanSurface: Color
 private val CleanSurfaceVariant: Color
     @Composable get() = MaterialTheme.colorScheme.surfaceVariant
 private val TextDarkMuted: Color
-    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
 private val TextDarkPrimary: Color
     @Composable get() = MaterialTheme.colorScheme.onSurface
 private val TextDarkSecondary: Color
     @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+private val PrimaryAccent: Color
+    @Composable get() = MaterialTheme.colorScheme.primary
+private val PrimaryContainerAccent: Color
+    @Composable get() = MaterialTheme.colorScheme.primaryContainer
+private val OnPrimaryAccent: Color
+    @Composable get() = MaterialTheme.colorScheme.onPrimary
 
 @Composable
 fun LockScreen(
     isBiometricAvailable: Boolean,
+    customAppName: String = "ADERA",
     onTriggerBiometrics: () -> Unit,
     onUnlockWithPassword: (String, (Result<Unit>) -> Unit) -> Unit,
     onRecoverWithKey: (recoveryKey: String, newPassword: String, (Result<Unit>) -> Unit) -> Unit = { _, _, _ -> },
@@ -127,18 +125,18 @@ fun LockScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var password by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(value = false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isAuthenticating by remember { mutableStateOf(false) }
+    var isAuthenticating by remember { mutableStateOf(value = false) }
 
     // Recovery State
-    var showRecoveryDialog by remember { mutableStateOf(false) }
+    var showRecoveryDialog by remember { mutableStateOf(value = false) }
     var recoveryKeyInput by remember { mutableStateOf("") }
     var recoveryNewPassword by remember { mutableStateOf("") }
     var recoveryConfirmPassword by remember { mutableStateOf("") }
-    var recoveryPasswordVisible by remember { mutableStateOf(false) }
+    var recoveryPasswordVisible by remember { mutableStateOf(value = false) }
     var recoveryErrorMessage by remember { mutableStateOf<String?>(null) }
-    var isRecovering by remember { mutableStateOf(false) }
+    var isRecovering by remember { mutableStateOf(value = false) }
 
     // Error shake animation
     val shakeOffset = remember { Animatable(0f) }
@@ -150,9 +148,9 @@ fun LockScreen(
         targetValue = 1.15f,
         animationSpec = infiniteRepeatable(
             animation = tween(2800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "pulseAura"
+        label = "pulseAura",
     )
 
     // Trigger biometrics automatically on entry if available
@@ -199,7 +197,7 @@ fun LockScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CleanBg)
+            .background(CleanBg),
     ) {
         // Ambient soft atmospheric glowing rings in background
         Box(
@@ -210,13 +208,13 @@ fun LockScreen(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            TotalSecurityPrimary.copy(alpha = 0.12f),
-                            TotalSecurityPrimary.copy(alpha = 0.04f),
-                            Color.Transparent
-                        )
+                            PrimaryAccent.copy(alpha = 0.12f),
+                            PrimaryAccent.copy(alpha = 0.04f),
+                            Color.Transparent,
+                        ),
                     ),
-                    shape = Shapes.large
-                )
+                    shape = Shapes.large,
+                ),
         )
 
         Column(
@@ -225,36 +223,36 @@ fun LockScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Spacer(modifier = Modifier.height(12.dp))
 
             // Security Badge Pill with pulse indicator
             Surface(
                 shape = Shapes.medium,
-                color = TotalSecurityPrimaryContainer,
+                color = PrimaryContainerAccent,
                 shadowElevation = 0.dp,
-                border = BorderStroke(1.dp, TotalSecurityPrimary.copy(alpha = 0.25f))
+                border = BorderStroke(1.dp, PrimaryAccent.copy(alpha = 0.25f)),
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
                         modifier = Modifier
                             .size(7.dp)
                             .clip(CircleShape)
-                            .background(EmeraldPrimary)
+                            .background(EmeraldPrimary),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "AES-256 ZERO-KNOWLEDGE VAULT",
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = TotalSecurityPrimary,
+                            color = PrimaryAccent,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 0.8.sp,
-                            fontSize = 10.5.sp
-                        )
+                            fontSize = 10.5.sp,
+                        ),
                     )
                 }
             }
@@ -265,62 +263,62 @@ fun LockScreen(
             Box(
                 modifier = Modifier
                     .size(96.dp)
-                    .shadow(16.dp, CircleShape, spotColor = TotalSecurityPrimary.copy(alpha = 0.35f))
+                    .shadow(16.dp, CircleShape, spotColor = PrimaryAccent.copy(alpha = 0.35f))
                     .clip(CircleShape)
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                TotalSecurityPrimaryLight,
-                                TotalSecurityPrimary
-                            )
-                        )
+                                PrimaryAccent.copy(alpha = 0.8f),
+                                PrimaryAccent,
+                            ),
+                        ),
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Box(
                     modifier = Modifier
                         .size(86.dp)
                         .clip(CircleShape)
                         .background(CleanSurface),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.ic_launcher_foreground),
                         contentDescription = "ADERE Security Logo",
-                        modifier = Modifier.size(76.dp)
+                        modifier = Modifier.size(76.dp),
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Title & Subtitle with Amharic badge
+            // Title & Subtitle
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    text = "Welcome Back",
+                    text = customAppName.ifBlank { "Welcome Back" },
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
                         color = TextDarkPrimary,
                         fontSize = 28.sp,
-                        letterSpacing = (-0.5).sp
-                    )
+                        letterSpacing = (-0.5).sp,
+                    ),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Surface(
                     shape = Shapes.medium,
-                    color = TotalSecurityPrimaryContainer
+                    color = PrimaryContainerAccent,
                 ) {
                     Text(
-                        text = "አደረ",
+                        text = "አደራ",
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TotalSecurityPrimary,
-                            fontSize = 11.sp
+                            color = PrimaryAccent,
+                            fontSize = 11.sp,
                         ),
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
             }
@@ -332,10 +330,10 @@ fun LockScreen(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = TextDarkSecondary,
                     fontSize = 13.5.sp,
-                    lineHeight = 19.sp
+                    lineHeight = 19.sp,
                 ),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -350,15 +348,15 @@ fun LockScreen(
                     .shadow(
                         elevation = 8.dp,
                         shape = Shapes.large,
-                        spotColor = Color.Black.copy(alpha = 0.08f)
+                        spotColor = Color.Black.copy(alpha = 0.08f),
                     ),
                 shape = Shapes.large,
                 colors = CardDefaults.cardColors(containerColor = CleanSurface),
-                border = BorderStroke(1.dp, CleanBorder)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
             ) {
                 Column(
                     modifier = Modifier.padding(22.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Biometric Unlock Trigger (Hero CTA if available)
                     if (isBiometricAvailable) {
@@ -368,31 +366,31 @@ fun LockScreen(
                                 onTriggerBiometrics()
                             },
                             shape = Shapes.medium,
-                            color = TotalSecurityPrimaryContainer,
-                            border = BorderStroke(1.dp, TotalSecurityPrimary.copy(alpha = 0.25f)),
+                            color = PrimaryContainerAccent,
+                            border = BorderStroke(1.dp, PrimaryAccent.copy(alpha = 0.25f)),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .testTag("unlock_biometric_button")
+                                .testTag("unlock_biometric_button"),
                         ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 14.dp, horizontal = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                                horizontalArrangement = Arrangement.Center,
                             ) {
                                 Box(
                                     modifier = Modifier
                                         .size(38.dp)
                                         .clip(CircleShape)
-                                        .background(TotalSecurityPrimary),
-                                    contentAlignment = Alignment.Center
+                                        .background(PrimaryAccent),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Fingerprint,
                                         contentDescription = "Biometric Icon",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(22.dp)
+                                        tint = OnPrimaryAccent,
+                                        modifier = Modifier.size(22.dp),
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -402,15 +400,15 @@ fun LockScreen(
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 15.sp,
-                                            color = TotalSecurityPrimary
-                                        )
+                                            color = PrimaryAccent,
+                                        ),
                                     )
                                     Text(
                                         text = "Touch sensor for instant access",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             color = TextDarkSecondary,
-                                            fontSize = 11.5.sp
-                                        )
+                                            fontSize = 11.5.sp,
+                                        ),
                                     )
                                 }
                             }
@@ -421,13 +419,13 @@ fun LockScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(1.dp)
-                                    .background(CleanBorder)
+                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                             )
                             Text(
                                 text = "OR USE MASTER PASSWORD",
@@ -435,15 +433,15 @@ fun LockScreen(
                                     color = TextDarkMuted,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 10.sp,
-                                    letterSpacing = 0.6.sp
+                                    letterSpacing = 0.6.sp,
                                 ),
-                                modifier = Modifier.padding(horizontal = 10.dp)
+                                modifier = Modifier.padding(horizontal = 10.dp),
                             )
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(1.dp)
-                                    .background(CleanBorder)
+                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                             )
                         }
                     }
@@ -456,69 +454,69 @@ fun LockScreen(
                             if (errorMessage != null) errorMessage = null
                         },
                         label = { Text("Master Password") },
-                        placeholder = { Text("Enter your secure key") },
+                        placeholder = { Text("Enter master password") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = if (password.isNotEmpty()) TotalSecurityPrimary else TextDarkMuted,
-                                modifier = Modifier.size(20.dp)
+                                tint = if (password.isNotEmpty()) PrimaryAccent else TextDarkMuted,
+                                modifier = Modifier.size(20.dp),
                             )
                         },
                         singleLine = true,
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
+                            imeAction = ImeAction.Done,
                         ),
                         keyboardActions = KeyboardActions(
-                            onDone = { submitPassword() }
+                            onDone = { submitPassword() },
                         ),
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(
                                     imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                                     contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                    tint = TextDarkSecondary
+                                    tint = TextDarkSecondary,
                                 )
                             }
                         },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = CleanSurfaceVariant,
                             unfocusedContainerColor = CleanSurfaceVariant,
-                            focusedBorderColor = TotalSecurityPrimary,
-                            unfocusedBorderColor = CleanBorder,
+                            focusedBorderColor = PrimaryAccent,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                             focusedTextColor = TextDarkPrimary,
                             unfocusedTextColor = TextDarkPrimary,
-                            cursorColor = TotalSecurityPrimary
+                            cursorColor = PrimaryAccent,
                         ),
-                        shape = Shapes.medium,
+                        shape = CircleShape,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag("lock_screen_password_input")
+                            .testTag("lock_screen_password_input"),
                     )
 
                     // Error Notification Surface
                     AnimatedVisibility(
                         visible = errorMessage != null,
                         enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
+                        exit = fadeOut() + shrinkVertically(),
                     ) {
                         Surface(
                             shape = Shapes.medium,
                             color = HealthRiskRed.copy(alpha = 0.08f),
                             border = BorderStroke(1.dp, HealthRiskRed.copy(alpha = 0.25f)),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Warning,
                                     contentDescription = null,
                                     tint = HealthRiskRed,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(16.dp),
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
@@ -526,8 +524,8 @@ fun LockScreen(
                                     color = HealthRiskRed,
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontWeight = FontWeight.Medium,
-                                        fontSize = 12.5.sp
-                                    )
+                                        fontSize = 12.5.sp,
+                                    ),
                                 )
                             }
                         }
@@ -546,39 +544,41 @@ fun LockScreen(
                             .shadow(
                                 elevation = if (password.isNotEmpty()) 6.dp else 0.dp,
                                 shape = Shapes.medium,
-                                spotColor = TotalSecurityPrimary
+                                spotColor = PrimaryAccent,
                             )
                             .testTag("lock_screen_unlock_button"),
                         shape = Shapes.medium,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = TotalSecurityPrimary,
-                            contentColor = Color.White,
-                            disabledContainerColor = TotalSecurityPrimary.copy(alpha = 0.6f)
-                        )
+                            containerColor = PrimaryAccent,
+                            contentColor = OnPrimaryAccent,
+                            disabledContainerColor = PrimaryAccent.copy(alpha = 0.6f),
+                        ),
                     ) {
                         if (isAuthenticating) {
                             CircularProgressIndicator(
-                                color = Color.White,
+                                color = OnPrimaryAccent,
                                 modifier = Modifier.size(22.dp),
-                                strokeWidth = 2.5.dp
+                                strokeWidth = 2.5.dp,
                             )
                         } else {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                                horizontalArrangement = Arrangement.Center,
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Key,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                    tint = OnPrimaryAccent,
+                                    modifier = Modifier.size(18.dp),
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Unlock Vault",
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp
-                                    )
+                                        fontSize = 15.sp,
+                                        color = OnPrimaryAccent,
+                                    ),
                                 )
                             }
                         }
@@ -599,26 +599,28 @@ fun LockScreen(
                             .testTag("lock_screen_recover_button"),
                         shape = Shapes.medium,
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = TotalSecurityPrimary
+                            contentColor = PrimaryAccent,
                         ),
-                        border = BorderStroke(1.dp, TotalSecurityPrimary.copy(alpha = 0.35f))
+                        border = BorderStroke(1.dp, PrimaryAccent.copy(alpha = 0.35f)),
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
                         ) {
                             Icon(
                                 imageVector = Icons.Default.VpnKey,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                tint = PrimaryAccent,
+                                modifier = Modifier.size(16.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Use Master Recovery Key",
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp
-                                )
+                                    fontSize = 13.sp,
+                                    color = PrimaryAccent,
+                                ),
                             )
                         }
                     }
@@ -631,13 +633,13 @@ fun LockScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 12.dp)
+                modifier = Modifier.padding(horizontal = 12.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Shield,
                     contentDescription = null,
                     tint = TextDarkMuted,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(14.dp),
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
@@ -645,9 +647,9 @@ fun LockScreen(
                     style = MaterialTheme.typography.labelSmall.copy(
                         color = TextDarkMuted,
                         fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     ),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
 
@@ -663,14 +665,14 @@ fun LockScreen(
                         modifier = Modifier
                             .size(52.dp)
                             .clip(CircleShape)
-                            .background(TotalSecurityPrimaryContainer),
-                        contentAlignment = Alignment.Center
+                            .background(PrimaryContainerAccent),
+                        contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Default.VpnKey,
                             contentDescription = null,
-                            tint = TotalSecurityPrimary,
-                            modifier = Modifier.size(26.dp)
+                            tint = PrimaryAccent,
+                            modifier = Modifier.size(26.dp),
                         )
                     }
                 },
@@ -679,24 +681,26 @@ fun LockScreen(
                         text = "Recover Encrypted Vault",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TextDarkPrimary
+                            color = TextDarkPrimary,
                         ),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 },
                 text = {
+                    val context = LocalContext.current
+                    val clipboardManager = LocalClipboardManager.current
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         Text(
                             text = "Enter your 24-character Master Recovery Key to restore full access and set a new Master Password without losing your encrypted records.",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = TextDarkSecondary,
-                                lineHeight = 18.sp
-                            )
+                                lineHeight = 18.sp,
+                            ),
                         )
 
                         // Formatted Recovery Key Input
@@ -709,24 +713,48 @@ fun LockScreen(
                             },
                             label = { Text("Master Recovery Key") },
                             placeholder = { Text("XXXX-XXXX-XXXX-XXXX-XXXX-XXXX") },
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    val pasted = clipboardManager.getText()?.text ?: ""
+                                    if (pasted.isNotBlank()) {
+                                        val normalized = RecoveryKeyManager.normalizeKey(pasted)
+                                        if (RecoveryKeyManager.isValidKeyFormat(normalized)) {
+                                            recoveryKeyInput = RecoveryKeyManager.formatKey(normalized)
+                                            recoveryErrorMessage = null
+                                            Toast.makeText(context, "Recovery key pasted from clipboard", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            recoveryErrorMessage = "Clipboard text is not a valid 24-character Recovery Key."
+                                            Toast.makeText(context, "Clipboard text is not a valid 24-character Recovery Key.", Toast.LENGTH_LONG).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                                    }
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentPaste,
+                                        contentDescription = "Paste Recovery Key",
+                                        tint = PrimaryAccent
+                                    )
+                                }
+                            },
                             singleLine = true,
                             textStyle = MaterialTheme.typography.bodyMedium.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 1.sp
+                                letterSpacing = 1.sp,
                             ),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = CleanSurfaceVariant,
                                 unfocusedContainerColor = CleanSurfaceVariant,
-                                focusedBorderColor = TotalSecurityPrimary,
-                                unfocusedBorderColor = CleanBorder,
+                                focusedBorderColor = PrimaryAccent,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                 focusedTextColor = TextDarkPrimary,
-                                unfocusedTextColor = TextDarkPrimary
+                                unfocusedTextColor = TextDarkPrimary,
                             ),
                             shape = Shapes.large,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .testTag("recovery_key_input")
+                                .testTag("recovery_key_input"),
                         )
 
                         // New Password Input
@@ -745,22 +773,22 @@ fun LockScreen(
                                     Icon(
                                         imageVector = if (recoveryPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                                         contentDescription = null,
-                                        tint = TextDarkSecondary
+                                        tint = TextDarkSecondary,
                                     )
                                 }
                             },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = CleanSurfaceVariant,
                                 unfocusedContainerColor = CleanSurfaceVariant,
-                                focusedBorderColor = TotalSecurityPrimary,
-                                unfocusedBorderColor = CleanBorder,
+                                focusedBorderColor = PrimaryAccent,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                 focusedTextColor = TextDarkPrimary,
-                                unfocusedTextColor = TextDarkPrimary
+                                unfocusedTextColor = TextDarkPrimary,
                             ),
                             shape = Shapes.large,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .testTag("recovery_new_password_input")
+                                .testTag("recovery_new_password_input"),
                         )
 
                         // Confirm Password Input
@@ -776,28 +804,28 @@ fun LockScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = CleanSurfaceVariant,
                                 unfocusedContainerColor = CleanSurfaceVariant,
-                                focusedBorderColor = TotalSecurityPrimary,
-                                unfocusedBorderColor = CleanBorder,
+                                focusedBorderColor = PrimaryAccent,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                                 focusedTextColor = TextDarkPrimary,
-                                unfocusedTextColor = TextDarkPrimary
+                                unfocusedTextColor = TextDarkPrimary,
                             ),
                             shape = Shapes.large,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .testTag("recovery_confirm_password_input")
+                                .testTag("recovery_confirm_password_input"),
                         )
 
                         if (recoveryErrorMessage != null) {
                             Surface(
                                 shape = Shapes.medium,
                                 color = HealthRiskRed.copy(alpha = 0.1f),
-                                border = BorderStroke(1.dp, HealthRiskRed.copy(alpha = 0.2f))
+                                border = BorderStroke(1.dp, HealthRiskRed.copy(alpha = 0.2f)),
                             ) {
                                 Text(
-                                    text = recoveryErrorMessage!!,
+                                    text = recoveryErrorMessage ?: "",
                                     color = HealthRiskRed,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
-                                    modifier = Modifier.padding(10.dp)
+                                    modifier = Modifier.padding(10.dp),
                                 )
                             }
                         }
@@ -834,30 +862,30 @@ fun LockScreen(
                         },
                         enabled = !isRecovering,
                         modifier = Modifier.testTag("recovery_submit_button"),
-                        colors = ButtonDefaults.buttonColors(containerColor = TotalSecurityPrimary),
-                        shape = Shapes.large
+                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryAccent),
+                        shape = Shapes.large,
                     ) {
                         if (isRecovering) {
                             CircularProgressIndicator(
-                                color = Color.White,
+                                color = OnPrimaryAccent,
                                 modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
                             )
                         } else {
-                            Text("Recover & Unlock", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Recover & Unlock", color = OnPrimaryAccent, fontWeight = FontWeight.Bold)
                         }
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { showRecoveryDialog = false },
-                        enabled = !isRecovering
+                        enabled = !isRecovering,
                     ) {
                         Text("Cancel", color = TextDarkSecondary)
                     }
                 },
                 containerColor = CleanSurface,
-                shape = Shapes.large
+                shape = Shapes.large,
             )
         }
     }
