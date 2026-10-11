@@ -7,7 +7,7 @@ This document provides a step-by-step walkthrough to build, sign, configure, and
 ## 📁 1. Generated Deployment File
 Your release Android App Bundle (`.aab`) has been compiled and is ready for upload:
 - **File Location**: `app/build/outputs/bundle/release/app-release.aab`
-- **Package ID**: `com.aistudio.adere.kxmpzq`
+- **Package ID**: `com.adere.kxmpzq`
 - **Target API**: Level 36 (Android 16 / Android 15+)
 - **Min API**: Level 24 (Android 7.0+)
 
