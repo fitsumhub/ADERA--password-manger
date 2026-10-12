@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - ADERA Password Manager</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131b2e;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #1f293d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 30px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--accent-green);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        h2 {
+            color: var(--accent-green);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        p, li {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .summary-card {
+            background: rgba(19, 27, 46, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .grid-item {
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .grid-item h4 {
+            color: var(--text-main);
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .grid-item p {
+            font-size: 13px;
+            margin: 0;
+        }
+
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">ADERA (አደራ)</div>
+            <div class="subtitle">Zero-Knowledge Encrypted Password Manager</div>
+            <div class="badge">100% LOCAL AES-256-GCM ENCRYPTION</div>
+        </div>
+
+        <p style="text-align: center;"><strong>Effective Date:</strong> March 30, 2026</p>
+
+        <h2>1. Privacy Architecture & Principles</h2>
+        <p>ADERA Security Labs operates the ADERA Password Manager mobile application. ADERA is designed with a strict <strong>Zero-Knowledge Architecture</strong>. Your passwords, credit card credentials, bank accounts, Wi-Fi keys, secure notes, TOTP 2FA tokens, and cryptocurrency recovery seed phrases are encrypted locally on your Android device and are <strong>never transmitted to, stored on, or accessible by our servers or any third parties</strong>.</p>
+
+        <div class="summary-card">
+            <h3 style="font-size: 16px; color: var(--text-main);">Security Summary</h3>
+            <div class="summary-grid">
+                <div class="grid-item">
+                    <h4>🔒 AES-256-GCM</h4>
+                    <p>All vault data is encrypted locally using hardware-backed cryptography.</p>
+                </div>
+                <div class="grid-item">
+                    <h4>🛑 No Accounts</h4>
+                    <p>No user registration, email, or account creation is required to use ADERA.</p>
+                </div>
+                <div class="grid-item">
+                    <h4>👆 Biometric Unlock</h4>
+                    <p>Fingerprint & Face ID run 100% inside Android Keystore TEE hardware.</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>2. Data Handled Locally on Your Device</h2>
+        <ul>
+            <li><strong>Encrypted Vault Contents:</strong> All credentials you enter into ADERA are encrypted using 256-bit AES-GCM with PBKDF2-HMAC-SHA256 key derivation. Plaintext vault contents never leave device memory.</li>
+            <li><strong>Biometric Data:</strong> Biometric authentication uses Android's native <code>BiometricPrompt</code> API. Raw biometric data stays securely inside your phone's hardware element.</li>
+        </ul>
+
+        <h2>3. Third-Party Services (Google AdMob)</h2>
+        <p>To keep ADERA free, the application integrates the <strong>Google AdMob SDK</strong> to display advertisements.</p>
+        <ul>
+            <li><strong>Device & Advertising Identifiers:</strong> AdMob may collect Google Advertising ID (AAID), IP address, device model, and OS version for ad delivery, analytics, and anti-fraud purposes.</li>
+            <li><strong>No Vault Access:</strong> Google AdMob has zero access to your encrypted or decrypted vault data.</li>
+        </ul>
+        <p>For more details, please review <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a>.</p>
+
+        <h2>4. Data Deletion & User Rights</h2>
+        <p>You have full control over your data at all times:</p>
+        <ul>
+            <li><strong>Instant Vault Wipe:</strong> You can purge all local vault data anytime inside ADERA under <strong>Settings &gt; Security &gt; Wipe Local Vault</strong>.</li>
+            <li><strong>App Uninstallation:</strong> Uninstalling ADERA immediately erases all encrypted database files from your device.</li>
+        </ul>
+
+        <h2>5. Contact Us</h2>
+        <p>If you have any questions regarding this Privacy Policy, please contact us:</p>
+        <p>📧 Email: <a href="mailto:fitsumenunu21@gmail.com">fitsumenunu21@gmail.com</a></p>
+        <p>🌐 Developer: ADERA Security Labs</p>
+
+        <div class="footer">
+            &copy; 2026 ADERA Security Labs. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

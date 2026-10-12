@@ -82,6 +82,9 @@ import com.example.R
 import com.example.adere.core.crypto.PasswordHealthAnalyzer
 import com.example.adere.domain.model.VaultCategory
 import com.example.adere.domain.model.VaultItem
+import com.example.adere.presentation.components.AllRecentActivitySheet
+import com.example.adere.presentation.components.EnhancedRecentActivityRow
+import com.example.adere.presentation.components.RecentActivityDetailSheet
 import com.example.adere.presentation.components.VaultItemAvatar
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
@@ -103,6 +106,9 @@ fun DashboardScreen(
     onLockClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
+    var selectedActivityItem by remember { mutableStateOf<VaultItem?>(null) }
+    var showAllActivitySheet by remember { mutableStateOf(false) }
+
     val recentItems = remember(items) {
         items.asSequence().sortedByDescending { it.updatedAt }.take(5).toList()
     }
@@ -308,7 +314,7 @@ fun DashboardScreen(
                     TextButton(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onNavigateToCategory(VaultCategory.ALL)
+                            showAllActivitySheet = true
                         },
                         contentPadding = PaddingValues(0.dp)
                     ) {
@@ -325,11 +331,11 @@ fun DashboardScreen(
 
             if (recentItems.isNotEmpty()) {
                 items(recentItems, key = { it.id }) { item ->
-                    DashboardVaultRow(
+                    EnhancedRecentActivityRow(
                         item = item,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onNavigateToItemDetail(item.id)
+                            selectedActivityItem = item
                         },
                         onCopy = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -350,6 +356,31 @@ fun DashboardScreen(
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
+    }
+
+    // Interactive Activity Detail Sheet
+    selectedActivityItem?.let { activityItem ->
+        RecentActivityDetailSheet(
+            item = activityItem,
+            onDismiss = { selectedActivityItem = null },
+            onNavigateToFullDetail = { itemId ->
+                selectedActivityItem = null
+                onNavigateToItemDetail(itemId)
+            },
+            onQuickCopy = onQuickCopy
+        )
+    }
+
+    // "View All Activity" Log Sheet
+    if (showAllActivitySheet) {
+        AllRecentActivitySheet(
+            items = items,
+            onDismiss = { showAllActivitySheet = false },
+            onSelectItem = { selectedItem ->
+                selectedActivityItem = selectedItem
+            },
+            onQuickCopy = onQuickCopy
+        )
     }
 }
 
@@ -1069,7 +1100,7 @@ private fun Category3DTile(
             },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             1.2.dp,
             Brush.verticalGradient(
                 listOf(
@@ -1161,7 +1192,7 @@ private fun DashboardVaultRow(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
         )
@@ -1277,7 +1308,7 @@ private fun EmptyVaultPrompt(onAddItem: () -> Unit) {
             .shadow(4.dp, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             1.dp,
             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
         )
