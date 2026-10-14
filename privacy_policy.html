@@ -4,15 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy - ADERA Password Manager</title>
+    <meta name="description" content="Official Privacy Policy and Zero-Knowledge Cryptographic Disclosures for ADERA Password Manager for Android.">
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: #131b2e;
+            --bg-dark: #070a12;
+            --bg-card: #0f172a;
+            --bg-card-hover: #1e293b;
+            --border-color: #1e293b;
+            --border-glow: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
             --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.15);
+            --accent-cyan: #06b6d4;
             --accent-blue: #3b82f6;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border-color: #1f293d;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         * {
@@ -22,192 +29,483 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
+            font-family: var(--font-stack);
+            background-color: var(--bg-dark);
             color: var(--text-main);
-            line-height: 1.6;
-            padding: 20px;
+            line-height: 1.7;
+            padding: 0;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
-        .header {
-            text-align: center;
+        /* Top Header Navigation */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 30px;
-            margin-bottom: 30px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .logo {
-            font-size: 32px;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .brand-title {
+            font-size: 18px;
             font-weight: 800;
-            color: var(--accent-green);
-            letter-spacing: 2px;
-            margin-bottom: 8px;
+            letter-spacing: 1px;
+            color: var(--text-main);
         }
 
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 14px;
+        .brand-title span {
+            color: var(--accent-green);
         }
 
-        .badge {
-            display: inline-block;
-            background: rgba(16, 185, 129, 0.15);
+        .badge-verified {
+            background: var(--accent-green-glow);
             color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            margin-top: 12px;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            letter-spacing: 0.5px;
         }
 
-        h2 {
-            color: var(--accent-green);
-            margin-top: 30px;
-            margin-bottom: 15px;
+        /* Container Layout */
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 24px 60px 24px;
+        }
+
+        /* Hero Header Section */
+        .hero {
+            text-align: center;
+            background: radial-gradient(circle at top, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 48px 32px;
+            margin-bottom: 36px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 16px;
+            max-width: 680px;
+            margin: 0 auto 24px auto;
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .hero-meta div {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Summary Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-glow);
+            background: var(--bg-card-hover);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .stat-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Policy Section Content */
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-card h2 {
             font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-green);
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        p, li {
+        .section-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 20px 0 10px 0;
+        }
+
+        .section-card p {
             color: var(--text-muted);
             font-size: 15px;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
-        ul {
+        .section-card ul {
             padding-left: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        li {
+        .section-card li {
+            color: var(--text-muted);
+            font-size: 15px;
             margin-bottom: 8px;
         }
 
-        .summary-card {
-            background: rgba(19, 27, 46, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+        .section-card li strong {
+            color: var(--text-main);
+        }
+
+        /* Table Styling */
+        .table-responsive {
+            overflow-x: auto;
             margin: 20px 0;
         }
 
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .grid-item {
-            background: rgba(255,255,255,0.03);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .grid-item h4 {
-            color: var(--text-main);
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
             font-size: 14px;
-            margin-bottom: 6px;
         }
 
-        .grid-item p {
+        th {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            font-weight: 600;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Code/Pill Styling */
+        code {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--accent-cyan);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: monospace;
             font-size: 13px;
-            margin: 0;
         }
 
         a {
-            color: var(--accent-blue);
+            color: var(--accent-cyan);
             text-decoration: none;
+            transition: color 0.2s;
         }
 
         a:hover {
+            color: var(--accent-green);
             text-decoration: underline;
         }
 
+        /* Footer */
         .footer {
-            margin-top: 40px;
             text-align: center;
-            font-size: 13px;
-            color: var(--text-muted);
+            padding-top: 32px;
             border-top: 1px solid var(--border-color);
-            padding-top: 20px;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+
+        .footer p {
+            margin-bottom: 8px;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 12px 16px;
+            }
+
+            .hero {
+                padding: 32px 16px;
+            }
+
+            .hero h1 {
+                font-size: 24px;
+            }
+
+            .section-card {
+                padding: 20px;
+            }
+
+            .badge-verified {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
+
+    <!-- Top Sticky Navigation -->
+    <nav class="navbar">
+        <a href="#" class="brand">
+            <div class="brand-icon">🛡️</div>
+            <div class="brand-title">ADERA <span>(አደራ)</span></div>
+        </a>
+        <div class="badge-verified">OFFICIAL PRIVACY DISCLOSURE</div>
+    </nav>
+
+    <!-- Main Container -->
     <div class="container">
-        <div class="header">
-            <div class="logo">ADERA (አደራ)</div>
-            <div class="subtitle">Zero-Knowledge Encrypted Password Manager</div>
-            <div class="badge">100% LOCAL AES-256-GCM ENCRYPTION</div>
-        </div>
 
-        <p style="text-align: center;"><strong>Effective Date:</strong> March 30, 2026</p>
-
-        <h2>1. Privacy Architecture & Principles</h2>
-        <p>ADERA Security Labs operates the ADERA Password Manager mobile application. ADERA is designed with a strict <strong>Zero-Knowledge Architecture</strong>. Your passwords, credit card credentials, bank accounts, Wi-Fi keys, secure notes, TOTP 2FA tokens, and cryptocurrency recovery seed phrases are encrypted locally on your Android device and are <strong>never transmitted to, stored on, or accessible by our servers or any third parties</strong>.</p>
-
-        <div class="summary-card">
-            <h3 style="font-size: 16px; color: var(--text-main);">Security Summary</h3>
-            <div class="summary-grid">
-                <div class="grid-item">
-                    <h4>🔒 AES-256-GCM</h4>
-                    <p>All vault data is encrypted locally using hardware-backed cryptography.</p>
-                </div>
-                <div class="grid-item">
-                    <h4>🛑 No Accounts</h4>
-                    <p>No user registration, email, or account creation is required to use ADERA.</p>
-                </div>
-                <div class="grid-item">
-                    <h4>👆 Biometric Unlock</h4>
-                    <p>Fingerprint & Face ID run 100% inside Android Keystore TEE hardware.</p>
-                </div>
+        <!-- Hero Header -->
+        <div class="hero">
+            <h1>Privacy Policy & Security Disclosures</h1>
+            <p>ADERA Password Manager is engineered on a strict <strong>Zero-Knowledge Architecture</strong>. Your passwords and private vault credentials stay 100% on your local device and are never sent to cloud servers.</p>
+            <div class="hero-meta">
+                <div>📅 <strong>Effective Date:</strong> March 30, 2026</div>
+                <div>🛡️ <strong>Publisher:</strong> ADERA Security Labs</div>
+                <div>🔒 <strong>Standard:</strong> AES-256-GCM / PBKDF2</div>
             </div>
         </div>
 
-        <h2>2. Data Handled Locally on Your Device</h2>
-        <ul>
-            <li><strong>Encrypted Vault Contents:</strong> All credentials you enter into ADERA are encrypted using 256-bit AES-GCM with PBKDF2-HMAC-SHA256 key derivation. Plaintext vault contents never leave device memory.</li>
-            <li><strong>Biometric Data:</strong> Biometric authentication uses Android's native <code>BiometricPrompt</code> API. Raw biometric data stays securely inside your phone's hardware element.</li>
-        </ul>
-
-        <h2>3. Third-Party Services (Google AdMob)</h2>
-        <p>To keep ADERA free, the application integrates the <strong>Google AdMob SDK</strong> to display advertisements.</p>
-        <ul>
-            <li><strong>Device & Advertising Identifiers:</strong> AdMob may collect Google Advertising ID (AAID), IP address, device model, and OS version for ad delivery, analytics, and anti-fraud purposes.</li>
-            <li><strong>No Vault Access:</strong> Google AdMob has zero access to your encrypted or decrypted vault data.</li>
-        </ul>
-        <p>For more details, please review <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a>.</p>
-
-        <h2>4. Data Deletion & User Rights</h2>
-        <p>You have full control over your data at all times:</p>
-        <ul>
-            <li><strong>Instant Vault Wipe:</strong> You can purge all local vault data anytime inside ADERA under <strong>Settings &gt; Security &gt; Wipe Local Vault</strong>.</li>
-            <li><strong>App Uninstallation:</strong> Uninstalling ADERA immediately erases all encrypted database files from your device.</li>
-        </ul>
-
-        <h2>5. Contact Us</h2>
-        <p>If you have any questions regarding this Privacy Policy, please contact us:</p>
-        <p>📧 Email: <a href="mailto:fitsumenunu21@gmail.com">fitsumenunu21@gmail.com</a></p>
-        <p>🌐 Developer: ADERA Security Labs</p>
-
-        <div class="footer">
-            &copy; 2026 ADERA Security Labs. All rights reserved.
+        <!-- At-A-Glance Stat Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🔒</div>
+                <div class="stat-title">Zero Cloud Storage</div>
+                <div class="stat-desc">Vault records reside solely on device SQLite memory.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔑</div>
+                <div class="stat-title">PBKDF2 + AES-256</div>
+                <div class="stat-desc">Key derivation uses 100,000 SHA-256 iterations.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🛑</div>
+                <div class="stat-title">No User Accounts</div>
+                <div class="stat-desc">Zero registration, no email, and no central identity logs.</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👆</div>
+                <div class="stat-title">Hardware Biometrics</div>
+                <div class="stat-desc">Fingerprint data runs strictly in Android TEE hardware.</div>
+            </div>
         </div>
+
+        <!-- Section 1: Zero-Knowledge Architecture -->
+        <div class="section-card">
+            <h2>1. Zero-Knowledge Cryptographic Architecture</h2>
+            <p>When you create a Master Password in ADERA:</p>
+            <ul>
+                <li>Your Master Password is processed through a <strong>PBKDF2-HMAC-SHA256</strong> key derivation function executing <strong>100,000 iterations</strong> with a unique 128-bit cryptographic salt.</li>
+                <li>The derived key encrypts your local database using <strong>AES-256-GCM</strong>, guaranteeing confidentiality and authenticated tamper prevention.</li>
+                <li>Additional secret keys are generated and sealed within the <strong>Android Keystore System</strong>, backed by hardware Secure Elements (StrongBox / TEE) where supported.</li>
+            </ul>
+            <h3>Unrecoverable Design Commitment</h3>
+            <p>Because we do not store or transmit your Master Password or local database salt, <strong>ADERA developers cannot access, read, restore, or decrypt your vault contents</strong> under any circumstances.</p>
+        </div>
+
+        <!-- Section 2: Data Handling Table -->
+        <div class="section-card">
+            <h2>2. Comprehensive Data Handling & Storage Mapping</h2>
+            <p>The following table outlines all data categories handled by ADERA:</p>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data Category</th>
+                            <th>Data Elements Included</th>
+                            <th>Storage & Encryption</th>
+                            <th>Third-Party Sharing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Vault Items</strong></td>
+                            <td>Passwords, Credit Cards, Bank Accounts, Notes, TOTP 2FA, Crypto Seed Phrases</td>
+                            <td>Encrypted locally on-device (<code>AES-256-GCM</code>)</td>
+                            <td>🛑 <strong>NEVER SHARED</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Master Keys</strong></td>
+                            <td>Master Password hash, Salt, Recovery Key</td>
+                            <td>Hashed & encrypted inside Android Keystore TEE</td>
+                            <td>🛑 <strong>NEVER SHARED</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Biometrics</strong></td>
+                            <td>Fingerprint & Face Recognition templates</td>
+                            <td>Stored securely inside Android Hardware Secure Element</td>
+                            <td>🛑 <strong>NEVER SHARED</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Advertising Identifiers</strong></td>
+                            <td>Google Advertising ID (AAID), IP Address, Network Status</td>
+                            <td>Processed in volatile memory by Google AdMob SDK</td>
+                            <td>📢 <strong>Google AdMob</strong> (Ad delivery & anti-fraud)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>App Settings</strong></td>
+                            <td>Theme, Auto-lock timer, Biometric toggles</td>
+                            <td>Stored locally in <code>EncryptedSharedPreferences</code></td>
+                            <td>🛑 <strong>NEVER SHARED</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 3: Google AdMob Disclosure -->
+        <div class="section-card">
+            <h2>3. Third-Party Services & Google AdMob SDK Integration</h2>
+            <p>To support free application access, ADERA integrates the official <strong>Google AdMob SDK</strong> (operated by Google LLC).</p>
+            <h3>Data Processed by Google AdMob</h3>
+            <ul>
+                <li><strong>Device Identifiers:</strong> Google Advertising ID (AAID), IP address, mobile operator, hardware model, and OS version.</li>
+                <li><strong>Ad Metrics:</strong> Ad impressions, click performance, diagnostic logs, and fraud prevention signals.</li>
+            </ul>
+            <h3>Strict Vault Isolation Guarantee</h3>
+            <p>The Google AdMob SDK operates in complete isolation from ADERA's cryptographic vault layer. Network calls made by AdMob cannot read, intercept, inspect, or transmit any portion of your unencrypted or encrypted vault records.</p>
+            <p>For more details: Review <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a> and <a href="https://policies.google.com/technologies/partner-sites" target="_blank">How Google uses information from apps</a>.</p>
+        </div>
+
+        <!-- Section 4: Operating System Permissions -->
+        <div class="section-card">
+            <h2>4. Android Operating System Permissions Disclosures</h2>
+            <p>ADERA requests only essential Android permissions required to provide vault functionality and display ads:</p>
+            <ul>
+                <li><code>android.permission.INTERNET</code>: Required exclusively by Google AdMob SDK for ad serving. *(Vault secrets never touch network calls)*.</li>
+                <li><code>android.permission.ACCESS_NETWORK_STATE</code>: Enables AdMob to verify network availability.</li>
+                <li><code>android.permission.USE_BIOMETRIC</code> / <code>USE_FINGERPRINT</code>: Enables local hardware biometric unlock via <code>BiometricPrompt</code>.</li>
+                <li><code>android.permission.VIBRATE</code>: Delivers tactile haptic feedback when copying passwords.</li>
+                <li><code>android.permission.POST_NOTIFICATIONS</code>: Used optionally for security warnings and auto-lock reminders.</li>
+            </ul>
+        </div>
+
+        <!-- Section 5: GDPR & CCPA Rights -->
+        <div class="section-card">
+            <h2>5. User Data Rights & Absolute Data Erasure (GDPR & CCPA)</h2>
+            <p>In accordance with global data protection standards (including GDPR and CCPA/CPRA):</p>
+            <ul>
+                <li><strong>Instant Local Vault Wipe:</strong> You can purge all local vault entries, cryptographic keys, and settings anytime in ADERA under <strong>Settings ➔ Security ➔ Wipe Local Vault</strong>.</li>
+                <li><strong>App Uninstallation:</strong> Uninstalling ADERA permanently deletes all encrypted database files and Keystore keys from your hardware.</li>
+                <li><strong>Data Portability:</strong> You can export your encrypted vault contents anytime under <strong>Settings ➔ Backup & Export</strong>.</li>
+                <li><strong>Ad Tracking Opt-Out:</strong> You can reset or opt out of personalized ads anytime on Android via <strong>Settings ➔ Google ➔ Ads ➔ Delete Advertising ID</strong>.</li>
+            </ul>
+        </div>
+
+        <!-- Section 6: COPPA Disclosures -->
+        <div class="section-card">
+            <h2>6. Children's Online Privacy Protection Act (COPPA)</h2>
+            <p>ADERA is a general-audience security application and is not directed at children under the age of 13 (or under 16 in the European Union). We do not knowingly solicit, collect, or process personal data from children.</p>
+        </div>
+
+        <!-- Section 7: Enterprise Security Controls -->
+        <div class="section-card">
+            <h2>7. Enterprise Security Controls & Anti-Tamper Safeguards</h2>
+            <ul>
+                <li><strong>Screen Capture Prevention:</strong> Sensitive screens enforce <code>WindowManager.LayoutParams.FLAG_SECURE</code> to block screenshots, screen recordings, and app switcher leaks.</li>
+                <li><strong>Clipboard Auto-Sanitization:</strong> Copied passwords are automatically purged from the system clipboard after 30 seconds.</li>
+                <li><strong>Cleartext Network Disabling:</strong> Cleartext HTTP communications are explicitly disabled application-wide (<code>usesCleartextTraffic="false"</code>).</li>
+                <li><strong>Volatile Memory Scrubbing:</strong> Decrypted password buffers in memory are cleared immediately following UI rendering.</li>
+            </ul>
+        </div>
+
+        <!-- Section 8: Regulatory Compliance & Contact -->
+        <div class="section-card">
+            <h2>8. Regulatory Compliance & Contact Information</h2>
+            <p>If you have any questions or security feedback regarding this Privacy Policy, please contact our security desk:</p>
+            <p>📧 <strong>Security Contact:</strong> <a href="mailto:fitsumenunu21@gmail.com">fitsumenunu21@gmail.com</a></p>
+            <p>🛡️ <strong>Publisher:</strong> ADERA Security Labs</p>
+            <p>🌐 <strong>GitHub Repository:</strong> <a href="https://github.com/fitsumhub/ADERA--password-manger" target="_blank">github.com/fitsumhub/ADERA--password-manger</a></p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2026 ADERA Security Labs. All rights reserved.</p>
+            <p>Zero-Knowledge Cryptographic Privacy Standard • Compliant with Google Play Data Safety Policies</p>
+        </div>
+
     </div>
+
 </body>
 </html>
