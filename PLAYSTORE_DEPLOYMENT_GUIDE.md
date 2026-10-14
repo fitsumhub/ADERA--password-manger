@@ -83,9 +83,19 @@ When completing the Data Safety Questionnaire:
    - Data is encrypted in transit (HTTPS enforced via `usesCleartextTraffic="false"`).
    - Users can request data deletion (Full vault wipe option available in Security Settings).
 
-### **B. Privacy Policy URL**
-Provide an HTTPS URL hosting your Privacy Policy (e.g., GitHub Pages or website).
-- Privacy disclosures required: Zero-knowledge local encryption, no cloud telemetry, and Google AdMob ad network integration.
+### **B. Privacy Policy URL (GitHub Pages Setup)**
+Google Play Console requires a publicly accessible HTTPS Privacy Policy URL.
+
+Your official live Privacy Policy link for Play Console is:
+👉 **`https://fitsumhub.github.io/ADERA--password-manger/`**
+
+**Configuration verified on GitHub**:
+- Repository: `https://github.com/fitsumhub/ADERA--password-manger`
+- Branch: `main` (`/ (root)` folder)
+- Webpage source: [`index.html`](file:///C:/Users/APLUS/ADERA--password-manger/index.html)
+
+Paste `https://fitsumhub.github.io/ADERA--password-manger/` into **Play Console ➔ App content ➔ Privacy Policy**.
+- Disclosures included in `PRIVACY.md`: Zero-knowledge local encryption, no cloud telemetry, and Google AdMob ad network integration.
 
 ---
 
