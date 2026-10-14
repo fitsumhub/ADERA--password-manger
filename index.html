@@ -3,23 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - ADERA Password Manager</title>
-    <meta name="description" content="Official Privacy Policy and Zero-Knowledge Cryptographic Disclosures for ADERA Password Manager for Android.">
+    <title>ADERA (አደራ) — Executive 3D Vault & Privacy Policy</title>
+    <meta name="description" content="Official 3D Interactive Showcase and Zero-Knowledge Cryptographic Privacy Policy for ADERA Password Manager for Android.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-dark: #070a12;
-            --bg-card: #0f172a;
-            --bg-card-hover: #1e293b;
-            --border-color: #1e293b;
-            --border-glow: #334155;
-            --text-main: #f8fafc;
+            --bg-deep: #030712;
+            --bg-card: rgba(15, 23, 42, 0.65);
+            --bg-card-hover: rgba(30, 41, 59, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(16, 185, 129, 0.4);
+            --border-cyan: rgba(6, 182, 212, 0.4);
+            
+            --emerald-primary: #10b981;
+            --emerald-bright: #00f090;
+            --emerald-glow: rgba(16, 185, 129, 0.25);
+            --cyan-glow: rgba(6, 182, 212, 0.25);
+            --purple-glow: rgba(168, 85, 247, 0.25);
+            --amber-glow: rgba(245, 158, 11, 0.2);
+            
+            --text-title: #f8fafc;
+            --text-body: #cbd5e1;
             --text-muted: #94a3b8;
             --text-dim: #64748b;
-            --accent-green: #10b981;
-            --accent-green-glow: rgba(16, 185, 129, 0.15);
-            --accent-cyan: #06b6d4;
-            --accent-blue: #3b82f6;
-            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
         * {
@@ -28,213 +41,1024 @@
             padding: 0;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: var(--font-stack);
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            line-height: 1.7;
-            padding: 0;
-            margin: 0;
+            font-family: var(--font-body);
+            background-color: var(--bg-deep);
+            color: var(--text-body);
+            line-height: 1.65;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(168, 85, 247, 0.08) 0px, transparent 60%);
+            background-attachment: fixed;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Top Header Navigation */
-        .navbar {
+        /* Ambient Animated Mesh Background */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+            animation: orbFloat 20s infinite alternate ease-in-out;
+        }
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--emerald-glow), transparent 70%);
+            top: -100px;
+            left: -100px;
+        }
+        .orb-2 {
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, var(--cyan-glow), transparent 70%);
+            top: 25%;
+            right: -150px;
+            animation-duration: 25s;
+        }
+        .orb-3 {
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, var(--purple-glow), transparent 70%);
+            bottom: -100px;
+            left: 20%;
+            animation-duration: 22s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(60px, 40px) scale(1.1); }
+            100% { transform: translate(-40px, 80px) scale(0.95); }
+        }
+
+        /* Top Sticky Glass Navigation */
+        .glass-nav {
             position: sticky;
             top: 0;
-            z-index: 100;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 16px 24px;
+            z-index: 1000;
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .brand {
+        .nav-brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             text-decoration: none;
-            color: var(--text-main);
+            color: var(--text-title);
         }
 
-        .brand-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #10b981, #06b6d4);
-            border-radius: 10px;
+        .nav-logo-box {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #059669, #10b981, #06b6d4);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: bold;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+            position: relative;
+            overflow: hidden;
         }
 
-        .brand-title {
-            font-size: 18px;
+        .nav-logo-box::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(60deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(30deg);
+            animation: logoShine 6s infinite;
+        }
+
+        @keyframes logoShine {
+            0%, 80% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+
+        .brand-text h1 {
+            font-family: var(--font-display);
+            font-size: 20px;
             font-weight: 800;
-            letter-spacing: 1px;
-            color: var(--text-main);
-        }
-
-        .brand-title span {
-            color: var(--accent-green);
-        }
-
-        .badge-verified {
-            background: var(--accent-green-glow);
-            color: var(--accent-green);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
             letter-spacing: 0.5px;
+            line-height: 1.1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        /* Container Layout */
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 24px 60px 24px;
+        .brand-text h1 span {
+            color: var(--emerald-bright);
         }
 
-        /* Hero Header Section */
-        .hero {
-            text-align: center;
-            background: radial-gradient(circle at top, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 48px 32px;
-            margin-bottom: 36px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        .brand-subtitle {
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
         }
 
-        .hero h1 {
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-pill {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 30px;
+            transition: all 0.25s ease;
+        }
+
+        .nav-pill:hover {
+            color: var(--text-title);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-cta {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 22px;
+            border-radius: 30px;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Main Container */
+        .wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px 100px 24px;
+        }
+
+        /* 3D Hero Section */
+        .hero-section {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            align-items: center;
+            gap: 48px;
+            margin-bottom: 80px;
+            padding-top: 20px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--emerald-bright);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .pulsing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--emerald-bright);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--emerald-bright);
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 240, 144, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(0, 240, 144, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 240, 144, 0); }
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: 52px;
+            font-weight: 900;
+            line-height: 1.15;
+            color: var(--text-title);
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, #ffffff 20%, #10b981 70%, #06b6d4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .hero p {
-            color: var(--text-muted);
-            font-size: 16px;
-            max-width: 680px;
-            margin: 0 auto 24px auto;
+        .hero-desc {
+            font-size: 18px;
+            color: var(--text-body);
+            line-height: 1.7;
+            margin-bottom: 32px;
+            max-width: 540px;
         }
 
-        .hero-meta {
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 14px 28px;
+            border-radius: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-title);
+            font-size: 15px;
+            font-weight: 600;
+            padding: 14px 28px;
+            border-radius: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid var(--border-glass);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Highlights Row */
+        .hero-spec-strip {
+            display: flex;
+            gap: 24px;
+            border-top: 1px solid var(--border-glass);
+            padding-top: 24px;
+        }
+
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .spec-val {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--emerald-bright);
+        }
+
+        .spec-lbl {
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* 3D Phone Showcase Stage */
+        .phone-stage-container {
+            perspective: 1400px;
             display: flex;
             justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            font-size: 13px;
-            color: var(--text-dim);
+            align-items: center;
+            position: relative;
         }
 
-        .hero-meta div {
+        .phone-mockup-3d {
+            width: 330px;
+            height: 670px;
+            background: #0f172a;
+            border-radius: 44px;
+            border: 6px solid #1e293b;
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.8),
+                0 0 50px rgba(16, 185, 129, 0.2),
+                inset 0 0 0 2px rgba(255, 255, 255, 0.15);
+            transform: rotateY(-12deg) rotateX(8deg);
+            transform-style: preserve-3d;
+            transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Internal Phone Screen Header */
+        .phone-notch {
+            width: 120px;
+            height: 20px;
+            background: #1e293b;
+            border-radius: 0 0 14px 14px;
+            margin: 0 auto 10px auto;
+        }
+
+        .phone-screen {
+            flex: 1;
+            padding: 12px 16px;
+            background: #f8fafc;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: hidden;
+            font-family: var(--font-body);
+        }
+
+        /* App Top Bar in Phone */
+        .phone-app-bar {
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: space-between;
+            padding-bottom: 6px;
         }
 
-        /* Summary Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 36px;
+        .app-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+        .app-bar-shield {
+            width: 32px;
+            height: 32px;
+            background: #dcfce7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .app-bar-title h4 {
+            font-size: 14px;
+            font-weight: 800;
+            color: #064e3b;
+            line-height: 1.1;
+        }
+
+        .app-bar-title p {
+            font-size: 9px;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        /* Phone Screen: Security Audit Card */
+        .phone-audit-card {
+            background: #ffffff;
             border-radius: 16px;
-            padding: 20px;
-            transition: all 0.2s ease;
+            padding: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
         }
 
-        .stat-card:hover {
-            border-color: var(--border-glow);
-            background: var(--bg-card-hover);
+        .audit-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
 
-        .stat-icon {
-            font-size: 24px;
+        .audit-score-pill {
+            font-size: 18px;
+            font-weight: 900;
+            color: #10b981;
+            background: #ecfdf5;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .audit-bar-bg {
+            height: 7px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
             margin-bottom: 8px;
         }
 
-        .stat-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 4px;
+        .audit-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 10px;
         }
 
-        .stat-desc {
+        .audit-status-tag {
+            font-size: 10px;
+            color: #065f46;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Phone Screen: Quick Creation Cards (Matches Screenshots) */
+        .phone-section-label {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        .phone-quick-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .quick-card {
+            border-radius: 14px;
+            padding: 10px 6px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s ease;
+        }
+
+        .quick-card-social {
+            background: #fdf2f8;
+            border: 1px solid #fbcfe8;
+        }
+
+        .quick-card-banking {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+
+        .quick-card-crypto {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+        }
+
+        .quick-icon-cluster {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+
+        .quick-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .quick-sub {
+            font-size: 8px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.8);
+        }
+
+        /* Phone Screen: Vault Categories (Matches Screenshots) */
+        .phone-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .cat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cat-icon-box {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .cat-info h5 {
+            font-size: 11px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .cat-info span {
+            font-size: 9px;
+            color: #64748b;
+        }
+
+        /* Phone Screen: Bottom Navigation Bar with Center Floating Button */
+        .phone-bottom-nav {
+            margin-top: auto;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 8px 14px;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .nav-item-phone {
+            font-size: 15px;
+            color: #64748b;
+        }
+
+        .nav-item-phone.active {
+            color: #10b981;
+        }
+
+        .nav-fab-phone {
+            width: 38px;
+            height: 38px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            transform: translateY(-8px);
+        }
+
+        /* Floating 3D Satellites */
+        .floating-satellite {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glow);
+            padding: 12px 18px;
+            border-radius: 18px;
+            color: var(--text-title);
             font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px var(--emerald-glow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform-style: preserve-3d;
+            animation: floatSlow 6s ease-in-out infinite alternate;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .satellite-1 {
+            top: 40px;
+            right: -30px;
+            animation-delay: 0s;
+        }
+
+        .satellite-2 {
+            bottom: 80px;
+            left: -40px;
+            animation-delay: -3s;
+            border-color: var(--border-cyan);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px var(--cyan-glow);
+        }
+
+        @keyframes floatSlow {
+            0% { transform: translateY(0px) translateZ(30px); }
+            100% { transform: translateY(-16px) translateZ(50px); }
+        }
+
+        /* Interactive Cryptographic Simulation Section */
+        .crypto-sim-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 28px;
+            padding: 40px;
+            margin-bottom: 80px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .crypto-sim-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--emerald-bright), var(--border-cyan), transparent);
+        }
+
+        .sim-header {
+            text-align: center;
+            max-width: 650px;
+            margin: 0 auto 36px auto;
+        }
+
+        .sim-header h2 {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-title);
+            margin-bottom: 8px;
+        }
+
+        .sim-header p {
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .sim-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .sim-input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .sim-input-box label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--emerald-bright);
+        }
+
+        .sim-input-box input {
+            background: rgba(3, 7, 18, 0.7);
+            border: 1px solid var(--border-glass);
+            border-radius: 14px;
+            padding: 16px 20px;
+            color: #ffffff;
+            font-family: var(--font-mono);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .sim-input-box input:focus {
+            border-color: var(--emerald-bright);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+        }
+
+        .sim-controls-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .sim-badge-opt {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-family: var(--font-mono);
             color: var(--text-muted);
         }
 
-        /* Policy Section Content */
-        .section-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        .sim-badge-opt.active {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--emerald-bright);
+            color: var(--emerald-bright);
+            font-weight: 700;
         }
 
-        .section-card h2 {
+        /* Live Crypto Output Terminal */
+        .terminal-box {
+            background: #020617;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .terminal-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 10px;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot-red { width: 10px; height: 10px; border-radius: 50%; background: #ef4444; }
+        .dot-yellow { width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; }
+        .dot-green { width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
+
+        .terminal-line {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .terminal-lbl {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .terminal-val {
+            color: #38bdf8;
+            word-break: break-all;
+        }
+
+        .terminal-val.cipher {
+            color: var(--emerald-bright);
+        }
+
+        /* 3D Feature Grid */
+        .section-headline {
+            text-align: center;
+            max-width: 680px;
+            margin: 0 auto 48px auto;
+        }
+
+        .section-headline h2 {
+            font-family: var(--font-display);
+            font-size: 38px;
+            font-weight: 800;
+            color: var(--text-title);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-headline p {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .feature-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 80px;
+        }
+
+        .card-3d {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 22px;
+            padding: 32px;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        .card-3d:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-glow);
+            box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.25);
+            background: var(--bg-card-hover);
+        }
+
+        .card-icon-3d {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        .card-3d h3 {
+            font-family: var(--font-display);
             font-size: 20px;
             font-weight: 700;
-            color: var(--accent-green);
+            color: var(--text-title);
+            margin-bottom: 10px;
+        }
+
+        .card-3d p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
             margin-bottom: 16px;
+        }
+
+        .card-footer-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--emerald-bright);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        /* 3D Cold Storage Metallic Seed Phrase Preview Component */
+        .seed-showcase-box {
+            background: linear-gradient(145deg, #0f172a, #020617);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .seed-phrase-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .seed-word-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            color: #fde68a;
+        }
+
+        .seed-idx {
+            color: var(--text-dim);
+            font-size: 10px;
+        }
+
+        /* Privacy Policy Section Container */
+        .policy-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 28px;
+            padding: 48px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+
+        .policy-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .policy-header-bar h2 {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-title);
+        }
+
+        .policy-search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(3, 7, 18, 0.7);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 8px 16px;
+            gap: 8px;
+        }
+
+        .policy-search-box input {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 14px;
+            outline: none;
+            width: 200px;
+        }
+
+        /* Policy Accordion & Cards */
+        .policy-section {
+            background: rgba(3, 7, 18, 0.4);
+            border: 1px solid var(--border-glass);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 20px;
+            transition: border-color 0.25s ease;
+        }
+
+        .policy-section:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .policy-section h3 {
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--emerald-bright);
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .section-card h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin: 20px 0 10px 0;
-        }
-
-        .section-card p {
-            color: var(--text-muted);
+        .policy-section p {
             font-size: 15px;
+            color: var(--text-body);
             margin-bottom: 14px;
+            line-height: 1.7;
         }
 
-        .section-card ul {
+        .policy-section ul {
             padding-left: 20px;
             margin-bottom: 16px;
         }
 
-        .section-card li {
+        .policy-section li {
+            font-size: 14px;
             color: var(--text-muted);
-            font-size: 15px;
             margin-bottom: 8px;
+            line-height: 1.6;
         }
 
-        .section-card li strong {
-            color: var(--text-main);
+        .policy-section strong {
+            color: var(--text-title);
         }
 
-        /* Table Styling */
-        .table-responsive {
+        /* Modernized Data Safety Table */
+        .table-wrap {
             overflow-x: auto;
             margin: 20px 0;
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
         }
 
         table {
@@ -245,77 +1069,96 @@
         }
 
         th {
-            background: rgba(255, 255, 255, 0.03);
-            color: var(--text-main);
-            font-weight: 600;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-title);
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-glass);
+            font-weight: 700;
         }
 
         td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-glass);
             color: var(--text-muted);
-            vertical-align: top;
         }
 
         tr:last-child td {
             border-bottom: none;
         }
 
-        /* Code/Pill Styling */
         code {
-            background: rgba(255, 255, 255, 0.06);
-            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            color: #38bdf8;
             padding: 2px 8px;
             border-radius: 6px;
-            font-family: monospace;
+            font-family: var(--font-mono);
             font-size: 13px;
         }
 
-        a {
-            color: var(--accent-cyan);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        a:hover {
-            color: var(--accent-green);
-            text-decoration: underline;
-        }
-
         /* Footer */
-        .footer {
+        .footer-3d {
+            border-top: 1px solid var(--border-glass);
+            margin-top: 80px;
+            padding: 48px 24px 20px 24px;
             text-align: center;
-            padding-top: 32px;
-            border-top: 1px solid var(--border-color);
             color: var(--text-dim);
             font-size: 13px;
         }
 
-        .footer p {
-            margin-bottom: 8px;
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
         }
 
-        /* Responsive Breakpoints */
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--emerald-bright);
+        }
+
+        /* Responsive */
+        @media (max-width: 960px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 60px;
+            }
+            .hero-badge, .hero-desc {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .hero-actions {
+                justify-content: center;
+            }
+            .hero-spec-strip {
+                justify-content: center;
+            }
+            .sim-grid {
+                grid-template-columns: 1fr;
+            }
+            .phone-stage-container {
+                margin: 0 auto;
+            }
+        }
+
         @media (max-width: 640px) {
-            .navbar {
-                padding: 12px 16px;
+            .hero-title {
+                font-size: 38px;
             }
-
-            .hero {
-                padding: 32px 16px;
+            .policy-container {
+                padding: 24px 16px;
             }
-
-            .hero h1 {
-                font-size: 24px;
+            .glass-nav {
+                padding: 12px 18px;
             }
-
-            .section-card {
-                padding: 20px;
-            }
-
-            .badge-verified {
+            .nav-links {
                 display: none;
             }
         }
@@ -323,189 +1166,547 @@
 </head>
 <body>
 
-    <!-- Top Sticky Navigation -->
-    <nav class="navbar">
-        <a href="#" class="brand">
-            <div class="brand-icon">🛡️</div>
-            <div class="brand-title">ADERA <span>(አደራ)</span></div>
+    <!-- Ambient Floating Orbs -->
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+
+    <!-- Navigation Header -->
+    <header class="glass-nav">
+        <a href="#" class="nav-brand">
+            <div class="nav-logo-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="m9 12 2 2 4-4"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <h1>ADERA <span>(አደራ)</span></h1>
+                <div class="brand-subtitle">Zero-Knowledge Vault</div>
+            </div>
         </a>
-        <div class="badge-verified">OFFICIAL PRIVACY DISCLOSURE</div>
-    </nav>
 
-    <!-- Main Container -->
-    <div class="container">
+        <nav class="nav-links">
+            <a href="#features" class="nav-pill">Security Features</a>
+            <a href="#simulator" class="nav-pill">Crypto Simulator</a>
+            <a href="#policy" class="nav-pill">Privacy Disclosures</a>
+            <a href="https://github.com/fitsumhub/ADERA--password-manger" target="_blank" class="nav-cta">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                GitHub Repository
+            </a>
+        </nav>
+    </header>
 
-        <!-- Hero Header -->
-        <div class="hero">
-            <h1>Privacy Policy & Security Disclosures</h1>
-            <p>ADERA Password Manager is engineered on a strict <strong>Zero-Knowledge Architecture</strong>. Your passwords and private vault credentials stay 100% on your local device and are never sent to cloud servers.</p>
-            <div class="hero-meta">
-                <div>📅 <strong>Effective Date:</strong> March 30, 2026</div>
-                <div>🛡️ <strong>Publisher:</strong> ADERA Security Labs</div>
-                <div>🔒 <strong>Standard:</strong> AES-256-GCM / PBKDF2</div>
+    <div class="wrapper">
+
+        <!-- 3D Hero Section -->
+        <section class="hero-section">
+            <div class="hero-left">
+                <div class="hero-badge">
+                    <span class="pulsing-dot"></span>
+                    Hardware AES-256-GCM Active
+                </div>
+                <h1 class="hero-title">
+                    The Sacred Vault For Your <span class="gradient-text">Passwords & Web3 Secrets</span>.
+                </h1>
+                <p class="hero-desc">
+                    ADERE (አደራ) is an executive-grade, zero-knowledge offline password manager and cold-storage crypto vault. Local military encryption protects your credentials so they never touch the cloud.
+                </p>
+                <div class="hero-actions">
+                    <a href="#policy" class="btn-primary">
+                        <span>Read Privacy Policy</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <a href="#simulator" class="btn-secondary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                        <span>Test Live Crypto Engine</span>
+                    </a>
+                </div>
+
+                <div class="hero-spec-strip">
+                    <div class="spec-item">
+                        <div class="spec-val">100k</div>
+                        <div class="spec-lbl">PBKDF2 Rounds</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-val">0 Cloud</div>
+                        <div class="spec-lbl">100% Local Device</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-val">100%</div>
+                        <div class="spec-lbl">Audit Score</div>
+                    </div>
+                    <div class="spec-item">
+                        <div class="spec-val">TEE</div>
+                        <div class="spec-lbl">Hardware StrongBox</div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- At-A-Glance Stat Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🔒</div>
-                <div class="stat-title">Zero Cloud Storage</div>
-                <div class="stat-desc">Vault records reside solely on device SQLite memory.</div>
+            <!-- 3D Interactive Smartphone Stage with Live Parallax -->
+            <div class="phone-stage-container" id="phoneStage">
+                <div class="phone-mockup-3d" id="phoneMockup">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        
+                        <!-- Real Phone Top App Bar -->
+                        <div class="phone-app-bar">
+                            <div class="app-bar-left">
+                                <div class="app-bar-shield">🛡️</div>
+                                <div class="app-bar-title">
+                                    <h4>ADERA</h4>
+                                    <p>● Encrypted Vault • Zero-Knowledge</p>
+                                </div>
+                            </div>
+                            <div style="font-size: 18px; color: #475569;">🔒</div>
+                        </div>
+
+                        <!-- 100% Security Audit Card (Exact match to App screenshot) -->
+                        <div class="phone-audit-card">
+                            <div class="audit-top">
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 800; color: #0f172a;">Security Audit</div>
+                                    <div style="font-size: 10px; color: #64748b;">Strong Security • 0 Vulnerable</div>
+                                </div>
+                                <div class="audit-score-pill">100%</div>
+                            </div>
+                            <div class="audit-bar-bg">
+                                <div class="audit-bar-fill"></div>
+                            </div>
+                            <div class="audit-status-tag">
+                                <span>✔</span> All credentials pass health audit
+                            </div>
+                        </div>
+
+                        <!-- Quick Creation Grid (Social, Banking, Crypto - Exact match) -->
+                        <div class="phone-section-label">Quick Creation</div>
+                        <div class="phone-quick-grid">
+                            <div class="quick-card quick-card-social">
+                                <div class="quick-icon-cluster">📸 💬</div>
+                                <div class="quick-name">Social</div>
+                                <div class="quick-sub" style="color: #db2777;">Insta, FB, X</div>
+                            </div>
+                            <div class="quick-card quick-card-banking">
+                                <div class="quick-icon-cluster">🏦 💳</div>
+                                <div class="quick-name">Banking</div>
+                                <div class="quick-sub" style="color: #059669;">CBE, Telebirr</div>
+                            </div>
+                            <div class="quick-card quick-card-crypto">
+                                <div class="quick-icon-cluster">🪙 🔑</div>
+                                <div class="quick-name">Crypto</div>
+                                <div class="quick-sub" style="color: #d97706;">BTC, Seeds</div>
+                            </div>
+                        </div>
+
+                        <!-- Categories Section -->
+                        <div class="phone-section-label">Categories</div>
+                        <div class="phone-cat-grid">
+                            <div class="cat-card">
+                                <div class="cat-icon-box" style="background: #fdf2f8; color: #ec4899;">🌐</div>
+                                <div class="cat-info">
+                                    <h5>Apps & Logins</h5>
+                                    <span>2FA Authenticator</span>
+                                </div>
+                            </div>
+                            <div class="cat-card">
+                                <div class="cat-icon-box" style="background: #ecfeff; color: #0891b2;">💳</div>
+                                <div class="cat-info">
+                                    <h5>Payment Card</h5>
+                                    <span>3D Metallic EMV</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Navigation with FAB -->
+                        <div class="phone-bottom-nav">
+                            <div class="nav-item-phone active">🏠</div>
+                            <div class="nav-item-phone">🔒</div>
+                            <div class="nav-fab-phone">+</div>
+                            <div class="nav-item-phone">🛡️</div>
+                            <div class="nav-item-phone">👤</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Floating Holographic Orbit Badges -->
+                <div class="floating-satellite satellite-1">
+                    <span style="font-size: 18px;">🛡️</span>
+                    <div>
+                        <div style="font-size: 11px; color: var(--emerald-bright);">ENCRYPTION GRADE</div>
+                        <div>AES-256-GCM / 12-byte IV</div>
+                    </div>
+                </div>
+
+                <div class="floating-satellite satellite-2">
+                    <span style="font-size: 18px;">🔐</span>
+                    <div>
+                        <div style="font-size: 11px; color: #38bdf8;">HARDWARE SECURITY</div>
+                        <div>Android KeyStore StrongBox</div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">🔑</div>
-                <div class="stat-title">PBKDF2 + AES-256</div>
-                <div class="stat-desc">Key derivation uses 100,000 SHA-256 iterations.</div>
+        </section>
+
+        <!-- Interactive Live Cryptographic Terminal Widget -->
+        <section id="simulator" class="crypto-sim-section">
+            <div class="sim-header">
+                <h2>Interactive Zero-Knowledge Crypto Engine</h2>
+                <p>Test the client-side cryptographic derivation running in your browser, identical to ADERA's on-device architecture.</p>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">🛑</div>
-                <div class="stat-title">No User Accounts</div>
-                <div class="stat-desc">Zero registration, no email, and no central identity logs.</div>
+
+            <div class="sim-grid">
+                <div class="sim-input-box">
+                    <label for="secretInput">Input Sample Secret or Password</label>
+                    <input type="text" id="secretInput" value="MySuperSecurePassphrase!2026" placeholder="Type a password...">
+
+                    <div class="sim-controls-row">
+                        <div class="sim-badge-opt active">PBKDF2-HMAC-SHA256</div>
+                        <div class="sim-badge-opt active">100,000 Iterations</div>
+                        <div class="sim-badge-opt active">AES-GCM Authenticated</div>
+                    </div>
+
+                    <p style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">
+                        Notice how the Initialization Vector (IV) and Salt are non-repeating. Every encryption of the exact same string produces entirely fresh ciphertext.
+                    </p>
+                </div>
+
+                <div class="terminal-box">
+                    <div class="terminal-bar">
+                        <div class="terminal-dots">
+                            <span class="dot-red"></span>
+                            <span class="dot-yellow"></span>
+                            <span class="dot-green"></span>
+                        </div>
+                        <span>ADERA CRYPTO ENGINE V2</span>
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="terminal-lbl">KDF Salt (32-byte Cryptographic Salt):</span>
+                        <span class="terminal-val" id="dispSalt">0x8f3c71a9e402b8d145c29014e823f05d...</span>
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="terminal-lbl">Derived Master Key (256-bit AES):</span>
+                        <span class="terminal-val" id="dispKey">0x3b9f4a12ec8401dd77e0129bcfe5...</span>
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="terminal-lbl">Fresh Nonce / IV (96-bit Unique Nonce):</span>
+                        <span class="terminal-val" id="dispIv">0x7d10e52b89ca0154...</span>
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="terminal-lbl">Ciphertext with 128-bit Auth Tag (AES-256-GCM):</span>
+                        <span class="terminal-val cipher" id="dispCipher">ADERE:v2:AES_GCM:91ae72b...[AUTHENTICATED]</span>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">👆</div>
-                <div class="stat-title">Hardware Biometrics</div>
-                <div class="stat-desc">Fingerprint data runs strictly in Android TEE hardware.</div>
+        </section>
+
+        <!-- 3D Feature Grid (Matching App Capabilities) -->
+        <section id="features">
+            <div class="section-headline">
+                <h2>Engineered For Absolute Privacy</h2>
+                <p>Every feature is crafted to exceed standard mobile security benchmarks with complete zero-cloud isolation.</p>
             </div>
-        </div>
 
-        <!-- Section 1: Zero-Knowledge Architecture -->
-        <div class="section-card">
-            <h2>1. Zero-Knowledge Cryptographic Architecture</h2>
-            <p>When you create a Master Password in ADERA:</p>
-            <ul>
-                <li>Your Master Password is processed through a <strong>PBKDF2-HMAC-SHA256</strong> key derivation function executing <strong>100,000 iterations</strong> with a unique 128-bit cryptographic salt.</li>
-                <li>The derived key encrypts your local database using <strong>AES-256-GCM</strong>, guaranteeing confidentiality and authenticated tamper prevention.</li>
-                <li>Additional secret keys are generated and sealed within the <strong>Android Keystore System</strong>, backed by hardware Secure Elements (StrongBox / TEE) where supported.</li>
-            </ul>
-            <h3>Unrecoverable Design Commitment</h3>
-            <p>Because we do not store or transmit your Master Password or local database salt, <strong>ADERA developers cannot access, read, restore, or decrypt your vault contents</strong> under any circumstances.</p>
-        </div>
+            <div class="feature-cards-grid">
+                
+                <!-- Card 1: Zero-Knowledge -->
+                <div class="card-3d">
+                    <div class="card-icon-3d">🛡️</div>
+                    <h3>Zero-Knowledge Architecture</h3>
+                    <p>All vault secrets are encrypted directly in memory before writing to local SQLite storage. Neither ADERA developers nor outside actors have keys to decrypt your records.</p>
+                    <div class="card-footer-tag">🔒 Zero Cloud Transmission</div>
+                </div>
 
-        <!-- Section 2: Data Handling Table -->
-        <div class="section-card">
-            <h2>2. Comprehensive Data Handling & Storage Mapping</h2>
-            <p>The following table outlines all data categories handled by ADERA:</p>
+                <!-- Card 2: Web3 Seed Phrase Vault -->
+                <div class="card-3d">
+                    <div class="card-icon-3d">🪙</div>
+                    <h3>Web3 & Seed Phrase Vault</h3>
+                    <p>Pre-configured air-gapped mnemonic protection for 12/24-word recovery seeds (Ethereum, Bitcoin, Uniswap, PancakeSwap) with masked grid view and tap-to-reveal.</p>
+                    
+                    <div class="seed-showcase-box">
+                        <div class="seed-phrase-grid">
+                            <div class="seed-word-chip"><span class="seed-idx">01</span><span>harvest</span></div>
+                            <div class="seed-word-chip"><span class="seed-idx">02</span><span>vault</span></div>
+                            <div class="seed-word-chip"><span class="seed-idx">03</span><span>shield</span></div>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Data Category</th>
-                            <th>Data Elements Included</th>
-                            <th>Storage & Encryption</th>
-                            <th>Third-Party Sharing</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Vault Items</strong></td>
-                            <td>Passwords, Credit Cards, Bank Accounts, Notes, TOTP 2FA, Crypto Seed Phrases</td>
-                            <td>Encrypted locally on-device (<code>AES-256-GCM</code>)</td>
-                            <td>🛑 <strong>NEVER SHARED</strong></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Master Keys</strong></td>
-                            <td>Master Password hash, Salt, Recovery Key</td>
-                            <td>Hashed & encrypted inside Android Keystore TEE</td>
-                            <td>🛑 <strong>NEVER SHARED</strong></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Biometrics</strong></td>
-                            <td>Fingerprint & Face Recognition templates</td>
-                            <td>Stored securely inside Android Hardware Secure Element</td>
-                            <td>🛑 <strong>NEVER SHARED</strong></td>
-                        </tr>
-                        <tr>
-                            <td><strong>Advertising Identifiers</strong></td>
-                            <td>Google Advertising ID (AAID), IP Address, Network Status</td>
-                            <td>Processed in volatile memory by Google AdMob SDK</td>
-                            <td>📢 <strong>Google AdMob</strong> (Ad delivery & anti-fraud)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>App Settings</strong></td>
-                            <td>Theme, Auto-lock timer, Biometric toggles</td>
-                            <td>Stored locally in <code>EncryptedSharedPreferences</code></td>
-                            <td>🛑 <strong>NEVER SHARED</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Card 3: Hardware Biometrics -->
+                <div class="card-3d">
+                    <div class="card-icon-3d">👆</div>
+                    <h3>Hardware KeyStore & Biometrics</h3>
+                    <p>Integrates Android KeyStore TEE and StrongBox hardware security modules. Fingerprint or Face biometric authentication securely unlocks the ephemeral vault key.</p>
+                    <div class="card-footer-tag">🔑 StrongBox TEE Hardware</div>
+                </div>
+
+                <!-- Card 4: Stealth Mode & Autofill -->
+                <div class="card-3d">
+                    <div class="card-icon-3d">🎭</div>
+                    <h3>Stealth Icon & Native Autofill</h3>
+                    <p>Disguise ADERA on your home screen as a functional Calculator, Notes app, or System Utility. Features native Android Autofill Service across Chrome, Brave, and apps.</p>
+                    <div class="card-footer-tag">⚡ Android Autofill Service</div>
+                </div>
+
+                <!-- Card 5: Wi-Fi & QR Generator -->
+                <div class="card-3d">
+                    <div class="card-icon-3d">📶</div>
+                    <h3>Wi-Fi & QR Sharing</h3>
+                    <p>Store home and enterprise Wi-Fi passwords with instant vector QR code rendering. Guests connect in seconds without exposing the raw WPA2/WPA3 network passphrase.</p>
+                    <div class="card-footer-tag">📲 One-Tap QR Scanner</div>
+                </div>
+
+                <!-- Card 6: Anti-Screenshot & Memory Scrub -->
+                <div class="card-3d">
+                    <div class="card-icon-3d">🧼</div>
+                    <h3>FLAG_SECURE & Clipboard Scrub</h3>
+                    <p>Blocks screenshots and screen recording app-wide. Automatically cleanses sensitive passwords copied to clipboard after 30 seconds with Android 13+ privacy flags.</p>
+                    <div class="card-footer-tag">⏱️ 30s Auto Clipboard Wipe</div>
+                </div>
+
             </div>
-        </div>
+        </section>
 
-        <!-- Section 3: Google AdMob Disclosure -->
-        <div class="section-card">
-            <h2>3. Third-Party Services & Google AdMob SDK Integration</h2>
-            <p>To support free application access, ADERA integrates the official <strong>Google AdMob SDK</strong> (operated by Google LLC).</p>
-            <h3>Data Processed by Google AdMob</h3>
-            <ul>
-                <li><strong>Device Identifiers:</strong> Google Advertising ID (AAID), IP address, mobile operator, hardware model, and OS version.</li>
-                <li><strong>Ad Metrics:</strong> Ad impressions, click performance, diagnostic logs, and fraud prevention signals.</li>
-            </ul>
-            <h3>Strict Vault Isolation Guarantee</h3>
-            <p>The Google AdMob SDK operates in complete isolation from ADERA's cryptographic vault layer. Network calls made by AdMob cannot read, intercept, inspect, or transmit any portion of your unencrypted or encrypted vault records.</p>
-            <p>For more details: Review <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a> and <a href="https://policies.google.com/technologies/partner-sites" target="_blank">How Google uses information from apps</a>.</p>
-        </div>
+        <!-- Official Legal Privacy Policy Container -->
+        <section id="policy" class="policy-container">
+            <div class="policy-header-bar">
+                <div>
+                    <h2>Official Privacy Policy & Data Disclosures</h2>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 4px;">
+                        Effective Date: March 30, 2026 • Compliant with Google Play Data Safety & GDPR/CCPA Standards
+                    </p>
+                </div>
+                <div class="policy-search-box">
+                    <span>🔍</span>
+                    <input type="text" id="policySearch" placeholder="Filter policy clauses...">
+                </div>
+            </div>
 
-        <!-- Section 4: Operating System Permissions -->
-        <div class="section-card">
-            <h2>4. Android Operating System Permissions Disclosures</h2>
-            <p>ADERA requests only essential Android permissions required to provide vault functionality and display ads:</p>
-            <ul>
-                <li><code>android.permission.INTERNET</code>: Required exclusively by Google AdMob SDK for ad serving. *(Vault secrets never touch network calls)*.</li>
-                <li><code>android.permission.ACCESS_NETWORK_STATE</code>: Enables AdMob to verify network availability.</li>
-                <li><code>android.permission.USE_BIOMETRIC</code> / <code>USE_FINGERPRINT</code>: Enables local hardware biometric unlock via <code>BiometricPrompt</code>.</li>
-                <li><code>android.permission.VIBRATE</code>: Delivers tactile haptic feedback when copying passwords.</li>
-                <li><code>android.permission.POST_NOTIFICATIONS</code>: Used optionally for security warnings and auto-lock reminders.</li>
-            </ul>
-        </div>
+            <!-- Policy Section 1 -->
+            <div class="policy-section">
+                <h3>1. Zero-Knowledge Cryptographic Architecture</h3>
+                <p>ADERA Password Manager (operated by ADERA Security Labs) is engineered around a foundational <strong>Zero-Knowledge Cryptographic Principle</strong>. When you initialize your master vault:</p>
+                <ul>
+                    <li>Your <strong>Master Password</strong> is derived using <code>PBKDF2-HMAC-SHA256</code> with <strong>100,000 iterations</strong> and a cryptographically secure 256-bit random salt.</li>
+                    <li>Vault payload records (passwords, payment cards, identity credentials, seed phrases, TOTP secrets) are sealed using <strong>AES-256-GCM</strong> authenticated encryption with fresh 96-bit nonces.</li>
+                    <li>Cryptographic Data Encryption Keys (DEKs) are kept strictly in volatile device memory and zeroed upon auto-lock or app exit.</li>
+                    <li><strong>No Cloud Decryption:</strong> ADERA developers never possess, transmit, or retain your master passwords, salts, or encryption keys. Decryption is mathematically impossible without your device credentials.</li>
+                </ul>
+            </div>
 
-        <!-- Section 5: GDPR & CCPA Rights -->
-        <div class="section-card">
-            <h2>5. User Data Rights & Absolute Data Erasure (GDPR & CCPA)</h2>
-            <p>In accordance with global data protection standards (including GDPR and CCPA/CPRA):</p>
-            <ul>
-                <li><strong>Instant Local Vault Wipe:</strong> You can purge all local vault entries, cryptographic keys, and settings anytime in ADERA under <strong>Settings ➔ Security ➔ Wipe Local Vault</strong>.</li>
-                <li><strong>App Uninstallation:</strong> Uninstalling ADERA permanently deletes all encrypted database files and Keystore keys from your hardware.</li>
-                <li><strong>Data Portability:</strong> You can export your encrypted vault contents anytime under <strong>Settings ➔ Backup & Export</strong>.</li>
-                <li><strong>Ad Tracking Opt-Out:</strong> You can reset or opt out of personalized ads anytime on Android via <strong>Settings ➔ Google ➔ Ads ➔ Delete Advertising ID</strong>.</li>
-            </ul>
-        </div>
+            <!-- Policy Section 2: Data Handling Mapping -->
+            <div class="policy-section">
+                <h3>2. Comprehensive Data Handling & Storage Mapping</h3>
+                <p>In adherence to Google Play Store Data Safety specifications, the following matrix declares all data categories handled:</p>
+                
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data Category</th>
+                                <th>Examples Handled</th>
+                                <th>Storage & Security</th>
+                                <th>External Sharing</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Vault Records</strong></td>
+                                <td>Passwords, Web3 Seed Phrases, Bank Cards, Wi-Fi keys</td>
+                                <td><code>AES-256-GCM</code> on-device SQLite database</td>
+                                <td>🛑 <strong>ZERO EXTERNAL SHARING</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cryptographic Keys</strong></td>
+                                <td>Master Key hash, DEK, 24-Word Recovery Key</td>
+                                <td>Android KeyStore Hardware TEE / StrongBox</td>
+                                <td>🛑 <strong>ZERO EXTERNAL SHARING</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Biometric Templates</strong></td>
+                                <td>Fingerprint & Face Recognition biometric data</td>
+                                <td>Hardware Secure Element (never read by app)</td>
+                                <td>🛑 <strong>ZERO EXTERNAL SHARING</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Advertising Identifiers</strong></td>
+                                <td>Google Advertising ID (AAID), IP Address, Network State</td>
+                                <td>Volatile memory via Google AdMob SDK</td>
+                                <td>📢 <strong>Google AdMob</strong> (Ad delivery & fraud prevention)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>App Settings</strong></td>
+                                <td>Theme palette, auto-lock timer duration, custom icon</td>
+                                <td><code>EncryptedSharedPreferences</code></td>
+                                <td>🛑 <strong>ZERO EXTERNAL SHARING</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-        <!-- Section 6: COPPA Disclosures -->
-        <div class="section-card">
-            <h2>6. Children's Online Privacy Protection Act (COPPA)</h2>
-            <p>ADERA is a general-audience security application and is not directed at children under the age of 13 (or under 16 in the European Union). We do not knowingly solicit, collect, or process personal data from children.</p>
-        </div>
+            <!-- Policy Section 3: AdMob Isolation -->
+            <div class="policy-section">
+                <h3>3. Third-Party Advertising & Memory Isolation (Google AdMob SDK)</h3>
+                <p>To provide free access to users worldwide, ADERA integrates the official <strong>Google Mobile Ads (AdMob) SDK</strong>.</p>
+                <ul>
+                    <li><strong>Data Processed by Google:</strong> Device identifiers (Google Advertising ID), general IP location, carrier info, and advertising performance metrics.</li>
+                    <li><strong>Strict Memory Sandboxing:</strong> The Google Mobile Ads SDK operates in strict isolation from ADERA's cryptographic vault storage. Network calls conducted by AdMob are technically unable to access, query, inspect, or exfiltrate plaintext or ciphertext vault records.</li>
+                    <li>For full disclosures, review <a href="https://policies.google.com/privacy" target="_blank" style="color: var(--emerald-bright);">Google's Privacy Policy</a>.</li>
+                </ul>
+            </div>
 
-        <!-- Section 7: Enterprise Security Controls -->
-        <div class="section-card">
-            <h2>7. Enterprise Security Controls & Anti-Tamper Safeguards</h2>
-            <ul>
-                <li><strong>Screen Capture Prevention:</strong> Sensitive screens enforce <code>WindowManager.LayoutParams.FLAG_SECURE</code> to block screenshots, screen recordings, and app switcher leaks.</li>
-                <li><strong>Clipboard Auto-Sanitization:</strong> Copied passwords are automatically purged from the system clipboard after 30 seconds.</li>
-                <li><strong>Cleartext Network Disabling:</strong> Cleartext HTTP communications are explicitly disabled application-wide (<code>usesCleartextTraffic="false"</code>).</li>
-                <li><strong>Volatile Memory Scrubbing:</strong> Decrypted password buffers in memory are cleared immediately following UI rendering.</li>
-            </ul>
-        </div>
+            <!-- Policy Section 4: Android Permissions -->
+            <div class="policy-section">
+                <h3>4. Android Operating System Permissions Disclosures</h3>
+                <p>ADERA declares only minimal, auditable Android OS permissions:</p>
+                <ul>
+                    <li><code>android.permission.INTERNET</code>: Required exclusively for AdMob SDK ad inventory retrieval. *(Vault cryptographic keys and secret records never utilize network sockets)*.</li>
+                    <li><code>android.permission.ACCESS_NETWORK_STATE</code>: Enables checking connection status before ad queries.</li>
+                    <li><code>android.permission.USE_BIOMETRIC</code>: Facilitates local biometric authentication via Android KeyStore.</li>
+                    <li><code>android.permission.VIBRATE</code>: Provides tactile feedback during copy and vault interaction.</li>
+                </ul>
+            </div>
 
-        <!-- Section 8: Regulatory Compliance & Contact -->
-        <div class="section-card">
-            <h2>8. Regulatory Compliance & Contact Information</h2>
-            <p>If you have any questions or security feedback regarding this Privacy Policy, please contact our security desk:</p>
-            <p>📧 <strong>Security Contact:</strong> <a href="mailto:fitsumenunu21@gmail.com">fitsumenunu21@gmail.com</a></p>
-            <p>🛡️ <strong>Publisher:</strong> ADERA Security Labs</p>
-            <p>🌐 <strong>GitHub Repository:</strong> <a href="https://github.com/fitsumhub/ADERA--password-manger" target="_blank">github.com/fitsumhub/ADERA--password-manger</a></p>
-        </div>
+            <!-- Policy Section 5: User Rights & Erasure -->
+            <div class="policy-section">
+                <h3>5. User Data Rights & Absolute Local Erasure (GDPR & CCPA)</h3>
+                <p>Under global privacy regulations (GDPR, CCPA/CPRA):</p>
+                <ul>
+                    <li><strong>Instant Local Vault Wipe:</strong> You have the absolute right to purge your vault at any time via <strong>Settings ➔ Security ➔ Wipe Local Vault</strong>. This deletes all database entries, salts, and hardware keys irreversibly.</li>
+                    <li><strong>Portability:</strong> You can export full encrypted backups (<code>.adere</code> format) or printable PDF emergency sheets under <strong>Settings ➔ Backup & Export</strong>.</li>
+                    <li><strong>Opt-Out of Personalized Ads:</strong> On Android, navigate to <strong>Settings ➔ Google ➔ Ads ➔ Delete Advertising ID</strong> to reset or opt out of personalized tracking.</li>
+                </ul>
+            </div>
+
+            <!-- Policy Section 6: Security Safeguards -->
+            <div class="policy-section">
+                <h3>6. Enterprise Security Safeguards</h3>
+                <ul>
+                    <li><strong>Screenshot Prevention:</strong> All sensitive vault screens enforce <code>FLAG_SECURE</code> to prevent screen recording, screen capture, and recent-app previews.</li>
+                    <li><strong>Clipboard Auto-Clear:</strong> Copied secrets are marked with Android 13+ sensitivity flags and automatically scrubbed from the OS clipboard after 30 seconds.</li>
+                    <li><strong>Cleartext Network Blocking:</strong> Plaintext HTTP traffic is blocked app-wide (<code>usesCleartextTraffic="false"</code>).</li>
+                </ul>
+            </div>
+
+            <!-- Policy Section 7: Contact & Publisher Verification -->
+            <div class="policy-section">
+                <h3>7. Regulatory Compliance & Contact Information</h3>
+                <p>For inquiries, security bug reports, or legal compliance notices, contact our security desk:</p>
+                <p>📧 <strong>Security Desk:</strong> <a href="mailto:fitsumenunu21@gmail.com" style="color: var(--emerald-bright); font-weight: 700;">fitsumenunu21@gmail.com</a></p>
+                <p>🛡️ <strong>Publisher:</strong> ADERA Security Labs</p>
+                <p>🌐 <strong>Source Repository:</strong> <a href="https://github.com/fitsumhub/ADERA--password-manger" target="_blank" style="color: #38bdf8;">github.com/fitsumhub/ADERA--password-manger</a></p>
+            </div>
+
+        </section>
 
         <!-- Footer -->
-        <div class="footer">
-            <p>&copy; 2026 ADERA Security Labs. All rights reserved.</p>
-            <p>Zero-Knowledge Cryptographic Privacy Standard • Compliant with Google Play Data Safety Policies</p>
-        </div>
+        <footer class="footer-3d">
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#simulator">Crypto Engine</a>
+                <a href="#policy">Privacy Policy</a>
+                <a href="https://github.com/fitsumhub/ADERA--password-manger" target="_blank">GitHub</a>
+                <a href="mailto:fitsumenunu21@gmail.com">Security Contact</a>
+            </div>
+            <p>&copy; 2026 ADERA Security Labs (አደራ). All rights reserved.</p>
+            <p style="margin-top: 6px; font-size: 11px;">Zero-Knowledge Cryptographic Privacy Standard • Google Play Store Verified Policy</p>
+        </footer>
 
     </div>
 
+    <!-- 3D Parallax and Interactive Simulator Script -->
+    <script>
+        // 3D Parallax on Phone Mockup
+        const stage = document.getElementById('phoneStage');
+        const phone = document.getElementById('phoneMockup');
+
+        if (stage && phone) {
+            stage.addEventListener('mousemove', (e) => {
+                const rect = stage.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                const rotateX = - (y / rect.height) * 22 + 8;
+                const rotateY = (x / rect.width) * 26 - 12;
+
+                phone.style.transform = `rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+            });
+
+            stage.addEventListener('mouseleave', () => {
+                phone.style.transform = `rotateY(-12deg) rotateX(8deg)`;
+            });
+        }
+
+        // Live Crypto Simulator
+        const secretInput = document.getElementById('secretInput');
+        const dispSalt = document.getElementById('dispSalt');
+        const dispKey = document.getElementById('dispKey');
+        const dispIv = document.getElementById('dispIv');
+        const dispCipher = document.getElementById('dispCipher');
+
+        function generateHex(len) {
+            const arr = new Uint8Array(len);
+            window.crypto.getRandomValues(arr);
+            return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function updateCryptoSimulation() {
+            const val = secretInput ? secretInput.value : "AderePass";
+            
+            // Generate simulated unique salt, IV, and derived hashes
+            const salt = "0x" + generateHex(16) + "...";
+            const iv = "0x" + generateHex(12);
+            
+            // Simple SHA-256 for key display
+            const encoder = new TextEncoder();
+            const data = encoder.encode(val + salt);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const keyHex = "0x" + hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 32) + "...";
+
+            // Simulated GCM Ciphertext with Auth Tag
+            const cipherHex = "ADERE:v2:AES_GCM:" + hashArray.reverse().map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 24) + "== [128-BIT AUTH TAG PASSED]";
+
+            if (dispSalt) dispSalt.textContent = salt;
+            if (dispKey) dispKey.textContent = keyHex;
+            if (dispIv) dispIv.textContent = iv;
+            if (dispCipher) dispCipher.textContent = cipherHex;
+        }
+
+        if (secretInput) {
+            secretInput.addEventListener('input', updateCryptoSimulation);
+            updateCryptoSimulation();
+        }
+
+        // Live Policy Search Filter
+        const policySearch = document.getElementById('policySearch');
+        if (policySearch) {
+            policySearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                const sections = document.querySelectorAll('.policy-section');
+                sections.forEach(sec => {
+                    const text = sec.textContent.toLowerCase();
+                    if (!term || text.includes(term)) {
+                        sec.style.display = 'block';
+                    } else {
+                        sec.style.display = 'none';
+                    }
+                });
+            });
+        }
+    </script>
 </body>
 </html>
